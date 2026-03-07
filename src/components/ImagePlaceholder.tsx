@@ -7,11 +7,13 @@ export default function ImagePlaceholder({
   label = "Project Image",
   dark = false,
   src,
+  objectPosition = "center",
 }: {
   height?: number;
   label?: string;
   dark?: boolean;
   src?: string;
+  objectPosition?: string;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -35,6 +37,7 @@ export default function ImagePlaceholder({
           src={src}
           alt={label}
           className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition }}
         />
       ) : (
         <>
