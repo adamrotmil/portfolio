@@ -11,6 +11,7 @@ import SectionLabel from "@/components/SectionLabel";
 import PullQuote from "@/components/PullQuote";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import Counter from "@/components/Counter";
+import PhoneFrame from "@/components/PhoneFrame";
 
 function RenderSection({ section }: { section: ProjectSection }) {
   switch (section.type) {
@@ -69,7 +70,25 @@ function RenderSection({ section }: { section: ProjectSection }) {
 
     case "images":
       if (!section.images) return null;
-      // If 1 image: full width. If 2: side by side. If 3: one full + two side by side. If 4: one full + three in a row.
+
+      // Phone gallery layout: full screens in device frames on light background
+      if (section.layout === "phone-gallery") {
+        return (
+          <section className="bg-[#f5f5f5] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+            <div className="max-w-[960px] mx-auto flex justify-center items-start gap-[clamp(1.5rem,3vw,3rem)]">
+              {section.images.map((img, i) => (
+                <Reveal key={i} delay={i * 0.12}>
+                  <div className="flex-1 min-w-0 max-w-[280px]">
+                    <PhoneFrame src={img.src!} alt={img.label} />
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      // Default grid layout
       const imgs = section.images;
       return (
         <div className="max-w-[1200px] mx-auto px-[clamp(1.5rem,4vw,4rem)] py-4">

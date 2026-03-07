@@ -8,6 +8,7 @@ export interface ProjectSection {
   stats?: { number: number; suffix: string; label: string }[];
   images?: { label: string; dark?: boolean; height?: number; src?: string; objectPosition?: string }[];
   imagePosition?: "left" | "right";
+  layout?: "phone-gallery";
 }
 
 export interface Project {
@@ -258,59 +259,28 @@ export const PROJECTS: Project[] = [
           "The best interface for a technician with greasy hands and a flashlight in their mouth is a conversation.",
       },
       {
-        type: "image-text",
-        imagePosition: "left",
-        images: [
-          {
-            label: "Gator Welcome — Start a Conversation",
-            height: 540,
-            src: "/images/gator/Diagnose-0.png",
-          },
-        ],
-        body: [
-          "I designed the complete mobile experience — from onboarding through diagnosis to guided repair flows. The design challenge was creating an interface that feels as simple as texting a knowledgeable friend, while handling the complexity of thousands of equipment models and diagnostic pathways underneath.",
-        ],
-      },
-      {
         type: "text",
         sectionNumber: "02",
         sectionLabel: "Onboarding",
         heading: "Get technicians in, not through a tutorial",
         body: [
-          "Technicians are busy. They download Gator because they need help right now, not because they want to learn a new app. The onboarding is ruthlessly minimal: phone number verification, one permission prompt for the camera, and they're in.",
-          "No account creation form. No feature tour. No onboarding carousel. The first thing they see after signing in is Gator introducing itself and asking what they need help with. The product teaches itself through use.",
+          "I designed the complete mobile experience — from onboarding through diagnosis to guided repair flows. The design challenge was creating an interface that feels as simple as texting a knowledgeable friend, while handling the complexity of thousands of equipment models and diagnostic pathways underneath.",
+          "The onboarding is ruthlessly minimal: phone number verification, one permission prompt for the camera, and they're in. No account creation form. No feature tour. The first thing they see is Gator introducing itself and asking what they need help with.",
         ],
       },
       {
         type: "images",
+        layout: "phone-gallery",
         images: [
-          {
-            label: "Gator Splash Screen",
-            dark: true,
-            height: 540,
-            src: "/images/gator/Gator-Splash.png",
-          },
-          {
-            label: "User Profile & Settings",
-            height: 540,
-            src: "/images/gator/User Profile.png",
-          },
+          { label: "Gator Splash Screen", src: "/images/gator/Gator-Splash.png" },
+          { label: "Welcome — Hey, it's Gator", src: "/images/gator/Diagnose-0.png" },
         ],
       },
       {
-        type: "image-text",
+        type: "text",
         sectionNumber: "03",
         sectionLabel: "Equipment Recognition",
-        imagePosition: "left",
         heading: "The camera is the search bar",
-        images: [
-          {
-            label: "QR Scanner — Camera View with Overlay",
-            dark: true,
-            height: 540,
-            src: "/images/gator/QR-scan.png",
-          },
-        ],
         body: [
           "Every HVAC unit has a barcode or serial number plate. Gator's scanner reads it instantly, pulling the exact make, model, and specs from its product database. No scrolling through menus, no typing model numbers on a tiny keyboard with cold fingers.",
           "For units where the label is damaged or missing, there's a manual fallback: type the serial number or describe the unit. The AI can often identify equipment from a description of its appearance and the symptoms alone.",
@@ -318,33 +288,19 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "phone-gallery",
         images: [
-          {
-            label: "Database Search — Identifying Equipment",
-            height: 540,
-            src: "/images/gator/Diagnose-4.png",
-          },
-          {
-            label: "Product Identified — QR Code Scanned",
-            height: 540,
-            src: "/images/gator/Diagnose-2.png",
-          },
+          { label: "QR Scanner — Camera View", src: "/images/gator/QR-scan.png" },
+          { label: "Searching Database", src: "/images/gator/Diagnose-4.png" },
+          { label: "Product Identified", src: "/images/gator/Diagnose-2.png" },
         ],
       },
       {
-        type: "image-text",
+        type: "text",
         sectionNumber: "04",
         sectionLabel: "The Conversation",
-        imagePosition: "right",
         heading:
           "Designing a chat that feels like talking to a senior tech",
-        images: [
-          {
-            label: "AI Diagnostic Conversation",
-            height: 540,
-            src: "/images/gator/Diagnose-1.png",
-          },
-        ],
         body: [
           "The diagnostic conversation is Gator's core experience. The AI doesn't just answer questions — it asks the right ones. Each question narrows down the problem, just like an experienced technician would think through it.",
           "I designed the chat to feel warm and confident without being patronizing. Gator has a personality — it's knowledgeable but approachable, like a coworker who's been doing this for 20 years and genuinely wants to help. The tone was as important as the UI.",
@@ -352,37 +308,18 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "phone-gallery",
         images: [
-          {
-            label: "Conversation History & Search",
-            height: 540,
-            src: "/images/gator/Diagnose.png",
-          },
-          {
-            label: "Follow-up Question — Typing",
-            height: 540,
-            src: "/images/gator/Diagnose-3.png",
-          },
-          {
-            label: "Voice Chat Session Ended",
-            height: 540,
-            src: "/images/gator/Voice ended.png",
-          },
+          { label: "AI Diagnostic Conversation", src: "/images/gator/Diagnose-1.png" },
+          { label: "Follow-up Question", src: "/images/gator/Diagnose-3.png" },
+          { label: "Conversation History", src: "/images/gator/Diagnose.png" },
         ],
       },
       {
-        type: "image-text",
+        type: "text",
         sectionNumber: "05",
         sectionLabel: "Guided Repair",
-        imagePosition: "left",
         heading: "One step at a time, never lost",
-        images: [
-          {
-            label: "Guided Repair — Step 1",
-            height: 540,
-            src: "/images/gator/Repair.png",
-          },
-        ],
         body: [
           "When the AI has enough information, the conversation mode shifts to a structured repair flow. Each step is a discrete card with clear instructions, the ability to ask follow-up questions, and two options: \"Problem solved\" or \"Next step.\"",
           "This transition from open conversation to guided steps was a critical design decision. Diagnosis is exploratory — it needs the flexibility of chat. But repair is procedural — it needs structure and confidence. The interface adapts its personality to match.",
@@ -390,17 +327,11 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "phone-gallery",
         images: [
-          {
-            label: "Guided Repair — Step 2",
-            height: 540,
-            src: "/images/gator/Repair-1.png",
-          },
-          {
-            label: "Problem Solved — Feedback",
-            height: 540,
-            src: "/images/gator/Repair-2.png",
-          },
+          { label: "Step 1 — Check the Thermostat", src: "/images/gator/Repair.png" },
+          { label: "Step 2 — Check Compressor", src: "/images/gator/Repair-1.png" },
+          { label: "Problem Solved", src: "/images/gator/Repair-2.png" },
         ],
       },
       {
@@ -409,21 +340,21 @@ export const PROJECTS: Project[] = [
           "Diagnosis needs the freedom of conversation. Repair needs the structure of a checklist. The trick is knowing when to shift between them.",
       },
       {
-        type: "image-text",
+        type: "text",
         sectionNumber: "06",
         sectionLabel: "Voice Mode",
-        imagePosition: "right",
         heading: "Hands free when it matters",
-        images: [
-          {
-            label: "Gator Voice — Hands-Free Repair",
-            height: 540,
-            src: "/images/gator/Gator speaks.png",
-          },
-        ],
         body: [
           "Technicians often can't hold a phone while working. Voice mode lets them speak naturally to Gator while keeping both hands on the equipment. The interface strips away to just the mascot, a mic button, and a camera option for sending photos mid-repair.",
           "The voice interaction needed to feel like a real conversation, not a voice command interface. Gator listens, confirms understanding, and responds in the same warm tone as the text chat — just spoken aloud.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "phone-gallery",
+        images: [
+          { label: "Voice Repair — Listening", src: "/images/gator/Gator speaks.png" },
+          { label: "Voice Chat Ended", src: "/images/gator/Voice ended.png" },
         ],
       },
       {
@@ -437,22 +368,11 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "phone-gallery",
         images: [
-          {
-            label: "Library — Manual Search",
-            height: 540,
-            src: "/images/gator/Search.png",
-          },
-          {
-            label: "Third-Party Integrations",
-            height: 540,
-            src: "/images/gator/Integrations.png",
-          },
-          {
-            label: "App Update Dialog",
-            height: 540,
-            src: "/images/gator/App update.png",
-          },
+          { label: "Library — Manual Search", src: "/images/gator/Search.png" },
+          { label: "User Profile", src: "/images/gator/User Profile.png" },
+          { label: "Third-Party Integrations", src: "/images/gator/Integrations.png" },
         ],
       },
     ],
