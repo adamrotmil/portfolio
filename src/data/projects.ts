@@ -8,7 +8,7 @@ export interface ProjectSection {
   stats?: { number: number; suffix: string; label: string }[];
   images?: { label: string; dark?: boolean; height?: number; src?: string; objectPosition?: string }[];
   imagePosition?: "left" | "right";
-  layout?: "phone-gallery";
+  layout?: "phone-gallery" | "desktop-showcase";
 }
 
 export interface Project {
@@ -108,40 +108,90 @@ export const PROJECTS: Project[] = [
         heading: "AI-generated creatives that actually look good",
         body: [
           "The platform generates on-brand ad creatives — images and video — by understanding a brand's visual identity, tone, and audience. Rather than outputting generic AI slop, the system produces polished, production-quality assets that feel intentionally designed.",
-          "I designed the creative gallery as a command center where marketers can review, compare, and curate AI-generated variants. Every asset surfaces metadata, AI-powered quality scores, and performance predictions before a single dollar is spent.",
+          "I designed the creative library as a command center where marketers can organize, review, and curate AI-generated variants. Assets are grouped into sets by campaign, with contextual actions for comparing, downloading, and reassigning creatives across platforms.",
         ],
       },
       {
         type: "images",
+        layout: "desktop-showcase",
         images: [
           {
-            label: "Creative Gallery — AI-Generated Brand Assets",
-            dark: true,
-            height: 520,
+            label: "Creative Library — Organizing AI-Generated Assets",
             src: "/images/clarvos/Creatives-Library.png",
-            objectPosition: "top",
           },
-          { label: "Asset Detail — Metadata & AI Insights", height: 360, src: "/images/clarvos/Hybrid Score + Insights.png" },
-          { label: "Trend Discovery — Topic Analysis", height: 360, src: "/images/clarvos/tiktok-trends.png" },
         ],
       },
       {
-        type: "image-text",
-        sectionNumber: "03",
-        sectionLabel: "Campaign Builder",
-        heading: "From blank slate to live campaign in minutes",
+        type: "text",
         body: [
-          "The campaign builder guides users through a structured wizard: define objectives, select audiences, set budgets, choose creatives, and schedule launches. Each step surfaces intelligent defaults from the AI while keeping the human in control of every decision.",
-          "I designed the flow to feel progressive rather than overwhelming — each step reveals only what's needed, with the AI pre-filling recommendations that users can accept, modify, or override. The system gets smarter with every campaign, learning from performance data to improve its suggestions.",
+          "Every creative asset surfaces a hybrid quality score that combines AI analysis with human judgment. The scoring system evaluates intent, style, composition, and emotional valence — giving marketers data-driven confidence in which variants to promote, remix, or retire.",
         ],
-        imagePosition: "left",
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
         images: [
-          { label: "Campaign Wizard — Step-by-Step Flow", height: 480, src: "/images/clarvos/Clarvos-Campaign-Plan.png", objectPosition: "top left" },
+          {
+            label: "Hybrid Scoring — AI Quality Analysis & Style Controls",
+            src: "/images/clarvos/Hybrid Score + Insights.png",
+          },
+          {
+            label: "AI Image Editor — Prompt-Driven Variant Generation",
+            src: "/images/clarvos/AI Edit Image.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Trend Discovery",
+        heading: "Campaigns that start with what's already working",
+        body: [
+          "Rather than guessing what content will resonate, Clarvos surfaces trending topics across social platforms in real time. The discover view ranks trends by volume, velocity, and audience alignment — then lets marketers launch a campaign directly from any trend with one click.",
+          "I designed two complementary views: a data-driven rankings table for analytical users, and a visual mood board for creatives who think in imagery. Both paths lead to the same outcome — a pre-populated campaign brief built on real audience signals.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Trend Rankings — Topic Analysis & Campaign Actions",
+            src: "/images/clarvos/tiktok-trends.png",
+          },
+          {
+            label: "Visual Trends — Social Content Mood Board",
+            src: "/images/clarvos/Homepage-Trends@2x.png",
+          },
         ],
       },
       {
         type: "text",
         sectionNumber: "04",
+        sectionLabel: "Campaign Builder",
+        heading: "From blank slate to live campaign in minutes",
+        body: [
+          "The campaign builder surfaces an AI-generated plan with budget allocation, ROAS predictions, and audience targeting already filled in. Marketers can accept the defaults, adjust any parameter, or override the AI entirely. The system explains why it made each recommendation, building trust through transparency.",
+          "Before anything goes live, every placement runs through a review and approval flow. Creatives are shown in their actual platform context — Instagram feed, TikTok story, Reddit post — so marketers approve what their audience will actually see, not an abstracted preview.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Campaign Plan — AI-Generated Strategy & Budget",
+            src: "/images/clarvos/Clarvos-Campaign-Plan.png",
+          },
+          {
+            label: "Review & Approve — Platform-Specific Placements",
+            src: "/images/clarvos/Review-Approve-Placements.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "05",
         sectionLabel: "Video Editor",
         heading: "Prompt-driven video editing for non-editors",
         body: [
@@ -151,49 +201,43 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "desktop-showcase",
         images: [
           {
-            label: "Video Editor — Scene Timeline with Prompt Controls",
-            dark: true,
-            height: 540,
+            label: "Canvas Studio — Scene Timeline & Media Tracks",
             src: "/images/clarvos/Canvas-Studio-Editor.png",
           },
-          { label: "Scene Prompts", height: 280, src: "/images/clarvos/AI Edit Image.png" },
-          { label: "Start & End Frames", height: 280, src: "/images/clarvos/Meta-Manual-Campaign-Editor.png" },
-          { label: "Audio & Vocal Tracks", height: 280, src: "/images/clarvos/Review-Approve-Placements.png" },
         ],
       },
       {
         type: "text",
-        sectionNumber: "05",
+        sectionNumber: "06",
+        sectionLabel: "Performance",
+        heading: "Closing the loop from spend to insight",
+        body: [
+          "The performance dashboard aggregates metrics across every connected platform — Facebook, TikTok, Google, Instagram, Pinterest, Snapchat — into a single view. Marketers see real spend, real results, and real trends without switching between six different ad managers.",
+          "I designed the dashboard around progressive disclosure: top-level KPIs surface the headline numbers, the trend graph reveals patterns over time, and the campaign table lets users drill into individual ad performance. Every row is actionable — one click to pause, boost, or duplicate a campaign.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Performance Dashboard — Cross-Platform Campaign Analytics",
+            src: "/images/clarvos/Performance-Dashboard.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "07",
         sectionLabel: "Design Decisions",
         heading: "Three principles that shaped everything",
         body: [
           "Progressive Autonomy: Rather than presenting the AI as a black box, I designed a transparency model where users can see exactly what the agent is doing at each step. Users start with full manual control and gradually allow more autonomy as they gain confidence.",
           "Familiar Metaphors for Unfamiliar Technology: The video editor uses a timeline. The creative gallery uses a card grid. The campaign builder uses a wizard. Every complex AI interaction is wrapped in a pattern users already understand.",
           "Designed for Iteration, Not Perfection: AI outputs aren't always right on the first try. I designed every creative surface with inline editing, quick regeneration, and A/B variant comparison built in.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "06",
-        sectionLabel: "System & Craft",
-        heading: "A design system built for AI-native interfaces",
-        body: [
-          "AI products need components that traditional design systems don't have: loading states for generative processes, confidence indicators, comparison views, prompt inputs, and progressive disclosure for complex agent outputs. I built a Figma component library that addresses these patterns alongside the standard UI toolkit.",
-        ],
-      },
-      {
-        type: "images",
-        images: [
-          {
-            label:
-              "Design System — Components, Patterns, AI-Specific Elements",
-            height: 420,
-            src: "/images/clarvos/Performance-Dashboard.png",
-          },
-          { label: "Component Library — Figma", height: 300, src: "/images/clarvos/Homepage-Trends@2x.png" },
-          { label: "Interaction Patterns — Agent States", height: 300, src: "/images/clarvos/Clarvos-Campaign-Plan.png" },
         ],
       },
     ],

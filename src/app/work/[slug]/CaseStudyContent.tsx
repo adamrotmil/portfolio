@@ -12,6 +12,7 @@ import PullQuote from "@/components/PullQuote";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import Counter from "@/components/Counter";
 import PhoneFrame from "@/components/PhoneFrame";
+import BrowserFrame from "@/components/BrowserFrame";
 
 function RenderSection({ section }: { section: ProjectSection }) {
   switch (section.type) {
@@ -71,18 +72,62 @@ function RenderSection({ section }: { section: ProjectSection }) {
     case "images":
       if (!section.images) return null;
 
-      // Phone gallery layout: full screens in device frames on light background
+      // Phone gallery layout: full screens in device frames on dark background
       if (section.layout === "phone-gallery") {
         return (
-          <section className="bg-[#f5f5f5] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
-            <div className="max-w-[960px] mx-auto flex justify-center items-start gap-[clamp(1.5rem,3vw,3rem)]">
+          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+            <div className="max-w-[960px] mx-auto flex flex-col items-center gap-[clamp(2rem,4vw,3rem)] sm:flex-row sm:justify-center sm:items-start">
               {section.images.map((img, i) => (
                 <Reveal key={i} delay={i * 0.12}>
-                  <div className="flex-1 min-w-0 max-w-[280px]">
+                  <div className="w-[240px] sm:flex-1 sm:min-w-0 sm:max-w-[280px] sm:w-auto">
                     <PhoneFrame src={img.src!} alt={img.label} />
                   </div>
                 </Reveal>
               ))}
+            </div>
+          </section>
+        );
+      }
+
+      // Desktop showcase layout: full-width app screenshots in browser frames
+      if (section.layout === "desktop-showcase") {
+        return (
+          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+            <div className="max-w-[1200px] mx-auto flex flex-col gap-[clamp(1.5rem,3vw,2.5rem)]">
+              {section.images.length === 1 && (
+                <Reveal>
+                  <BrowserFrame
+                    src={section.images[0].src!}
+                    alt={section.images[0].label}
+                  />
+                </Reveal>
+              )}
+              {section.images.length === 2 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1.5rem,3vw,2.5rem)]">
+                  {section.images.map((img, i) => (
+                    <Reveal key={i} delay={i * 0.12}>
+                      <BrowserFrame src={img.src!} alt={img.label} />
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+              {section.images.length >= 3 && (
+                <>
+                  <Reveal>
+                    <BrowserFrame
+                      src={section.images[0].src!}
+                      alt={section.images[0].label}
+                    />
+                  </Reveal>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1.5rem,3vw,2.5rem)]">
+                    {section.images.slice(1).map((img, i) => (
+                      <Reveal key={i} delay={(i + 1) * 0.1}>
+                        <BrowserFrame src={img.src!} alt={img.label} />
+                      </Reveal>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </section>
         );
