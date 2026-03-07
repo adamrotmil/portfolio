@@ -1277,6 +1277,130 @@ export const PROJECTS: Project[] = [
       tools: ["TBD"],
     },
     nextProject: {
+      slug: "vulcan",
+      title: "Vulcan",
+      subtitle: "DoD Innovation Platform",
+    },
+  },
+  {
+    slug: "vulcan",
+    title: "Vulcan",
+    subtitle: "DoD Innovation Platform",
+    description:
+      "An innovation management platform where government agencies issue calls for entries and commercial-sector innovators submit proposals and technical demos. Part of the deep tech pipeline modernizing how SOCOM conducts BAAs and acquires new capabilities.",
+    tags: ["Defense", "GovTech", "Innovation", "Enterprise"],
+    color: "#475569",
+    meta: [
+      { label: "Client", value: "Cylitix / DoD (SOCOM)" },
+      { label: "Role", value: "Product Designer" },
+      { label: "Duration", value: "TBD" },
+      { label: "Platform", value: "Web" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "Overview",
+        heading: "Modernizing how the Department of Defense discovers innovation",
+        body: [
+          "Vulcan is an innovation platform built for Cylitix with sponsorship from the Department of Defense. It modernizes the Broad Agency Announcement (BAA) process — how agencies like SOCOM issue calls for capabilities and how commercial-sector innovators respond with proposals and technical demonstrations.",
+          "The platform sits at the center of the deep tech pipeline, connecting government needs with commercial innovation in a structured, searchable, and evaluable way.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Search & Discovery",
+        heading: "Making innovation findable",
+        body: [
+          "Designed the search experience for navigating a complex landscape of proposals, capabilities, and innovator profiles. The search UI needed to support both broad exploration and precise filtering across technical domains, readiness levels, and compliance criteria.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Detail Pages",
+        heading: "Structured views for evaluating proposals",
+        body: [
+          "Designed detail pages that surface the information evaluators need — technical approach, team qualifications, timeline, and demo materials — in a scannable, consistent format across hundreds of submissions.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Design System",
+        heading: "A scalable component library for the platform",
+        body: [
+          "Built out the design system underpinning the platform, ensuring consistency across search, detail, submission, and evaluation views.",
+        ],
+      },
+      {
+        type: "quote",
+        quote: "Note: Project content shown uses illustrative/anonymized data due to the sensitive nature of the defense innovation pipeline.",
+      },
+    ],
+    outcome: {
+      heading: "Enabling the deep tech pipeline",
+      body: [
+        "Placeholder — outcome details to be added. The platform supports SOCOM's modernized approach to capability acquisition, streamlining the path from government need to commercial innovation.",
+      ],
+      contributions: [
+        "Product Design",
+        "Search UX",
+        "Information Architecture",
+        "Design System",
+      ],
+      collaborators: [
+        "Cylitix Team",
+        "DoD Stakeholders",
+      ],
+      tools: ["Figma"],
+    },
+    nextProject: {
+      slug: "uscis",
+      title: "USCIS",
+      subtitle: "DHS Immigration Services",
+    },
+  },
+  {
+    slug: "uscis",
+    title: "USCIS",
+    subtitle: "DHS Immigration Services",
+    description:
+      "Design work for U.S. Citizenship and Immigration Services under the Department of Homeland Security.",
+    tags: ["GovTech", "DHS", "Enterprise"],
+    color: "#1e3a5f",
+    meta: [
+      { label: "Client", value: "USCIS / DHS" },
+      { label: "Role", value: "Product Designer" },
+      { label: "Duration", value: "TBD" },
+      { label: "Platform", value: "TBD" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "Overview",
+        heading: "Design work for U.S. Citizenship and Immigration Services",
+        body: [
+          "Placeholder — project details to be added.",
+        ],
+      },
+    ],
+    outcome: {
+      heading: "TBD",
+      body: [
+        "Placeholder — outcome details to be added.",
+      ],
+      contributions: [
+        "Product Design",
+      ],
+      collaborators: [
+        "TBD",
+      ],
+      tools: ["TBD"],
+    },
+    nextProject: {
       slug: "clarvos",
       title: "Clarvos",
       subtitle: "Agentic AI Ad Platform",
