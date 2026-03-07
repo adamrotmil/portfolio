@@ -581,11 +581,10 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "03",
-        sectionLabel: "Prototyping",
+        sectionLabel: "Command Center",
         heading: "A central dashboard that helps operators get oriented for the day's work",
         body: [
-          "Initial product and market research helped shape the MVP vision, where users have a central dashboard that helps them get oriented for the day's work. From this view, they can focus on high-priority actions and track progress. The goal was to make it feel manageable, so that operators actually experience less stress while their performance improves.",
-          "Users were spending a lot of time managing email requests. So the design included a view for emails that would work with their existing client under the hood, while using the onboard LLM to pre-draft responses.",
+          "Initial product and market research helped shape the MVP vision, where users have a central dashboard that helps them get oriented for the day's work. From this view, they can focus on high-priority actions, track email and message volumes, and monitor response quality scores.",
         ],
       },
       {
@@ -593,12 +592,27 @@ export const PROJECTS: Project[] = [
         layout: "desktop-showcase",
         images: [
           {
-            label: "Respond AI — Dashboard & Messaging Interface",
-            src: "/images/respond-ai/respond-messaging-2x.png",
-          },
-          {
-            label: "Email View — LLM Pre-drafted Responses",
+            label: "Respond AI — Operator Dashboard",
             src: "/images/respond-ai/respond-home.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Messaging",
+        heading: "AI pre-drafts responses so operators can review, edit, and send",
+        body: [
+          "The messaging interface gives operators a queue of driver conversations on the left and a threaded view on the right. The LLM pre-drafts each response using real-time data — operators simply review, make edits if needed, and accept. This same pattern extends to mobile follow-ups, where drivers get quick, contextual answers on the road.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Messaging Interface — AI Pre-drafted Responses",
+            src: "/images/respond-ai/respond-messaging-2x.png",
           },
         ],
       },
@@ -607,14 +621,14 @@ export const PROJECTS: Project[] = [
         layout: "phone-gallery",
         images: [
           {
-            label: "Driver Follow-up — Contextual AI Suggestions",
+            label: "Driver Follow-up — Mobile Conversation View",
             src: "/images/respond-ai/driver-followup-2.png",
           },
         ],
       },
       {
         type: "text",
-        sectionNumber: "04",
+        sectionNumber: "05",
         sectionLabel: "Templates",
         heading: "Templates that guide AI responses and ensure quality",
         body: [
@@ -623,7 +637,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "text",
-        sectionNumber: "05",
+        sectionNumber: "06",
         sectionLabel: "Testing & Feedback",
         heading: "Overwhelmingly positive response from active customers",
         body: [
@@ -709,25 +723,36 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
+        layout: "desktop-showcase",
         images: [
           {
-            label: "Patient Check-in — Voice Symptom Tracking",
-            dark: true,
-            height: 480,
+            label: "Patient-Reported Outcomes — Weekly Insight & Pain Tracking",
             src: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
           },
-          { label: "Doctor Dashboard — Patient Monitoring", height: 360, src: "/images/astrazeneca/Concepts-Testing.png" },
-          { label: "Guided Check-in Flow", height: 360, src: "/images/astrazeneca/Variations.png" },
         ],
       },
       {
         type: "text",
         sectionNumber: "04",
-        sectionLabel: "Prototyping",
-        heading: "Iterative design sprints with real patients and clinicians",
+        sectionLabel: "Concept Exploration",
+        heading: "Iterating on data visualization through rapid concept testing",
         body: [
-          "Based on research insights, I led ideation through sketching and collaborative workshops with stakeholders. Wireframes and interactive prototypes were developed with key features including simple symptom logging using visual scales, customizable tracking based on each patient's treatment plan, real-time alerts for doctors, and data visualization of symptom trends.",
-          "Visual design aimed to create a calming, supportive experience for patients while ensuring clarity and professionalism for doctors. Soft, nature-inspired color palette and intuitive icons enhanced usability.",
+          "Based on research insights, I led ideation through sketching and collaborative workshops with stakeholders. Multiple concept variations were developed to explore how patients could best understand their symptom data — from weekly insights and community comparisons to actionable pain management articles.",
+          "Each concept was tested with real patients to understand which data presentations felt most useful and least overwhelming. This iterative process helped us converge on a design that balanced clinical rigor with genuine patient empathy.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Concept Testing — Symptom Data Visualization Explorations",
+            src: "/images/astrazeneca/Concepts-Testing.png",
+          },
+          {
+            label: "Design Variations — Pain Tracking Interface Iterations",
+            src: "/images/astrazeneca/Variations.png",
+          },
         ],
       },
     ],
@@ -782,29 +807,7 @@ export const PROJECTS: Project[] = [
           "A patient & doctor platform for clinical cancer research at the Sylvester Cancer Research Center.",
         body: [
           "The Sylvester Cancer Research Center at the University of Miami was conducting clinical trials for new cancer treatments but faced challenges in efficiently monitoring patient symptoms and correlating treatments with health outcomes.",
-          "They needed a user-friendly system that would allow patients to easily track their symptoms and enable doctors to remotely monitor patient health and make data-driven decisions. The platform had to be designed to prove not only correlations, but causal impact.",
-          "Study participants are randomly assigned to either the intervention group or the control group. The app is used to track the intervention group's adherence to a prescribed diet and exercise protocol.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "02",
-        sectionLabel: "User Research",
-        heading:
-          "Interviews with 8 cancer patients and 5 oncologists revealed critical insights.",
-        body: [
-          "Patients often struggled to remember and accurately report symptoms during clinic visits. Doctors needed real-time access to patient symptom data to make timely interventions. Both wanted a simple, intuitive system that would not add to their existing burdens.",
-          "Primary value was identified in three areas: a mobile app for patients to log symptoms daily, a dashboard for doctors to view patient symptom trends and receive alerts, and integration with wearable devices to automatically track relevant health metrics.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "03",
-        sectionLabel: "Prototyping",
-        heading: "From wireframes to interactive prototypes",
-        body: [
-          "Key features included simple symptom logging using visual scales and pre-defined options, customizable symptom tracking based on each patient's condition and treatment plan, real-time alerts for doctors when patient symptoms exceeded predefined thresholds, and data visualization of symptom trends and correlations with treatments.",
-          "Visual design aimed to create a calming, supportive experience for patients while ensuring clarity and professionalism for doctors.",
+          "They needed a platform that would allow patients to easily track their symptoms and enable doctors to remotely monitor health and make data-driven decisions. The study design used randomized controlled trials — participants assigned to either intervention or control groups — to prove causal impact, not just correlation.",
         ],
       },
       {
@@ -812,27 +815,105 @@ export const PROJECTS: Project[] = [
         layout: "desktop-showcase",
         images: [
           {
-            label: "MyWellness — Patient Dashboard",
-            src: "/images/miami/my-wellness-dashboard.png",
+            label: "Randomized Controlled Trial Design — Intervention vs. Control",
+            src: "/images/miami/miami-average-treatment-effect.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Discovery",
+        heading:
+          "From patient interviews to storyboards and wireframes",
+        body: [
+          "Interviews with 8 cancer patients and 5 oncologists revealed that patients struggled to remember symptoms during clinic visits, and doctors needed real-time data for timely interventions. Both wanted a system that wouldn't add burden.",
+          "I developed storyboards to map the patient journey — from daily check-ins to doctor reviews — and translated those into wireframes exploring video-based symptom capture, biometric data collection, and caregiver sharing flows.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Storyboard — Patient Journey from Check-in to Doctor Review",
+            src: "/images/miami/Storyboard.jpg",
           },
           {
-            label: "Doctor Dashboard — Patient Coaching",
-            src: "/images/miami/Patient-coaching.png",
+            label: "Wireframes — Video Recording & Symptom Capture Flows",
+            src: "/images/miami/Wireframes.jpg",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Design & Prototyping",
+        heading: "Mapping complex user flows into clear, testable interactions",
+        body: [
+          "I created detailed user flows for both patient and clinician personas, mapping every interaction from app onboarding through daily symptom logging, video reflections, and data review. Each screen was annotated with functional specifications to guide development.",
+          "Key features included a mobile app for patients to log symptoms daily, a dashboard for doctors to view trends and receive alerts, and integration with wearable devices to automatically track health metrics.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "User Flow — Patient & Clinician Interaction Paths",
+            src: "/images/miami/User-Flow.png",
           },
           {
-            label: "Real-time Messaging Interface",
-            src: "/images/miami/Messaging.png",
+            label: "Annotated Screens — Video Check-in Functional Specifications",
+            src: "/images/miami/Annotations.png",
           },
         ],
       },
       {
         type: "text",
         sectionNumber: "04",
-        sectionLabel: "Real-Time Collaboration",
-        heading: "Patient coaching with unprecedented precision",
+        sectionLabel: "The Platform",
+        heading: "MyWellness — patient coaching with unprecedented precision",
         body: [
-          "The platform supports patient coaching with a level of precision that has not been possible before. New studies have been launched in partnership with Yale University and the University of Miami.",
-          "Doctors and research scientists have real-time transparency into new data, giving them the ability to learn and iterate far faster than ever before.",
+          "The myWellness platform gives clinicians a comprehensive dashboard with food intake tracking, symptom severity trends, and real-time actigraphy data. Video coaching sessions allow face-to-face check-ins with patients while viewing their health data side by side.",
+          "An integrated messaging system supports ongoing communication between coaching sessions, with file sharing for photos and documents. The platform supports patient coaching with a level of precision that has not been possible before.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "MyWellness Dashboard — Patient Health Data & Symptom Trends",
+            src: "/images/miami/my-wellness-dashboard.png",
+          },
+          {
+            label: "Video Coaching — Face-to-Face Patient Check-in",
+            src: "/images/miami/Patient-coaching.png",
+          },
+          {
+            label: "Messaging — Ongoing Patient-Clinician Communication",
+            src: "/images/miami/Messaging.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "05",
+        sectionLabel: "Study Configuration",
+        heading: "Configurable study modules that adapt to each trial's needs",
+        body: [
+          "The platform's library system allows researchers to create and reuse questionnaire modules across studies. Each module supports configurable automation rules — if a patient misses a response or reports a severe symptom, the system can automatically notify the research team. This flexibility enabled new studies launched in partnership with Yale University.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Study Module Editor — Configurable Questionnaires & Automation",
+            src: "/images/miami/my-wellness-study-design-control.png",
+          },
         ],
       },
       {
@@ -848,7 +929,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "text",
-        sectionNumber: "05",
+        sectionNumber: "06",
         sectionLabel: "Publications",
         heading: "Results written up in peer-reviewed journals",
         body: [
@@ -918,7 +999,7 @@ export const PROJECTS: Project[] = [
           "A modular Miro-style canvas for content authors to create training labs.",
         body: [
           "I designed a content authoring environment for educators and trainers to create competency-based assessments, as well as to design hands-on exercises. These tools serve the purpose of teaching new skills to existing staff (upskilling), as well as verifying competencies for new joiners.",
-          "Users needed the ability to create a custom palette of containers and virtual machines, define network topology maps using subnet masks, routers, and connections, use a properties panel to inspect details like CPU cores and memory management, and crucially, create conflicted scenarios that would fail normal validation checks — since fixing those issues is part of the skillset being taught.",
+          "Users needed the ability to create custom palettes of containers and virtual machines, define network topology maps using subnet masks, routers, and connections, and inspect details like CPU cores and memory management. Crucially, the canvas supports creating intentionally broken scenarios — since diagnosing and fixing network issues is part of the skillset being taught.",
         ],
       },
       {
@@ -926,27 +1007,57 @@ export const PROJECTS: Project[] = [
         layout: "desktop-showcase",
         images: [
           {
-            label: "Content Studio — Network Topology Canvas",
-            src: "/images/content-studio/cyber-training-canvas-designer.png",
-          },
-          {
-            label: "Container Palette — VM Configuration",
-            src: "/images/content-studio/design-system-components.png",
-          },
-          {
-            label: "Properties Panel — System Resources",
-            src: "/images/content-studio/design-system-components-slots.png",
+            label: "Network Topology Canvas — Virtual Lab Designer",
+            src: "/images/content-studio/content-studio-cyber-training.png",
           },
         ],
       },
       {
         type: "text",
         sectionNumber: "03",
+        sectionLabel: "Content Authoring",
+        heading: "A page workbench for building courses and interactive exercises",
+        body: [
+          "Beyond the virtual lab canvas, Content Studio includes a rich page editor for authoring course content. Educators can build structured curricula with rich text, embedded media, and interactive exercise blocks — including multiple-choice questions with automated grading and detailed explanations.",
+          "The workbench supports courses ranging from introductory social engineering awareness to hands-on router configuration, all within a consistent authoring experience.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Page Workbench — Course Content Editor",
+            src: "/images/content-studio/Page-Workbench-1.png",
+          },
+          {
+            label: "Exercise Builder — Interactive Assessment Creation",
+            src: "/images/content-studio/Create-New-Block.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
         sectionLabel: "Design System",
         heading: "Sprint Zero design system for agile delivery",
         body: [
-          "In order to work efficiently and collaborate effectively with developers, I created a streamlined design system that reflected the existing aspects of the client's enterprise framework. The design system made effective use of abstraction, nested components, variables, and slots.",
-          "All team members found the design system to be a key enabler that ensured their success, both in terms of UX consistency as well as being able to work in an agile manner to distribute work in a modular way and hit deadlines.",
+          "In order to work efficiently and collaborate effectively with developers, I created a streamlined design system that reflected the existing aspects of the client's enterprise framework. The design system made effective use of abstraction, nested components, variables, and slots — enabling modular content cards that accept different block types.",
+          "All team members found the design system to be a key enabler that ensured their success, both in terms of UX consistency as well as being able to work in an agile manner to distribute work and hit deadlines.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Design System — Component Library",
+            src: "/images/content-studio/design-system-components.png",
+          },
+          {
+            label: "Component Architecture — Slot-based Content Cards",
+            src: "/images/content-studio/design-system-components-slots.png",
+          },
         ],
       },
     ],
@@ -1000,18 +1111,30 @@ export const PROJECTS: Project[] = [
         body: [
           "T. Rowe Price's 401(k) service for retail investors relied heavily on support calls for account management, including distributions. Investors often felt guilty or discouraged when making withdrawals, and the process lacked financial wellness support.",
           "The goal was to create a self-service platform that empowered investors to manage their 401(k) accounts while providing guidance and support to minimize the negative impact of withdrawals.",
-          "I led a comprehensive two-day product design workshop, based on a modified form of the Google Ventures design sprint. We co-created with a diverse range of customers, designers, engineers, stakeholders, SMEs, and product managers.",
         ],
       },
       {
         type: "text",
         sectionNumber: "02",
-        sectionLabel: "User Research",
-        heading:
-          "Investors found the distribution process confusing and emotionally taxing.",
+        sectionLabel: "Design Sprint",
+        heading: "A two-day product design workshop bringing together customers and stakeholders",
         body: [
-          "Interviews were conducted with retail investors and support agents. Investors desired more control and transparency. Agents reported that investors often expressed guilt or discouragement when making withdrawals.",
-          "There was a lack of guidance and support to help investors make informed decisions and stay on track after a withdrawal.",
+          "I led a comprehensive two-day product design workshop, based on a modified form of the Google Ventures design sprint. We co-created with a diverse range of customers, designers, engineers, stakeholders, SMEs, and product managers.",
+          "Teams mapped the end-to-end investor journey — from evaluating options through finalizing a withdrawal — using Jobs-to-be-Done frameworks to uncover the functional, emotional, and social dimensions of each decision point.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Design Sprint — Journey Mapping & Jobs-to-be-Done Workshop",
+            src: "/images/trowe-price/Workshop-UXR.jpg",
+          },
+          {
+            label: "Collaborative Workshop — Team Mapping Session",
+            src: "/images/trowe-price/workshop-yellow-1.jpeg",
+          },
         ],
       },
       {
@@ -1021,7 +1144,16 @@ export const PROJECTS: Project[] = [
         heading: "Educational content and tools to understand the impact of withdrawals",
         body: [
           "Key concepts included a self-service platform for managing 401(k) accounts including distributions, educational content and tools to help investors understand the impact of withdrawals and explore alternatives, personalized financial wellness support and goal-setting features, and emotionally supportive language and design elements.",
-          "Research and iterative testing with retail investors using interactive prototypes confirmed the self-service platform was intuitive and empowering.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "401(k) Platform — Account Overview & Withdrawal Options",
+            src: "/images/trowe-price/Landing-page-401k-overview.jpg",
+          },
         ],
       },
       {
@@ -1045,31 +1177,6 @@ export const PROJECTS: Project[] = [
         ],
       },
       {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "401(k) Dashboard — Account Overview",
-            src: "/images/trowe-price/Landing-page-401k-overview.jpg",
-          },
-          {
-            label: "Usability Testing — Task Success Metrics",
-            src: "/images/trowe-price/03-Testing-UXR.png",
-          },
-        ],
-      },
-      {
-        type: "images",
-        images: [
-          {
-            label: "Design Sprint Workshop — Journey Mapping & Jobs-to-be-Done",
-            dark: true,
-            height: 480,
-            src: "/images/trowe-price/Workshop-UXR.jpg",
-          },
-        ],
-      },
-      {
         type: "text",
         sectionNumber: "04",
         sectionLabel: "Iterative Testing",
@@ -1077,6 +1184,16 @@ export const PROJECTS: Project[] = [
         body: [
           "Regular tests were run to confirm or falsify hypotheses under consideration. In one instance, the team realized that users may not even have known where to look for the starting point of the flow.",
           "Based on that learning, they quickly pivoted to address discoverability issues, restructured some of the IA on the sitewide nav, and changed terminology to be less jargon-laden — such as changing 'take a distribution' to 'take a withdrawal.'",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Usability Testing — Task Success Rates & Navigation Analysis",
+            src: "/images/trowe-price/03-Testing-UXR.png",
+          },
         ],
       },
       {
