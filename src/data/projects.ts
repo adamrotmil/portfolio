@@ -542,20 +542,21 @@ export const PROJECTS: Project[] = [
     },
     nextProject: {
       slug: "respond-ai",
-      title: "McLeod Respond AI",
+      title: "Respond AI",
       subtitle: "LLM for Logistics",
     },
   },
   {
     slug: "respond-ai",
-    title: "McLeod Respond AI",
+    title: "Respond AI",
     subtitle: "LLM for Logistics",
     description:
       "Integrating an LLM into a dispatch platform to pre-draft carrier responses. Human-in-the-loop design keeps operators in control while cutting response time dramatically.",
     tags: ["AI / LLM", "Enterprise", "Human-in-the-Loop"],
     color: "#7c3aed",
-    thumbnail: "/images/respond-ai/respond-home.png",
+    thumbnail: "/images/respond-ai/Respond Cover.png",
     heroImage: "/images/respond-ai/respond-home.png",
+    heroObjectPosition: "top",
     meta: [
       { label: "Client", value: "McLeod Software" },
       { label: "Role", value: "Lead Product Designer" },
