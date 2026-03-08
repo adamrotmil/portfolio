@@ -1537,7 +1537,7 @@ export const PROJECTS: Project[] = [
           { number: 6, suffix: "", label: "Designers managed" },
           { number: 4, suffix: "", label: "Work streams" },
           { number: 100, suffix: "+", label: "User interviews" },
-          { number: 6, suffix: " mo", label: "Duration" },
+          { number: 16, suffix: "", label: "Design sprint weeks" },
         ],
       },
       {
@@ -1565,6 +1565,44 @@ export const PROJECTS: Project[] = [
         heading: "Co-creation and iterative prototyping",
         body: [
           "Delivery team could not start right away, so we did a deep dive on co-creation and iterative prototyping.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "06",
+        sectionLabel: "Site Visits",
+        heading: "Understanding how systems overlapped",
+        body: [
+          "We focused on two things: people's working relationships and the data they need. We visited sites across the country — California, Texas, Florida, Missouri, Vermont, Virginia, and more.",
+          "At the end, we understood how systems overlapped. Some were being used for just one datapoint, presenting an opportunity to simplify the process.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "07",
+        sectionLabel: "Systems Analysis",
+        heading: "Mapping system usage across agencies",
+        body: [
+          "We created a system usage matrix plotting internal and external usage by agency — USCIS, ICE, CBP, and external systems. This revealed which systems overlapped and where consolidation was possible.",
+          "We also identified opportunities at the service level to consolidate roles and streamline business processes.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "08",
+        sectionLabel: "Design Sprints",
+        heading: "16 sprint weeks of discovery and testing",
+        body: [
+          "We ran 16 design sprint weeks, each focused on a theme from the research, to discover product features. We tested with users at least 2x per week.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "09",
+        sectionLabel: "Solution",
+        heading: "One cohesive interface — like a Google search",
+        body: [
+          'The experience changed along the way, but the core idea to "make it feel like a Google search" remained. We developed an interactive timeline that merged all the systems into one cohesive interface.',
         ],
       },
     ],
