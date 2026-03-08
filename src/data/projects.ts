@@ -48,7 +48,7 @@ export const PROJECTS: Project[] = [
     color: "#6366f1",
     featured: true,
     thumbnail: "/images/clarvos/Homepage-AI-Optimized-Agentic.png",
-    thumbnailVideo: "/images/clarvos/clarvos-core-flow.mp4",
+    thumbnailVideo: "/images/clarvos/full-flow-no-cursor.mp4",
     heroImage: "/images/clarvos/Clarvos hero Image.png",
     heroObjectPosition: "top",
     meta: [
@@ -616,11 +616,12 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
-        layout: "phone-gallery",
+        layout: "photo-grid",
         images: [
           {
             label: "Driver Follow-up — Mobile Conversation View",
             src: "/images/respond-ai/driver-followup-2.png",
+            height: 600,
           },
         ],
       },
