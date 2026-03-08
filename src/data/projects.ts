@@ -278,6 +278,8 @@ export const PROJECTS: Project[] = [
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
     color: "#10b981",
     featured: true,
+    thumbnail: "/images/prompt-evals/oai-logo.png",
+    heroImage: "/images/prompt-evals/mountains-oai.png",
     meta: [
       { label: "Client", value: "Google, OpenAI & Others (via DataAnnotation)" },
       { label: "Role", value: "AI Training Specialist / Evaluator" },
@@ -293,6 +295,16 @@ export const PROJECTS: Project[] = [
         body: [
           "Contributed to the training and evaluation of frontier large language models through structured human feedback. The work involved multi-axis rating systems used for supervised fine-tuning (SFT) and reinforcement learning from human feedback (RLHF).",
           "Each response was evaluated across dimensions including groundedness, truthfulness, instruction-following, safety, and factual accuracy. This work directly shaped model behavior for products used by hundreds of millions of people.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            src: "/images/prompt-evals/prompt evals.png",
+            label: "Multi-turn evaluation interface — conversation rating workflow",
+          },
         ],
       },
       {
@@ -1552,8 +1564,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "quote",
-        quote:
-          "Note: Project content shown uses illustrative/anonymized data due to the sensitive nature of the defense innovation pipeline.",
+        quote: "Note: project content is illustrative.",
       },
     ],
     outcome: {
