@@ -1494,46 +1494,101 @@ export const PROJECTS: Project[] = [
     nextProject: {
       slug: "uscis",
       title: "USCIS",
-      subtitle: "DHS Immigration Services",
+      subtitle: "U.S. Citizenship & Immigration Services",
     },
   },
   {
     slug: "uscis",
     title: "USCIS",
-    subtitle: "DHS Immigration Services",
+    subtitle: "U.S. Citizenship & Immigration Services",
     description:
-      "Design work for U.S. Citizenship and Immigration Services under the Department of Homeland Security.",
-    tags: ["GovTech", "DHS", "Enterprise"],
+      "Led design for a modernization effort at USCIS, consolidating disparate systems into a unified platform so specialists can view accurate information and immigrants can receive benefits without delays.",
+    tags: ["GovTech", "DHS", "Enterprise", "Field Research"],
     color: "#1e3a5f",
     meta: [
       { label: "Client", value: "USCIS / DHS" },
-      { label: "Role", value: "Product Designer" },
-      { label: "Duration", value: "TBD" },
-      { label: "Platform", value: "TBD" },
+      { label: "Role", value: "Lead Designer & Design Manager" },
+      { label: "Duration", value: "Six months" },
+      { label: "Scope", value: "Field Research, Co-creation, Product Design, Delivery" },
     ],
     sections: [
       {
         type: "text",
         sectionNumber: "01",
-        sectionLabel: "Overview",
-        heading: "Design work for U.S. Citizenship and Immigration Services",
+        sectionLabel: "Context",
+        heading: "Modernizing a system designed in the 1970s",
         body: [
-          "Placeholder — project details to be added.",
+          "The government agency responsible for immigration needed to modernize its system for keeping track of information about people, which had been created in the 1970s.",
+          "How might we consolidate disparate systems and tools into a one-stop-shop, so specialists can view accurate information, and so immigrants can receive benefits without as many delays?",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "My Role",
+        heading: "Leading design across four work streams",
+        body: [
+          "Lead designer in hands-on role, and design manager for team of 6 designers across 4 work streams.",
+        ],
+      },
+      {
+        type: "stats",
+        stats: [
+          { number: 6, suffix: "", label: "Designers managed" },
+          { number: 4, suffix: "", label: "Work streams" },
+          { number: 100, suffix: "+", label: "User interviews" },
+          { number: 6, suffix: " mo", label: "Duration" },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Discovery",
+        heading: "Deep dive into existing systems",
+        body: [
+          "The existing system was quite old and in need of modernization. I began with a deep dive of existing systems and methods, as well as interviews with over 100 users.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Field Research",
+        heading: "Contextual research at the border",
+        body: [
+          "During contextual research we saw a heavily paper-based system, with dozens of fragmented digital touchpoints that the users did not really trust.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "05",
+        sectionLabel: "Observations",
+        heading: "Co-creation and iterative prototyping",
+        body: [
+          "Delivery team could not start right away, so we did a deep dive on co-creation and iterative prototyping.",
         ],
       },
     ],
     outcome: {
-      heading: "TBD",
+      heading: "Consolidating systems for faster immigration services",
       body: [
-        "Placeholder — outcome details to be added.",
+        "By consolidating disparate tools and systems into a unified platform, specialists gained access to accurate, real-time information — reducing delays and improving the experience for immigrants seeking benefits.",
       ],
       contributions: [
+        "Design Leadership",
+        "Field Research",
+        "Co-creation Workshops",
+        "Interaction Design",
+        "Iterative Prototyping",
         "Product Design",
+        "Delivery",
       ],
       collaborators: [
-        "TBD",
+        "1 Design Lead",
+        "4 IxD",
+        "1 VizD",
+        "1 Business Designer",
       ],
-      tools: ["TBD"],
+      tools: ["Figma", "Prototyping"],
     },
     nextProject: {
       slug: "clarvos",
