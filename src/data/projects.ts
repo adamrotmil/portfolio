@@ -503,24 +503,6 @@ export const PROJECTS: Project[] = [
           { label: "Voice Chat Ended", src: "/images/gator/Voice ended.png" },
         ],
       },
-      {
-        type: "text",
-        sectionNumber: "07",
-        sectionLabel: "Design Language",
-        heading: "Green means go",
-        body: [
-          "Gator’s visual language is built on a deep forest green and warm off-whites — colors that feel professional and trustworthy without the cold clinical feel of most enterprise tools. The gator mascot adds personality and approachability to what could otherwise feel like a sterile diagnostic tool.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "phone-gallery",
-        images: [
-          { label: "Library — Manual Search", src: "/images/gator/Search.png" },
-          { label: "User Profile", src: "/images/gator/User Profile.png" },
-          { label: "Third-Party Integrations", src: "/images/gator/Integrations.png" },
-        ],
-      },
     ],
     outcome: {
       heading: "Ready for development",
