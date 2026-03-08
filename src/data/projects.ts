@@ -534,7 +534,7 @@ export const PROJECTS: Project[] = [
     tags: ["AI / LLM", "Enterprise", "Human-in-the-Loop"],
     color: "#7c3aed",
     thumbnail: "/images/respond-ai/Respond Cover.png",
-    heroImage: "/images/respond-ai/respond-home.png",
+    heroImage: "/images/respond-ai/Respond-new-hero.png",
     heroObjectPosition: "top",
     meta: [
       { label: "Client", value: "McLeod Software" },
