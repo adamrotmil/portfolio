@@ -1497,7 +1497,7 @@ export const PROJECTS: Project[] = [
       subtitle: "U.S. Citizenship & Immigration Services",
     },
   },
-  {
+    {
     slug: "uscis",
     title: "USCIS",
     subtitle: "U.S. Citizenship & Immigration Services",
@@ -1505,6 +1505,8 @@ export const PROJECTS: Project[] = [
       "Led the redesign of the main identity system (CIS 2) used by USCIS adjudicators to verify applicant qualifications and check historical encounters — serving 5,000+ users processing ~35k applications per day.",
     tags: ["GovTech", "DHS", "Enterprise", "Identity & Access"],
     color: "#1e3a5f",
+    heroImage: "/images/uscis/cis-1.webp",
+    thumbnail: "/images/uscis/cis-7.webp",
     meta: [
       { label: "Client", value: "USCIS / DHS" },
       { label: "Role", value: "Craft Lead, Interaction Design" },
@@ -1518,7 +1520,7 @@ export const PROJECTS: Project[] = [
         sectionLabel: "Context",
         heading: "Redesigning the backbone of DHS identity services",
         body: [
-          "USCIS needed to modernize CIS 2 — the main identity system used by adjudicators to verify applicant qualifications and check historical encounters. The system had been originally designed in the 1970s and served as the backbone for DHS identity services that downstream platforms like Palantir ontology rely on.",
+          "CIS 2 is the main identity system used by USCIS adjudicators to verify applicant qualifications and check historical encounters. Originally designed in the 1970s, it had become the backbone for DHS identity services that downstream platforms like Palantir ontology rely on — but it was showing its age.",
           "How might we drive person-centric identity and case-management UX — A-number search, cross-record timelines, audit/lineage, RBAC/ABAC, and error-handling — at a scale of 5,000+ users processing ~35k applications per day?",
         ],
       },
@@ -1543,67 +1545,100 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "03",
-        sectionLabel: "Discovery",
-        heading: "Deep dive into existing systems",
+        sectionLabel: "Field Research",
+        heading: "Starting with the people doing the work",
         body: [
-          "The existing system was quite old and in need of modernization. I began with a deep dive of existing systems and methods, as well as interviews with over 100 users.",
+          "We conducted contextual research at ports of entry along the U.S.–Mexico border and at service centers across the country — shadowing adjudicators, observing intake processes, and conducting over 100 user interviews to understand how the system was actually being used.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/cis-2.webp", label: "Field research at the border", height: 640 },
         ],
       },
       {
         type: "text",
         sectionNumber: "04",
-        sectionLabel: "Field Research",
-        heading: "Contextual research at the border",
+        sectionLabel: "Observations",
+        heading: "A paper-heavy reality",
         body: [
-          "During contextual research we saw a heavily paper-based system, with dozens of fragmented digital touchpoints that the users did not really trust.",
+          "What we found was a heavily paper-based system. Case files were physically bundled, routed, and tracked by hand. Adjudicators toggled between dozens of fragmented digital systems — none of which they fully trusted — to verify a single applicant’s identity.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/cis-3.webp", label: "Paper-based case files observed during field research", height: 640 },
         ],
       },
       {
         type: "text",
         sectionNumber: "05",
-        sectionLabel: "Observations",
-        heading: "Co-creation and iterative prototyping",
+        sectionLabel: "Site Visits",
+        heading: "Understanding how systems overlapped",
         body: [
-          "Delivery team could not start right away, so we did a deep dive on co-creation and iterative prototyping.",
+          "We focused on two things: people’s working relationships and the data they need. We visited sites across the country — California, Texas, Florida, Missouri, Vermont, Virginia, and more.",
+          "At the end, we understood how systems overlapped. Some were being used for just one data point, presenting a clear opportunity to simplify.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/cis-4.webp", label: "Site visit locations across the United States", height: 640 },
         ],
       },
       {
         type: "text",
         sectionNumber: "06",
-        sectionLabel: "Site Visits",
-        heading: "Understanding how systems overlapped",
+        sectionLabel: "Systems Analysis",
+        heading: "Mapping 25+ platforms across four agencies",
         body: [
-          "We focused on two things: people's working relationships and the data they need. We visited sites across the country — California, Texas, Florida, Missouri, Vermont, Virginia, and more.",
-          "At the end, we understood how systems overlapped. Some were being used for just one datapoint, presenting an opportunity to simplify the process.",
+          "We mapped every system touching the adjudication process — 25+ platforms spanning USCIS, ICE, CBP, and external agencies. The system usage matrix revealed massive overlap: some systems existed solely for a single data point.",
+          "We also mapped the human side — the web of relationships around each adjudicator — to understand how information actually flowed between roles.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/cis-5.webp", label: "System usage matrix by agency", height: 640 },
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/cis-6.webp", label: "Stakeholder relationship map", height: 640 },
         ],
       },
       {
         type: "text",
         sectionNumber: "07",
-        sectionLabel: "Systems Analysis",
-        heading: "Mapping system usage across agencies",
+        sectionLabel: "Design Sprints",
+        heading: "16 sprint weeks of discovery and testing",
         body: [
-          "We created a system usage matrix plotting internal and external usage by agency — USCIS, ICE, CBP, and external systems. This revealed which systems overlapped and where consolidation was possible.",
-          "We also identified opportunities at the service level to consolidate roles and streamline business processes.",
+          "We ran 16 design sprint weeks, each focused on a theme surfaced during research, to discover and validate product features. We tested with users at least twice per week, iterating rapidly between rounds.",
         ],
       },
       {
         type: "text",
         sectionNumber: "08",
-        sectionLabel: "Design Sprints",
-        heading: "16 sprint weeks of discovery and testing",
-        body: [
-          "We ran 16 design sprint weeks, each focused on a theme from the research, to discover product features. We tested with users at least 2x per week.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "09",
         sectionLabel: "Solution",
         heading: "One cohesive interface — like a Google search",
         body: [
-          'The experience changed along the way, but the core idea to "make it feel like a Google search" remained. We developed a person-centric interface with A-number search, cross-record timelines, audit trails, and role-based access controls (RBAC/ABAC) — merging all systems into one cohesive experience.',
-          "CIS 2 now underpins DHS identity services that downstream platforms like Palantir ontology rely on, serving 5,000+ users and processing approximately 35,000 applications per day.",
+          "The core idea — “make it feel like a Google search” — survived every iteration. CIS 2 became a person-centric interface: a single A-number search surfaces cross-record timelines, biographic data, encounter history, and potential identity matches — all in one view.",
+          "Granular RBAC/ABAC controls ensure each role sees exactly what they need, with full audit lineage. The system now serves 5,000+ users processing approximately 35,000 applications per day.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          { src: "/images/uscis/cis-7.webp", label: "CIS 2 — Identity resolution interface" },
         ],
       },
     ],
