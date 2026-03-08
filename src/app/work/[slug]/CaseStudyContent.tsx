@@ -133,6 +133,64 @@ function RenderSection({ section }: { section: ProjectSection }) {
         );
       }
 
+      // Photo grid layout: rounded-corner images on dark background, no device frames
+      if (section.layout === "photo-grid") {
+        return (
+          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+            <div className="max-w-[1200px] mx-auto flex flex-col gap-[clamp(1.5rem,3vw,2.5rem)]">
+              {section.images.length === 1 && (
+                <Reveal>
+                  <ImagePlaceholder
+                    height={section.images[0].height || 480}
+                    label={section.images[0].label}
+                    src={section.images[0].src}
+                    objectPosition={section.images[0].objectPosition}
+                  />
+                </Reveal>
+              )}
+              {section.images.length === 2 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1.5rem,3vw,2.5rem)]">
+                  {section.images.map((img, i) => (
+                    <Reveal key={i} delay={i * 0.12}>
+                      <ImagePlaceholder
+                        height={img.height || 360}
+                        label={img.label}
+                        src={img.src}
+                        objectPosition={img.objectPosition}
+                      />
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+              {section.images.length >= 3 && (
+                <>
+                  <Reveal>
+                    <ImagePlaceholder
+                      height={section.images[0].height || 480}
+                      label={section.images[0].label}
+                      src={section.images[0].src}
+                      objectPosition={section.images[0].objectPosition}
+                    />
+                  </Reveal>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1.5rem,3vw,2.5rem)]">
+                    {section.images.slice(1).map((img, i) => (
+                      <Reveal key={i} delay={(i + 1) * 0.1}>
+                        <ImagePlaceholder
+                          height={img.height || 360}
+                          label={img.label}
+                          src={img.src}
+                          objectPosition={img.objectPosition}
+                        />
+                      </Reveal>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        );
+      }
+
       // Default grid layout
       const imgs = section.images;
       return (

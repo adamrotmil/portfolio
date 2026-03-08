@@ -8,7 +8,7 @@ export interface ProjectSection {
   stats?: { number: number; suffix: string; label: string }[];
   images?: { label: string; dark?: boolean; height?: number; src?: string; objectPosition?: string }[];
   imagePosition?: "left" | "right";
-  layout?: "phone-gallery" | "desktop-showcase";
+  layout?: "phone-gallery" | "desktop-showcase" | "photo-grid";
 }
 
 export interface Project {
@@ -274,11 +274,11 @@ export const PROJECTS: Project[] = [
     title: "AI Model Training",
     subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
     description:
-      "Contract work contributing to the development of leading AI models including Google's Gemini Copilot and OpenAI's ChatGPT through multi-axis evaluation, SFT rating, and RLHF — assessing groundedness, truthfulness, instruction-following, safety, and factual accuracy.",
+      "Contract work contributing to the development of OpenAI's ChatGPT, Google's Gemini, and other leading AI models through multi-axis evaluation, SFT rating, and RLHF — assessing groundedness, truthfulness, instruction-following, safety, and factual accuracy.",
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
     color: "#10b981",
     featured: true,
-    thumbnail: "/images/prompt-evals/oai-logo.png",
+    thumbnail: "/images/prompt-evals/mountains-oai.png",
     heroImage: "/images/prompt-evals/mountains-oai.png",
     meta: [
       { label: "Client", value: "Google, OpenAI & Others (via DataAnnotation)" },
@@ -374,10 +374,10 @@ export const PROJECTS: Project[] = [
     title: "Gator",
     subtitle: "AI Tech Support Chatbot",
     description:
-      "A mobile-native diagnostic tool for HVAC technicians. QR scanning identifies equipment, then an LLM guides step-by-step repairs with product-aware responses.",
+      "Agentic diagnostic tool for technical workers. Multimodal scanning builds case context, then an LLM guides step-by-step actions with product-aware responses. Native iOS app.",
     tags: ["Mobile", "Conversational AI", "QR/Vision", "Field Service"],
     color: "#2d5a3d",
-    thumbnail: "/images/gator/Gator-Splash.png",
+    thumbnail: "/images/gator/Gator cover.png",
     heroImage: "/images/gator/Gator-Splash.png",
     meta: [
       { label: "Client", value: "Gator Tech Support" },
@@ -845,7 +845,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
-        layout: "desktop-showcase",
+        layout: "photo-grid",
         images: [
           {
             label: "Storyboard — Patient Journey from Check-in to Doctor Review",
@@ -869,7 +869,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
-        layout: "desktop-showcase",
+        layout: "photo-grid",
         images: [
           {
             label: "User Flow — Patient & Clinician Interaction Paths",
@@ -1137,7 +1137,7 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "images",
-        layout: "desktop-showcase",
+        layout: "photo-grid",
         images: [
           {
             label: "Design Sprint — Journey Mapping & Jobs-to-be-Done Workshop",
@@ -1253,7 +1253,7 @@ export const PROJECTS: Project[] = [
       "A platform that matches doctors and pharmacists to facilitate collaboration, improving patient outcomes through better coordination between prescribers and dispensers.",
     tags: ["Healthcare", "Platform", "Matching", "Collaboration"],
     color: "#0ea5e9",
-    thumbnail: "/images/collabmatch/collab-match-illustrative.png",
+    thumbnail: "/images/collabmatch/Collab Match Cover.png",
     heroImage: "/images/collabmatch/collab-match-illustrative.png",
     meta: [
       { label: "Client", value: "CollabMatch (Startup)" },
