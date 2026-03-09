@@ -319,6 +319,10 @@ export const PROJECTS: Project[] = [
             src: "/images/prompt-evals/prompt evals.png",
             label: "Multi-turn evaluation interface — conversation rating workflow",
           },
+          {
+            src: "/images/prompt-evals/prompt-kernel.png",
+            label: "Multi-axis response rating — instruction following, completeness, factuality",
+          },
         ],
       },
       {
