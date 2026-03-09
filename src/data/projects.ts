@@ -1349,8 +1349,8 @@ export const PROJECTS: Project[] = [
       "A consumer brain wearable companion app that uses EEG biofeedback and behavioral tracking to help users optimize focus, creativity, and mental performance through personalized training programs.",
     tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback"],
     color: "#a855f7",
-    thumbnail: "/images/wb/new exports/Feed Option 1.png",
-    heroImage: "/images/wb/new exports/Introduction.png",
+    thumbnail: "/images/wb/1728495774900.jpeg",
+    heroImage: "/images/wb/1728495774900.jpeg",
     meta: [
       { label: "Client", value: "Wild Brains" },
       { label: "Role", value: "Product Designer" },
@@ -1390,11 +1390,42 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "02",
-        sectionLabel: "Personalization",
-        heading: "An adaptive assessment that builds your brain profile",
+        sectionLabel: "Onboarding",
+        heading: "First touch \u2014 goals and basic profiling",
         body: [
-          "Before the headband even turns on, the app builds a behavioral and psychological profile through a carefully sequenced onboarding assessment. Questions move from binary choices to multi-select grids to analog sliders \u2014 each interaction type calibrated to the kind of data we need.",
-          "The assessment covers chronotype, personality dimensions, self-perception, goals, and activity preferences. This data seeds the recommendation engine that generates personalized training programs.",
+          "The app opens with a brand moment, then immediately gets to work. Users set their primary goal and enter basic demographics \u2014 just enough to start generating a personalized plan. No account creation friction, no feature tours.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "phone-gallery",
+        images: [
+          {
+            src: "/images/wb/new exports/Introduction.png",
+            label: "Brand introduction",
+          },
+          {
+            src: "/images/wb/new exports/Initial assessment-3.png",
+            label: "Primary goal selection",
+          },
+          {
+            src: "/images/wb/new exports/Initial assessment-1.png",
+            label: "Age input",
+          },
+          {
+            src: "/images/wb/new exports/Initial assessment-2.png",
+            label: "Age confirmed",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Assessment",
+        heading: "Building a behavioral and psychological profile",
+        body: [
+          "The deeper assessment unfolds across eight questions \u2014 moving from binary personality dimensions to multi-select grids and analog sliders. Each interaction type is calibrated to the data it captures: chronotype, personality, self-perception, goals, focus capacity, and activity preferences.",
+          "This data seeds the recommendation engine. By the time the assessment completes, the app has enough signal to generate a personalized 2-week training program.",
         ],
       },
       {
@@ -1403,15 +1434,15 @@ export const PROJECTS: Project[] = [
         images: [
           {
             src: "/images/wb/new exports/Initial assessment-4.png",
-            label: "Chronotype selection",
+            label: "Chronotype",
           },
           {
             src: "/images/wb/new exports/Initial assessment-10.png",
-            label: "Self-description with selections",
+            label: "Self-description",
           },
           {
             src: "/images/wb/new exports/Initial assessment-9.png",
-            label: "Goal selection",
+            label: "Goals",
           },
           {
             src: "/images/wb/new exports/Initial assessment-11.png",
@@ -1425,26 +1456,22 @@ export const PROJECTS: Project[] = [
         images: [
           {
             src: "/images/wb/new exports/Guidance-1.png",
-            label: "Plan generation",
+            label: "Generating personalized plan",
           },
           {
             src: "/images/wb/new exports/Guidance-2.png",
-            label: "Goal confirmation",
-          },
-          {
-            src: "/images/wb/new exports/Guidance-3.png",
-            label: "Brain data preview",
+            label: "Ready to begin",
           },
         ],
       },
       {
         type: "text",
-        sectionNumber: "03",
-        sectionLabel: "Daily Experience",
-        heading: "A dashboard that makes brain data feel personal",
+        sectionNumber: "04",
+        sectionLabel: "Your Brain",
+        heading: "Turning neural signals into something you can feel",
         body: [
-          "The home screen anchors the daily experience. It surfaces the user\u2019s active training track, today\u2019s brain insight score, and a weekly progress summary \u2014 all without overwhelming a consumer audience with raw neuroscience data.",
-          "We designed two states: the daily view with current session and brain insights, and the weekly retrospective showing confidence trends and cumulative focus time. Both encourage return visits and reinforce progress.",
+          "This was the core design challenge: how do you make EEG data legible to someone who isn\u2019t a neuroscientist? We explored multiple visualization approaches \u2014 from radar charts mapping four cognitive dimensions, to 3D brain renderings with activity hotspots, to simple bar breakdowns.",
+          "Each approach served a different context. The radar chart works for at-a-glance brain profiles, the 3D rendering creates an emotional connection to the data, and the bar charts support comparison across sessions.",
         ],
       },
       {
@@ -1452,24 +1479,40 @@ export const PROJECTS: Project[] = [
         layout: "phone-gallery",
         images: [
           {
-            src: "/images/wb/new exports/Home.png",
-            label: "Daily dashboard",
+            src: "/images/wb/new exports/Aggregate data-1.png",
+            label: "3D brain activity map",
           },
           {
-            src: "/images/wb/new exports/Home-1.png",
-            label: "Weekly review",
+            src: "/images/wb/new exports/Aggregate data.png",
+            label: "Session benchmark \u2014 76%",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "phone-gallery",
+        images: [
+          {
+            src: "/images/wb/new exports/Feed Option 1.png",
+            label: "Radar chart",
+          },
+          {
+            src: "/images/wb/new exports/Feed Option 2.png",
+            label: "Radar with insight panel",
+          },
+          {
+            src: "/images/wb/new exports/Feed Option 3.png",
+            label: "3D brain with breakdown",
           },
         ],
       },
       {
         type: "text",
-        sectionNumber: "04",
-        sectionLabel: "Training Programs",
-        heading:
-          "Structured brain workouts, delivered as 2-week programs",
+        sectionNumber: "05",
+        sectionLabel: "Activities",
+        heading: "Structured brain training through creative exercises",
         body: [
-          "Training programs are the core engagement loop. Each program is a structured 2-week curriculum of daily activities \u2014 creative exercises, focus challenges, and mindfulness sessions \u2014 all calibrated to the user\u2019s brain profile and goals.",
-          "The detail view breaks each day into specific activities with clear time commitments and difficulty indicators. This structure borrows from fitness app conventions to make brain training feel familiar and achievable.",
+          "Training programs are the core engagement loop \u2014 structured 2-week curricula of daily activities calibrated to the user\u2019s brain profile. The headband captures EEG data during each exercise, then reveals what the brain was doing afterward \u2014 creating a feedback loop between effort and neural response.",
         ],
       },
       {
@@ -1487,14 +1530,17 @@ export const PROJECTS: Project[] = [
         ],
       },
       {
-        type: "text",
-        sectionNumber: "05",
-        sectionLabel: "Live Activities",
-        heading:
-          "Real-time brain monitoring during creative exercises",
-        body: [
-          "The headband captures EEG data while users complete creative activities \u2014 drawing, writing, problem-solving. The app guides each session with clear instructions and a progress timer, while the device quietly records neural patterns in the background.",
-          "After each activity, the app reveals what the brain was doing during the exercise \u2014 creating a feedback loop between conscious effort and measurable neural response.",
+        type: "images",
+        layout: "phone-gallery",
+        images: [
+          {
+            src: "/images/wb/new exports/Video.png",
+            label: "Drawing activity",
+          },
+          {
+            src: "/images/wb/new exports/Video-1.png",
+            label: "Activity in progress",
+          },
         ],
       },
       {
@@ -1502,24 +1548,22 @@ export const PROJECTS: Project[] = [
         layout: "phone-gallery",
         images: [
           {
-            src: "/images/wb/new exports/Video.png",
-            label: "Drawing activity \u2014 instructions",
+            src: "/images/wb/new exports/Guidance-3.png",
+            label: "See inside your head",
           },
           {
-            src: "/images/wb/new exports/Video-1.png",
-            label: "Drawing activity \u2014 in progress",
+            src: "/images/wb/new exports/Aggregate data-2.png",
+            label: "Your brain on creativity",
           },
         ],
       },
       {
         type: "text",
         sectionNumber: "06",
-        sectionLabel: "Brain Visualization",
-        heading:
-          "Turning neural signals into something you can understand",
+        sectionLabel: "Walking the Path",
+        heading: "A daily loop that makes progress visible",
         body: [
-          "This was the core design challenge: how do you make EEG data legible to someone who isn\u2019t a neuroscientist? We explored multiple visualization approaches \u2014 from radar charts mapping four cognitive dimensions, to 3D brain renderings with activity hotspots, to simple bar breakdowns.",
-          "Each approach served a different context. The radar chart works for at-a-glance brain profiles, the 3D rendering creates an emotional connection to the data, and the bar charts support comparison across sessions and time periods.",
+          "The home screen anchors the daily experience \u2014 surfacing the active training track, brain insight score, and weekly progress. The progress view maps the user\u2019s journey across four dimensions \u2014 Focus, Creativity, Anxiety, and Sleep \u2014 turning abstract cognitive improvement into a visible trajectory.",
         ],
       },
       {
@@ -1527,45 +1571,13 @@ export const PROJECTS: Project[] = [
         layout: "phone-gallery",
         images: [
           {
-            src: "/images/wb/new exports/Aggregate data-1.png",
-            label: "3D brain activity map",
+            src: "/images/wb/new exports/Home.png",
+            label: "Daily dashboard",
           },
           {
-            src: "/images/wb/new exports/Aggregate data-2.png",
-            label: "Post-activity brain analysis",
+            src: "/images/wb/new exports/Home-1.png",
+            label: "Weekly review",
           },
-          {
-            src: "/images/wb/new exports/Aggregate data.png",
-            label: "Session benchmark score",
-          },
-        ],
-      },
-      {
-        type: "images",
-        layout: "phone-gallery",
-        images: [
-          {
-            src: "/images/wb/new exports/Feed Option 1.png",
-            label: "Radar chart visualization",
-          },
-          {
-            src: "/images/wb/new exports/Feed Option 2.png",
-            label: "Radar with brain insight panel",
-          },
-          {
-            src: "/images/wb/new exports/Feed Option 3.png",
-            label: "3D brain with metric breakdown",
-          },
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "07",
-        sectionLabel: "Progress",
-        heading:
-          "Tracking the long game across multiple cognitive dimensions",
-        body: [
-          "The progress view maps the user\u2019s journey across four brain dimensions \u2014 Focus, Creativity, Anxiety, and Sleep \u2014 showing how each evolves over time through sustained training. It transforms abstract cognitive improvement into a visible trajectory.",
         ],
       },
       {
@@ -1574,7 +1586,7 @@ export const PROJECTS: Project[] = [
         images: [
           {
             src: "/images/wb/new exports/User Progress.png",
-            label: "Multi-dimension progress tracking",
+            label: "Multi-dimension progress",
           },
         ],
       },
