@@ -1349,8 +1349,9 @@ export const PROJECTS: Project[] = [
       "A consumer brain wearable companion app that uses EEG biofeedback and behavioral tracking to help users optimize focus, creativity, and mental performance through personalized training programs.",
     tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback"],
     color: "#a855f7",
-    thumbnail: "/images/wb/1728495774900.jpeg",
-    heroImage: "/images/wb/1728495774900.jpeg",
+    thumbnail: "/images/wb/upscale.png",
+    heroImage: "/images/wb/upscale.png",
+    heroObjectPosition: "top",
     meta: [
       { label: "Client", value: "Wild Brains" },
       { label: "Role", value: "Product Designer" },
@@ -1574,16 +1575,6 @@ export const PROJECTS: Project[] = [
             src: "/images/wb/new exports/Home.png",
             label: "Daily dashboard",
           },
-          {
-            src: "/images/wb/new exports/Home-1.png",
-            label: "Weekly review",
-          },
-        ],
-      },
-      {
-        type: "images",
-        layout: "phone-gallery",
-        images: [
           {
             src: "/images/wb/new exports/User Progress.png",
             label: "Multi-dimension progress",
