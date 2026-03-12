@@ -14,6 +14,14 @@ type Topping = {
   emoji: string;
 };
 
+type DialogueNode = {
+  speaker: "them" | "you";
+  text: string;
+  choiceA?: { label: string; next: number };
+  choiceB?: { label: string; next: number };
+  // if no choices, it's the end of the conversation
+};
+
 type GamePhase = "menu" | "playing" | "result";
 
 type Customer = {
@@ -54,6 +62,76 @@ const CUSTOMER_NAMES = [
 
 const NUDGES = ["...", "~", "hmm", "\u266A", "\u2764\uFE0F", "!", "yay~"];
 const HAPPY_REACTIONS = ["YAY!", "\u2764\uFE0F", "TYSM!", "WOW!", "\u2728"];
+
+// ── Dialogue Trees ───────────────────────────────────────────────────────────
+const CUSTOMER_DIALOGUES: DialogueNode[][] = [
+  // Conversation 0 – about favorite flavor
+  [
+    { speaker: "them", text: "Hey! I come here every day~", choiceA: { label: "Welcome back!", next: 1 }, choiceB: { label: "Every day?!", next: 2 } },
+    { speaker: "them", text: "You always remember my order! You're the best scooper ever!", choiceA: { label: "Aw thanks!", next: 3 }, choiceB: { label: "I try my best~", next: 3 } },
+    { speaker: "them", text: "Yeah! I can't resist... ice cream is my whole personality now", choiceA: { label: "Same honestly", next: 3 }, choiceB: { label: "That's valid", next: 3 } },
+    { speaker: "them", text: "Okay okay, lemme get my usual! See ya! \u2764\uFE0F" },
+  ],
+  // Conversation 1 – weather
+  [
+    { speaker: "them", text: "Perfect ice cream weather today, right?", choiceA: { label: "It's always ice cream weather!", next: 1 }, choiceB: { label: "A bit chilly actually...", next: 2 } },
+    { speaker: "them", text: "SO true! Hot days, cold days... every day is scoop day!", choiceA: { label: "You get it!", next: 3 }, choiceB: { label: "A true fan~", next: 3 } },
+    { speaker: "them", text: "Chilly?! That means the ice cream won't melt as fast! Big brain!", choiceA: { label: "Genius logic!", next: 3 }, choiceB: { label: "Haha fair point", next: 3 } },
+    { speaker: "them", text: "Alright, scoop me up something amazing! \u2728" },
+  ],
+  // Conversation 2 – compliment the shop
+  [
+    { speaker: "them", text: "This shop is SO cute! Love the vibes~", choiceA: { label: "Thanks! We try!", next: 1 }, choiceB: { label: "You're cute too!", next: 2 } },
+    { speaker: "them", text: "The little polka dots on the wall? *chef's kiss*", choiceA: { label: "Scoopy picked those!", next: 3 }, choiceB: { label: "They're hand-painted!", next: 3 } },
+    { speaker: "them", text: "Oh stop it~ \u2764\uFE0F You're making me blush more than the strawberry ice cream!", choiceA: { label: "Hehe~", next: 3 }, choiceB: { label: "\u2764\uFE0F", next: 3 } },
+    { speaker: "them", text: "Okay now I'm definitely getting an extra scoop! Treat yourself, right?" },
+  ],
+  // Conversation 3 – secret menu
+  [
+    { speaker: "them", text: "Psst... is there a secret menu?", choiceA: { label: "Maybe... \uD83E\uDD2B", next: 1 }, choiceB: { label: "Everything's on display!", next: 2 } },
+    { speaker: "them", text: "I KNEW IT! What's on it?? Tell me tell me!", choiceA: { label: "Triple mango stack", next: 3 }, choiceB: { label: "The Scoopy Special", next: 3 } },
+    { speaker: "them", text: "Hmm... but what if I asked REALLY nicely? Pretty please? \uD83E\uDD7A", choiceA: { label: "Well... okay fine", next: 3 }, choiceB: { label: "You're too cute to refuse", next: 3 } },
+    { speaker: "them", text: "YESSS! I'm telling all my friends about this place! \uD83C\uDF89" },
+  ],
+  // Conversation 4 – existential ice cream
+  [
+    { speaker: "them", text: "Do you ever wonder if the ice cream is happy being eaten?", choiceA: { label: "That's... deep", next: 1 }, choiceB: { label: "It was born for this!", next: 2 } },
+    { speaker: "them", text: "Like... it fulfills its purpose, right? We ALL need purpose!", choiceA: { label: "Whoa \uD83E\uDD2F", next: 3 }, choiceB: { label: "Philosopher blob~", next: 3 } },
+    { speaker: "them", text: "Exactly! Every scoop finds its cone. It's destiny!", choiceA: { label: "Poetic!", next: 3 }, choiceB: { label: "You should write a book", next: 3 } },
+    { speaker: "them", text: "Anyway... I'll have two scoops of destiny please! \u2728" },
+  ],
+];
+
+const SCOOPY_DIALOGUES: DialogueNode[][] = [
+  // Conversation 0 – welcome
+  [
+    { speaker: "them", text: "Hey there, partner! How's scooping going?", choiceA: { label: "Great, boss!", next: 1 }, choiceB: { label: "My arm is tired~", next: 2 } },
+    { speaker: "them", text: "That's the spirit! Keep those scoops round and tall!", choiceA: { label: "You got it!", next: 3 }, choiceB: { label: "Round AND tall?!", next: 3 } },
+    { speaker: "them", text: "Ha! Take a little break if you need. I'll cover for ya~ ...just kidding I'm a blob, I can't hold a scooper", choiceA: { label: "Hahaha!", next: 3 }, choiceB: { label: "You have tiny arms!", next: 3 } },
+    { speaker: "them", text: "Now get back out there! Those customers won't scoop themselves! \uD83D\uDCAA" },
+  ],
+  // Conversation 1 – origin story
+  [
+    { speaker: "them", text: "Wanna hear how I started this shop?", choiceA: { label: "Tell me!", next: 1 }, choiceB: { label: "Were you always a blob?", next: 2 } },
+    { speaker: "them", text: "I found a magic ice cream cone in the park. One lick and POOF — I became Scoopy!", choiceA: { label: "No way!", next: 3 }, choiceB: { label: "That's amazing!", next: 3 } },
+    { speaker: "them", text: "Rude! I've ALWAYS been a blob! A CUTE blob, thank you very much!", choiceA: { label: "The cutest!", next: 3 }, choiceB: { label: "Sorry Scoopy!", next: 3 } },
+    { speaker: "them", text: "And now I run the best ice cream shop in town! Life is sweet~ \uD83C\uDF66" },
+  ],
+  // Conversation 2 – business tips
+  [
+    { speaker: "them", text: "Pro tip: always smile when you scoop! Customers love it!", choiceA: { label: "I'm always smiling!", next: 1 }, choiceB: { label: "Does it affect flavor?", next: 2 } },
+    { speaker: "them", text: "I can tell! You've got that natural scooper energy~", choiceA: { label: "Learned from you!", next: 3 }, choiceB: { label: "\u2728 scooper energy \u2728", next: 3 } },
+    { speaker: "them", text: "ABSOLUTELY! Happy scoops taste 47% better! That's science! ...probably.", choiceA: { label: "Sounds legit!", next: 3 }, choiceB: { label: "I believe you", next: 3 } },
+    { speaker: "them", text: "Now go spread that scooper joy! The customers are waiting! \u2B50" },
+  ],
+  // Conversation 3 – Scoopy's dream
+  [
+    { speaker: "them", text: "One day I wanna open shops ALL over the world!", choiceA: { label: "Global Scoopy empire!", next: 1 }, choiceB: { label: "That's ambitious!", next: 2 } },
+    { speaker: "them", text: "Scoopy's Scoop Shop: Paris, Tokyo, Mars! Why not?!", choiceA: { label: "Mars ice cream?!", next: 3 }, choiceB: { label: "I'd visit them all!", next: 3 } },
+    { speaker: "them", text: "Dream big, scoop bigger! That's the Scoopy way~", choiceA: { label: "Words to live by!", next: 3 }, choiceB: { label: "You inspire me!", next: 3 } },
+    { speaker: "them", text: "And you'll be my #1 scooper at every location! Deal? \uD83E\uDD1D" },
+  ],
+];
 
 const PX = 4; // pixel scale
 const W = 128; // game viewport width in "pixels"
@@ -708,6 +786,13 @@ export default function IceCreamGame() {
   const [goldCoins, setGoldCoins] = useState<{ x: number; y: number; age: number }[]>([]);
   const [totalGold, setTotalGold] = useState(0);
 
+  // Chat/dialogue state
+  const [chatActive, setChatActive] = useState(false);
+  const [chatTarget, setChatTarget] = useState<"customer" | "scoopy" | null>(null);
+  const [chatDialogue, setChatDialogue] = useState<DialogueNode[]>([]);
+  const [chatNodeIdx, setChatNodeIdx] = useState(0);
+  const chatHistoryRef = useRef<{ customer: number[]; scoopy: number[] }>({ customer: [], scoopy: [] });
+
   // Load high score
   useEffect(() => {
     const saved = localStorage.getItem("scoopstack-highscore");
@@ -995,6 +1080,8 @@ export default function IceCreamGame() {
     setLevel(1); setScore(0); setCustomersServed(0); setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
     setGoldCoins([]); setTotalGold(0);
+    setChatActive(false); setChatTarget(null);
+    chatHistoryRef.current = { customer: [], scoopy: [] };
     customerIdRef.current = 0; setPhase("playing");
     if (musicRef.current) musicRef.current.stop();
     musicRef.current = createMusicContext();
@@ -1004,6 +1091,72 @@ export default function IceCreamGame() {
   const toggleMusic = useCallback(() => {
     if (musicRef.current) { musicRef.current.stop(); musicRef.current = null; setMusicOn(false); }
     else { musicRef.current = createMusicContext(); setMusicOn(true); }
+  }, []);
+
+  // Pick a dialogue that hasn't been seen recently
+  const pickDialogue = useCallback((target: "customer" | "scoopy") => {
+    const pool = target === "scoopy" ? SCOOPY_DIALOGUES : CUSTOMER_DIALOGUES;
+    const seen = chatHistoryRef.current[target];
+    const unseen = pool.map((_, i) => i).filter((i) => !seen.includes(i));
+    const idx = unseen.length > 0 ? pick(unseen) : Math.floor(Math.random() * pool.length);
+    // Track last 3 seen
+    chatHistoryRef.current[target] = [...seen, idx].slice(-3);
+    return pool[idx];
+  }, []);
+
+  // Canvas tap handler — detect character taps
+  const handleCanvasTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (chatActive) return; // don't open another chat while one is active
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+
+      // Check shopkeeper (drawn at x=64, y=70, body extends ~14px up)
+      if (Math.abs(gx - 64) < 12 && gy > 50 && gy < 78) {
+        playBoop();
+        setChatTarget("scoopy");
+        setChatDialogue(pickDialogue("scoopy"));
+        setChatNodeIdx(0);
+        setChatActive(true);
+        return;
+      }
+
+      // Check customer (if waiting)
+      if (customer && (customer.state === "waiting" || customer.state === "served")) {
+        const cx = Math.round(customer.x);
+        if (Math.abs(gx - cx) < 14 && gy > 58 && gy < 100) {
+          playBoop();
+          setChatTarget("customer");
+          setChatDialogue(pickDialogue("customer"));
+          setChatNodeIdx(0);
+          setChatActive(true);
+        }
+      }
+    },
+    [chatActive, customer, pickDialogue]
+  );
+
+  const handleChatChoice = useCallback((nextIdx: number) => {
+    playBoop();
+    setChatNodeIdx(nextIdx);
+  }, []);
+
+  const closeChat = useCallback(() => {
+    setChatActive(false);
+    setChatTarget(null);
   }, []);
 
   useEffect(() => {
@@ -1168,14 +1321,108 @@ export default function IceCreamGame() {
           ref={canvasRef}
           width={CANVAS_W}
           height={CANVAS_H}
+          onClick={handleCanvasTap}
+          onTouchStart={handleCanvasTap}
           style={{
             width: "100%",
             height: "auto",
             imageRendering: "pixelated",
             display: "block",
+            cursor: "pointer",
           }}
         />
       </div>
+
+      {/* Chat overlay */}
+      {chatActive && chatDialogue.length > 0 && (
+        <div className="w-full max-w-lg mb-3 animate-in"
+          style={{ fontFamily: "monospace" }}>
+          {/* Speaker name */}
+          <div className="flex items-center gap-2 mb-1 px-1">
+            <div className="rounded-full px-3 py-1 text-xs font-bold border-2"
+              style={{
+                background: chatTarget === "scoopy" ? "#90EE90" : "#FFE066",
+                borderColor: chatTarget === "scoopy" ? "#6BC56B" : "#FFD700",
+                color: "#333",
+              }}>
+              {chatTarget === "scoopy" ? "SCOOPY" : customer?.name?.toUpperCase() || "???"}
+            </div>
+          </div>
+
+          {/* Speech bubble */}
+          <div className="relative rounded-2xl p-5 border-4"
+            style={{
+              background: "#FFFDE8",
+              borderColor: "#333",
+              boxShadow: "4px 4px 0 #333",
+              minHeight: 80,
+            }}>
+            {/* Tamagotchi-style dots in corners */}
+            <div className="absolute top-2 left-2 w-2 h-2 rounded-full" style={{ background: "#FFD6E8" }} />
+            <div className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: "#C8F7C5" }} />
+            <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full" style={{ background: "#B8E0FF" }} />
+            <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full" style={{ background: "#FFE066" }} />
+
+            {/* Dialogue text */}
+            <p className="text-lg font-bold text-center leading-relaxed mb-4"
+              style={{ color: "#333" }}>
+              {chatDialogue[chatNodeIdx]?.text}
+            </p>
+
+            {/* A/B choices or close button */}
+            {chatDialogue[chatNodeIdx]?.choiceA && chatDialogue[chatNodeIdx]?.choiceB ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleChatChoice(chatDialogue[chatNodeIdx].choiceA!.next)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 border-b-4 hover:scale-[1.02]"
+                  style={{
+                    background: "linear-gradient(180deg, #FFB0CB, #FF85A2)",
+                    borderBottomColor: "#D4567A",
+                    color: "#FFF",
+                    boxShadow: "0 3px 0 #C44569",
+                    textShadow: "1px 1px 0 #D4567A",
+                  }}>
+                  A: {chatDialogue[chatNodeIdx].choiceA!.label}
+                </button>
+                <button
+                  onClick={() => handleChatChoice(chatDialogue[chatNodeIdx].choiceB!.next)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 border-b-4 hover:scale-[1.02]"
+                  style={{
+                    background: "linear-gradient(180deg, #B8E0FF, #87CEEB)",
+                    borderBottomColor: "#5BB5E0",
+                    color: "#333",
+                    boxShadow: "0 3px 0 #4A9BC4",
+                    textShadow: "1px 1px 0 rgba(255,255,255,0.5)",
+                  }}>
+                  B: {chatDialogue[chatNodeIdx].choiceB!.label}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={closeChat}
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 border-b-4 hover:scale-[1.02]"
+                style={{
+                  background: "linear-gradient(180deg, #C8F7C5, #8EEDC7)",
+                  borderBottomColor: "#5CC49A",
+                  color: "#333",
+                  boxShadow: "0 3px 0 #4AA882",
+                }}>
+                Bye bye! {"\u{1F44B}"}
+              </button>
+            )}
+          </div>
+
+          {/* Bubble tail */}
+          <div className="flex justify-center">
+            <div style={{
+              width: 0, height: 0,
+              borderLeft: "12px solid transparent",
+              borderRight: "12px solid transparent",
+              borderTop: "12px solid #333",
+            }} />
+          </div>
+        </div>
+      )}
 
       {/* Order instruction - big readable text below canvas */}
       {customer && customer.state === "waiting" && (
