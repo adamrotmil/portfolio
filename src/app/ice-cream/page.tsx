@@ -61,16 +61,16 @@ const H = 112; // game viewport height in "pixels"
 const CANVAS_W = W * PX; // 512
 const CANVAS_H = H * PX; // 448
 
-// Sprite color palettes for different customers (skin, shirt, hair, pants)
-const CUSTOMER_PALETTES = [
-  { skin: "#FFDBB4", shirt: "#FF6B6B", hair: "#5C3317", pants: "#4A4A6A" },
-  { skin: "#E8B88A", shirt: "#4ECDC4", hair: "#2C1B0E", pants: "#3A3A5A" },
-  { skin: "#C68642", shirt: "#45B7D1", hair: "#1A1A2E", pants: "#4A4A6A" },
-  { skin: "#FFDBB4", shirt: "#FFEAA7", hair: "#D4A017", pants: "#3A6A3A" },
-  { skin: "#8D5524", shirt: "#DDA0DD", hair: "#2C1B0E", pants: "#4A4A6A" },
-  { skin: "#E8B88A", shirt: "#96CEB4", hair: "#8B6914", pants: "#5A3A3A" },
-  { skin: "#6B3E26", shirt: "#FF8C69", hair: "#1A1A2E", pants: "#3A3A5A" },
-  { skin: "#FFDBB4", shirt: "#87CEEB", hair: "#C04000", pants: "#4A4A6A" },
+// Tamagotchi-style blob palettes (body color, accent, eye color)
+const TAMA_PALETTES = [
+  { body: "#FFE066", accent: "#FFD700", eyes: "#1A1A2E" },  // Yellow Mametchi-style
+  { body: "#87CEEB", accent: "#5BB5E0", eyes: "#1A1A2E" },  // Blue
+  { body: "#FFB0CB", accent: "#FF85A2", eyes: "#1A1A2E" },  // Pink
+  { body: "#B8FFE0", accent: "#8EEDC7", eyes: "#1A1A2E" },  // Mint green
+  { body: "#FFD4A0", accent: "#FFB870", eyes: "#2C1B0E" },  // Orange
+  { body: "#DDA0DD", accent: "#CC80CC", eyes: "#1A1A2E" },  // Purple
+  { body: "#FFFFFF", accent: "#E0E0E0", eyes: "#333" },      // White
+  { body: "#FF8C69", accent: "#FF6B4A", eyes: "#1A1A2E" },  // Coral
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ function createCustomer(id: number, level: number): Customer {
   return {
     id,
     name: pick(CUSTOMER_NAMES),
-    spriteIdx: Math.floor(Math.random() * CUSTOMER_PALETTES.length),
+    spriteIdx: Math.floor(Math.random() * TAMA_PALETTES.length),
     order: generateOrder(level),
     toppings: generateToppings(level),
     x: W + 10,
@@ -111,10 +111,27 @@ function createCustomer(id: number, level: number): Customer {
   };
 }
 
-// ── Sound helpers ─────────────────────────────────────────────────────────────
-function playDing() {
+// ── Sound helpers (shared AudioContext for mobile compatibility) ──────────────
+// Mobile browsers require AudioContext to be created/resumed during a user gesture.
+// We create ONE shared context on first interaction and reuse it for all sounds.
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioCtx(): AudioContext | null {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+      sharedAudioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    }
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch { return null; }
+}
+
+function playDing() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
@@ -135,8 +152,9 @@ function playDing() {
 }
 
 function playBoop() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
@@ -149,8 +167,9 @@ function playBoop() {
 }
 
 function playWrong() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
@@ -161,9 +180,31 @@ function playWrong() {
   } catch { /* */ }
 }
 
-function createMusicContext(): { ctx: AudioContext; stop: () => void } | null {
+function playCoinSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    // Coin collect jingle - rising arpeggio
+    const notes = [880, 1108, 1318, 1760];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "square";
+      const t = ctx.currentTime + i * 0.08;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+      osc.start(t); osc.stop(t + 0.15);
+    });
+  } catch { /* */ }
+}
+
+function createMusicContext(): { stop: () => void } | null {
+  const audioCtx = getAudioCtx();
+  if (!audioCtx) return null;
+  const ctx = audioCtx;
+  try {
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(0.06, ctx.currentTime);
     masterGain.connect(ctx.destination);
@@ -195,8 +236,7 @@ function createMusicContext(): { ctx: AudioContext; stop: () => void } | null {
     }
     scheduleLoop(ctx.currentTime + 0.1);
     return {
-      ctx,
-      stop: () => { stopped = true; masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5); setTimeout(() => ctx.close(), 600); },
+      stop: () => { stopped = true; masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5); },
     };
   } catch { return null; }
 }
@@ -301,76 +341,115 @@ function drawBackground(ctx: CanvasRenderingContext2D) {
 }
 
 function drawCustomerSprite(ctx: CanvasRenderingContext2D, x: number, y: number, paletteIdx: number, walking: boolean, facing: "left" | "right") {
-  const pal = CUSTOMER_PALETTES[paletteIdx % CUSTOMER_PALETTES.length];
-  const f = facing === "left" ? -1 : 1;
-  const bobY = walking ? Math.floor(Math.sin(Date.now() / 200) * 1) : 0;
-  const legAnim = walking ? Math.floor(Math.sin(Date.now() / 150) * 2) : 0;
-
-  // Draw mirrored if facing left
-  const cx = (px_x: number) => facing === "left" ? x - px_x : x + px_x;
+  const pal = TAMA_PALETTES[paletteIdx % TAMA_PALETTES.length];
+  const bobY = walking ? Math.floor(Math.sin(Date.now() / 200) * 1.5) : 0;
+  const legAnim = walking ? Math.floor(Math.sin(Date.now() / 150) * 1) : 0;
 
   // Shadow on ground
-  px(ctx, x - 4, y + 16, 9, 1, "rgba(0,0,0,0.1)");
+  px(ctx, x - 5, y + 12, 11, 2, "rgba(0,0,0,0.08)");
 
-  // Legs
-  px(ctx, cx(-2), y + 12 + bobY, 2, 4 + legAnim, pal.pants);
-  px(ctx, cx(2), y + 12 + bobY, 2, 4 - legAnim, pal.pants);
+  // Tiny feet/legs (Tamagotchi style - very small)
+  px(ctx, x - 3, y + 10 + bobY + legAnim, 2, 3, pal.accent);
+  px(ctx, x + 2, y + 10 + bobY - legAnim, 2, 3, pal.accent);
 
-  // Shoes
-  px(ctx, cx(-3), y + 15 + bobY + legAnim, 3, 2, "#333");
-  px(ctx, cx(1), y + 15 + bobY - legAnim, 3, 2, "#333");
-
-  // Body
-  for (let dy = 3; dy < 13; dy++) {
-    for (let dx = -3; dx < 5; dx++) {
-      px(ctx, cx(dx), y + dy + bobY, 1, 1, pal.shirt);
-    }
-  }
-  // Shirt highlight
-  px(ctx, cx(-1), y + 5 + bobY, 2, 4, lightenColor(pal.shirt, 30));
-
-  // Arms
-  px(ctx, cx(-4), y + 4 + bobY, 1, 6, pal.shirt);
-  px(ctx, cx(5), y + 4 + bobY, 1, 6, pal.shirt);
-  // Hands
-  px(ctx, cx(-4), y + 10 + bobY, 1, 2, pal.skin);
-  px(ctx, cx(5), y + 10 + bobY, 1, 2, pal.skin);
-
-  // Head (big like Tamagotchi!)
-  for (let dy = -8; dy < 3; dy++) {
-    for (let dx = -4; dx < 6; dx++) {
-      const isEdge = (dy === -8 && (dx < -2 || dx > 3)) || (dy === 2 && (dx < -2 || dx > 3));
-      if (!isEdge) {
-        px(ctx, cx(dx), y + dy + bobY, 1, 1, pal.skin);
-      }
+  // Round blob body (big oval - the main Tamagotchi shape)
+  for (let dy = -10; dy <= 9; dy++) {
+    // Ellipse: wider in middle, narrower at top/bottom
+    const progress = (dy + 10) / 19;
+    const halfW = Math.round(7 * Math.sin(progress * Math.PI));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const isOuterEdge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + bobY, 1, 1, isOuterEdge ? pal.accent : pal.body);
     }
   }
 
-  // Hair - big on top
-  for (let dx = -4; dx < 6; dx++) {
-    px(ctx, cx(dx), y - 9 + bobY, 1, 1, pal.hair);
-    px(ctx, cx(dx), y - 8 + bobY, 1, 1, pal.hair);
+  // Body highlight (light reflection on upper left)
+  for (let dy = -7; dy <= -3; dy++) {
+    px(ctx, x - 3, y + dy + bobY, 2, 1, lightenColor(pal.body, 40));
   }
-  for (let dx = -3; dx < 5; dx++) {
-    px(ctx, cx(dx), y - 10 + bobY, 1, 1, pal.hair);
-  }
-  // Side hair
-  px(ctx, cx(-4), y - 7 + bobY, 1, 3, pal.hair);
-  px(ctx, cx(5), y - 7 + bobY, 1, 3, pal.hair);
 
-  // Eyes - big pixel eyes (Tamagotchi style)
-  px(ctx, cx(-1), y - 4 + bobY, 2, 2, "#000");
-  px(ctx, cx(3), y - 4 + bobY, 2, 2, "#000");
-  // Eye shine
-  px(ctx, cx(-1), y - 4 + bobY, 1, 1, "#FFF");
-  px(ctx, cx(3), y - 4 + bobY, 1, 1, "#FFF");
+  // Tiny arms (stubby Tamagotchi limbs)
+  px(ctx, x - 7, y + 1 + bobY, 2, 2, pal.accent);
+  px(ctx, x + 6, y + 1 + bobY, 2, 2, pal.accent);
 
-  // Mouth
-  px(ctx, cx(0), y + 0 + bobY, 3, 1, "#E06060");
+  // Eyes - big and round (Tamagotchi signature)
+  // Left eye
+  px(ctx, x - 3, y - 3 + bobY, 3, 3, pal.eyes);
+  px(ctx, x - 3, y - 3 + bobY, 1, 1, "#FFF"); // shine
+  // Right eye
+  px(ctx, x + 2, y - 3 + bobY, 3, 3, pal.eyes);
+  px(ctx, x + 2, y - 3 + bobY, 1, 1, "#FFF"); // shine
+
+  // Mouth - small happy curve
+  px(ctx, x - 1, y + 2 + bobY, 3, 1, "#E06060");
+  px(ctx, x - 2, y + 1 + bobY, 1, 1, "#E06060");
+  px(ctx, x + 3, y + 1 + bobY, 1, 1, "#E06060");
 
   // Cheek blush
-  px(ctx, cx(-3), y - 2 + bobY, 2, 1, "#FFB0B0");
-  px(ctx, cx(4), y - 2 + bobY, 2, 1, "#FFB0B0");
+  px(ctx, x - 6, y + bobY, 2, 2, "#FFB0B0");
+  px(ctx, x + 5, y + bobY, 2, 2, "#FFB0B0");
+}
+
+function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  const pal = { body: "#90EE90", accent: "#6BC56B", eyes: "#1A1A2E" }; // green shopkeeper
+
+  // Body behind counter (only upper half visible)
+  for (let dy = -14; dy <= 0; dy++) {
+    const progress = (dy + 14) / 14;
+    const halfW = Math.round(6 * Math.sin(progress * Math.PI * 0.7 + 0.3));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const isOuterEdge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy, 1, 1, isOuterEdge ? pal.accent : pal.body);
+    }
+  }
+
+  // Highlight
+  for (let dy = -12; dy <= -9; dy++) {
+    px(ctx, x - 3, y + dy, 2, 1, lightenColor(pal.body, 40));
+  }
+
+  // Eyes
+  px(ctx, x - 3, y - 9, 3, 3, pal.eyes);
+  px(ctx, x - 3, y - 9, 1, 1, "#FFF");
+  px(ctx, x + 2, y - 9, 3, 3, pal.eyes);
+  px(ctx, x + 2, y - 9, 1, 1, "#FFF");
+
+  // Happy mouth
+  px(ctx, x - 1, y - 4, 3, 1, "#E06060");
+  px(ctx, x - 2, y - 5, 1, 1, "#E06060");
+  px(ctx, x + 3, y - 5, 1, 1, "#E06060");
+
+  // Blush
+  px(ctx, x - 5, y - 6, 2, 2, "#FFB0B0");
+  px(ctx, x + 4, y - 6, 2, 2, "#FFB0B0");
+
+  // Little chef hat
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 15, 1, 1, "#FFFFFF");
+    px(ctx, x + dx, y - 16, 1, 1, "#FFFFFF");
+  }
+  for (let dx = -3; dx <= 3; dx++) {
+    px(ctx, x + dx, y - 17, 1, 1, "#FFFFFF");
+    px(ctx, x + dx, y - 18, 1, 1, "#FFFFFF");
+  }
+  // Hat band
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 15, 1, 1, "#FF69B4");
+  }
+
+  // Name tag on counter
+  const tagW = 22;
+  const tagX = x - Math.floor(tagW / 2);
+  const tagY = y + 1;
+  for (let dx = 0; dx < tagW; dx++) {
+    for (let dy = 0; dy < 6; dy++) {
+      const isBorder = dy === 0 || dy === 5 || dx === 0 || dx === tagW - 1;
+      px(ctx, tagX + dx, tagY + dy, 1, 1, isBorder ? "#333" : "#FFF");
+    }
+  }
+  drawText(ctx, "SCOOPY", x, tagY + 3, "#FF69B4", 0.4);
 }
 
 function lightenColor(hex: string, amt: number): string {
@@ -455,91 +534,147 @@ function drawCone(ctx: CanvasRenderingContext2D, x: number, y: number, scoops: F
 
 function drawSpeechBubble(ctx: CanvasRenderingContext2D, cx: number, cy: number, order: Flavor[], scoopsDone: number, toppings: Topping[], toppingsDone: number, toppingsPhase: boolean, reaction: string) {
   if (reaction) {
-    // Show reaction text in bubble
-    const bw = Math.max(20, reaction.length * 4 + 8);
+    // Big round Tamagotchi-style reaction bubble
+    const bw = Math.max(28, reaction.length * 5 + 12);
+    const bh = 16;
     const bx = Math.max(1, Math.min(cx - Math.floor(bw / 2), W - bw - 1));
-    const by = cy - 14;
-    // Bubble bg
-    for (let dy = 0; dy < 10; dy++) {
+    const by = cy - 20;
+
+    // Rounded bubble with thick border (Tamagotchi style)
+    for (let dy = 0; dy < bh; dy++) {
       for (let dx = 0; dx < bw; dx++) {
-        const isBorder = dy === 0 || dy === 9 || dx === 0 || dx === bw - 1;
-        px(ctx, bx + dx, by + dy, 1, 1, isBorder ? "#333" : "#FFF");
+        // Round corners
+        const cornerDist = Math.min(
+          Math.sqrt(dx * dx + dy * dy),
+          Math.sqrt((bw - 1 - dx) ** 2 + dy * dy),
+          Math.sqrt(dx * dx + (bh - 1 - dy) ** 2),
+          Math.sqrt((bw - 1 - dx) ** 2 + (bh - 1 - dy) ** 2)
+        );
+        if (cornerDist < 2.5) continue;
+        const isBorder = dy <= 1 || dy >= bh - 2 || dx <= 1 || dx >= bw - 2;
+        px(ctx, bx + dx, by + dy, 1, 1, isBorder ? "#333" : "#FFFDE8");
       }
     }
-    // Tail
-    px(ctx, cx, by + 10, 2, 1, "#333");
-    px(ctx, cx, by + 11, 1, 1, "#333");
-    drawText(ctx, reaction, bx + bw / 2, by + 5, "#333", 0.55);
+    // Rounded tail
+    px(ctx, cx - 1, by + bh, 4, 2, "#333");
+    px(ctx, cx, by + bh + 2, 2, 1, "#333");
+    px(ctx, cx, by + bh, 2, 2, "#FFFDE8");
+    drawText(ctx, reaction, bx + bw / 2, by + bh / 2, "#FF69B4", 0.7);
     return;
   }
 
-  // Order bubble showing scoop colors as circles
-  const itemCount = order.length + (toppings.length > 0 ? 1 : 0);
-  const bw = Math.max(22, itemCount * 8 + 6);
-  const bh = 12;
+  // Large Tamagotchi-style order bubble with scoop circles
+  const itemCount = order.length + (toppings.length > 0 ? toppings.length + 1 : 0);
+  const bw = Math.max(30, itemCount * 9 + 10);
+  const bh = 18;
   const bx = Math.max(1, Math.min(cx - Math.floor(bw / 2), W - bw - 1));
-  const by = cy - 16;
+  const by = cy - 24;
 
-  // Bubble background
+  // Rounded bubble background (thick border, warm white fill)
   for (let dy = 0; dy < bh; dy++) {
     for (let dx = 0; dx < bw; dx++) {
-      const isBorder = dy === 0 || dy === bh - 1 || dx === 0 || dx === bw - 1;
-      px(ctx, bx + dx, by + dy, 1, 1, isBorder ? "#333" : "#FFF");
+      const cornerDist = Math.min(
+        Math.sqrt(dx * dx + dy * dy),
+        Math.sqrt((bw - 1 - dx) ** 2 + dy * dy),
+        Math.sqrt(dx * dx + (bh - 1 - dy) ** 2),
+        Math.sqrt((bw - 1 - dx) ** 2 + (bh - 1 - dy) ** 2)
+      );
+      if (cornerDist < 3) continue;
+      const isBorder = dy <= 1 || dy >= bh - 2 || dx <= 1 || dx >= bw - 2;
+      px(ctx, bx + dx, by + dy, 1, 1, isBorder ? "#333" : "#FFFDE8");
     }
   }
-  // Tail
-  px(ctx, cx, by + bh, 2, 1, "#333");
-  px(ctx, cx, by + bh + 1, 1, 1, "#333");
+  // Rounded tail pointing down
+  px(ctx, cx - 1, by + bh, 4, 2, "#333");
+  px(ctx, cx, by + bh + 2, 2, 1, "#333");
+  px(ctx, cx, by + bh, 2, 2, "#FFFDE8");
 
-  // Draw scoop circles in bubble
+  // Draw scoop circles in bubble (bigger, 5x5)
   order.forEach((item, i) => {
     const done = i < scoopsDone;
     const isNext = !toppingsPhase && i === scoopsDone;
-    const ix = bx + 4 + i * 8;
-    const iy = by + 4;
+    const ix = bx + 6 + i * 9;
+    const iy = by + 5;
 
-    // Scoop dot (3x3 pixel circle)
-    for (let dy = 0; dy < 4; dy++) {
-      for (let dx = 0; dx < 4; dx++) {
-        const dist = Math.abs(dx - 1.5) + Math.abs(dy - 1.5);
-        if (dist < 2.5) {
+    // Scoop dot (5x5 pixel circle)
+    for (let dy = 0; dy < 5; dy++) {
+      for (let dx = 0; dx < 5; dx++) {
+        const dist = Math.abs(dx - 2) + Math.abs(dy - 2);
+        if (dist <= 3) {
           px(ctx, ix + dx, iy + dy, 1, 1, done ? "#CCC" : item.colors[1]);
         }
       }
     }
     if (done) {
-      px(ctx, ix + 1, iy + 1, 2, 2, "#4CAF50");
+      // Checkmark
+      px(ctx, ix + 1, iy + 2, 1, 1, "#4CAF50");
+      px(ctx, ix + 2, iy + 3, 1, 1, "#4CAF50");
+      px(ctx, ix + 3, iy + 2, 1, 1, "#4CAF50");
+      px(ctx, ix + 4, iy + 1, 1, 1, "#4CAF50");
     }
     if (isNext) {
-      // Blinking border
       const blink = Math.floor(Date.now() / 300) % 2;
       if (blink) {
-        px(ctx, ix - 1, iy - 1, 6, 1, "#333");
-        px(ctx, ix - 1, iy + 4, 6, 1, "#333");
-        px(ctx, ix - 1, iy, 1, 4, "#333");
-        px(ctx, ix + 4, iy, 1, 4, "#333");
+        // Blinking highlight border
+        for (let dx = -1; dx <= 5; dx++) {
+          px(ctx, ix + dx, iy - 1, 1, 1, "#FF69B4");
+          px(ctx, ix + dx, iy + 5, 1, 1, "#FF69B4");
+        }
+        for (let dy = 0; dy < 5; dy++) {
+          px(ctx, ix - 1, iy + dy, 1, 1, "#FF69B4");
+          px(ctx, ix + 5, iy + dy, 1, 1, "#FF69B4");
+        }
       }
     }
   });
 
-  // Topping indicators in bubble
+  // Topping indicators
   if (toppings.length > 0) {
-    const tx = bx + 4 + order.length * 8;
-    const ty = by + 3;
-    // Separator line
-    px(ctx, tx - 2, ty, 1, 6, "#DDD");
-    // Topping dots
+    const tx = bx + 6 + order.length * 9;
+    const ty = by + 4;
+    // Separator
+    px(ctx, tx - 2, ty, 1, 8, "#DDD");
+    px(ctx, tx - 3, ty, 1, 8, "#EEE");
+
     toppings.forEach((_, ti) => {
       const done = ti < toppingsDone;
       const isNext = toppingsPhase && ti === toppingsDone;
-      const tix = tx + ti * 5;
-      px(ctx, tix, ty + 1, 3, 3, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
+      const tix = tx + 1 + ti * 7;
+      // Star shape for toppings
+      px(ctx, tix + 1, ty + 1, 3, 3, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
+      px(ctx, tix + 2, ty, 1, 1, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
+      px(ctx, tix + 2, ty + 4, 1, 1, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
+      px(ctx, tix, ty + 2, 1, 1, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
+      px(ctx, tix + 4, ty + 2, 1, 1, done ? "#4CAF50" : isNext ? "#FF69B4" : "#DDD");
       if (isNext) {
         const blink = Math.floor(Date.now() / 300) % 2;
-        if (blink) px(ctx, tix - 1, ty, 5, 5, "rgba(255,105,180,0.3)");
+        if (blink) {
+          for (let dx = -1; dx <= 5; dx++) {
+            px(ctx, tix + dx, ty - 1, 1, 1, "#FF69B4");
+            px(ctx, tix + dx, ty + 5, 1, 1, "#FF69B4");
+          }
+        }
       }
     });
   }
+}
+
+// Gold coin drawing helper
+function drawGoldCoin(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
+  // Outer ring
+  for (let dy = -size; dy <= size; dy++) {
+    for (let dx = -size; dx <= size; dx++) {
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= size) {
+        const isEdge = dist > size - 1.5;
+        px(ctx, cx + dx, cy + dy, 1, 1, isEdge ? "#B8860B" : "#FFD700");
+      }
+    }
+  }
+  // Shine
+  px(ctx, cx - 1, cy - 1, 1, 1, "#FFED80");
+  // Dollar sign or G in center
+  drawText(ctx, "G", cx + 0.5, cy + 0.5, "#B8860B", 0.35);
 }
 
 
@@ -560,8 +695,10 @@ export default function IceCreamGame() {
   const [showTutorial, setShowTutorial] = useState(false);
   const customerIdRef = useRef(0);
   const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const musicRef = useRef<{ ctx: AudioContext; stop: () => void } | null>(null);
+  const musicRef = useRef<{ stop: () => void } | null>(null);
   const animFrameRef = useRef<number>(0);
+  const [goldCoins, setGoldCoins] = useState<{ x: number; y: number; age: number }[]>([]);
+  const [totalGold, setTotalGold] = useState(0);
 
   // Load high score
   useEffect(() => {
@@ -592,6 +729,9 @@ export default function IceCreamGame() {
 
       drawBackground(ctx);
 
+      // Draw shopkeeper behind counter
+      drawShopkeeper(ctx, 64, 70);
+
       // Draw customer
       const cust = customer;
       if (cust) {
@@ -609,7 +749,7 @@ export default function IceCreamGame() {
           drawSpeechBubble(
             ctx,
             Math.round(cust.x),
-            50,
+            38,
             cust.order,
             scoopsDone,
             cust.toppings,
@@ -618,13 +758,17 @@ export default function IceCreamGame() {
             cust.reaction,
           );
 
-          // Name tag
-          const nameW = cust.name.length * 3 + 4;
+          // Name tag below the character
+          const nameW = cust.name.length * 3 + 6;
           const nx = Math.round(cust.x) - Math.floor(nameW / 2);
+          const ny = 90;
           for (let dx = 0; dx < nameW; dx++) {
-            px(ctx, nx + dx, 40, 1, 6, "rgba(0,0,0,0.7)");
+            for (let dy = 0; dy < 6; dy++) {
+              const isBorder = dy === 0 || dy === 5 || dx === 0 || dx === nameW - 1;
+              px(ctx, nx + dx, ny + dy, 1, 1, isBorder ? "#333" : "#FFFDE8");
+            }
           }
-          drawText(ctx, cust.name, Math.round(cust.x) + 1, 43, "#FFF", 0.45);
+          drawText(ctx, cust.name, Math.round(cust.x) + 1, ny + 3, "#FF69B4", 0.4);
         }
       }
 
@@ -633,9 +777,22 @@ export default function IceCreamGame() {
         drawCone(ctx, 100, 52, coneScoops, cust.toppings, toppingsDone);
       }
 
+      // Draw floating gold coins
+      goldCoins.forEach((coin) => {
+        const floatY = coin.y - coin.age * 0.3;
+        const alpha = Math.max(0, 1 - coin.age / 60);
+        if (alpha > 0) {
+          ctx.globalAlpha = alpha;
+          drawGoldCoin(ctx, coin.x, Math.round(floatY), 3);
+          ctx.globalAlpha = 1;
+        }
+      });
+
       // HUD on canvas
       drawText(ctx, `LV.${level}`, 16, 13, "#FF69B4", 0.65);
-      drawText(ctx, `${score}pts`, 64, 13, "#FF69B4", 0.65);
+      // Gold coin counter instead of pts
+      drawGoldCoin(ctx, 52, 12, 2);
+      drawText(ctx, `${totalGold}`, 62, 13, "#FFD700", 0.65);
 
       // Hearts
       const heartX = 105;
@@ -653,7 +810,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, score, customersServed]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, score, customersServed, goldCoins, totalGold]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -733,16 +890,42 @@ export default function IceCreamGame() {
     }
   }, [customersServed]);
 
+  // Gold coin animation aging
+  useEffect(() => {
+    if (goldCoins.length === 0) return;
+    const interval = setInterval(() => {
+      setGoldCoins((prev) => {
+        const updated = prev.map((c) => ({ ...c, age: c.age + 1 })).filter((c) => c.age < 60);
+        return updated;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, [goldCoins.length]);
+
   // Complete order
   const completeOrder = useCallback(() => {
     if (!customer) return;
-    const bonus = 50 + customer.toppings.length * 25;
-    setScore((s) => s + 100 + bonus);
+    const coinCount = 1 + customer.order.length + customer.toppings.length;
+    setScore((s) => s + 100 + customer.toppings.length * 25);
+    setTotalGold((g) => g + coinCount);
     setCustomersServed((c) => c + 1);
-    setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS), state: "served" } : prev);
+    playCoinSound();
+
+    // Spawn floating gold coins around the customer
+    const newCoins = Array.from({ length: coinCount }, (_, i) => ({
+      x: Math.round(customer.x) - 5 + i * 6,
+      y: 70,
+      age: 0,
+    }));
+    setGoldCoins((prev) => [...prev, ...newCoins]);
+
+    setCustomer((prev) => prev ? { ...prev, reaction: `+${coinCount}G!`, state: "served" } : prev);
+    setTimeout(() => {
+      setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS) } : prev);
+    }, 600);
     setTimeout(() => {
       setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
-    }, 1200);
+    }, 1400);
   }, [customer]);
 
   // Tap a flavor
@@ -799,8 +982,11 @@ export default function IceCreamGame() {
   );
 
   const startGame = useCallback(() => {
+    // Initialize shared audio context on user gesture (critical for mobile)
+    getAudioCtx();
     setLevel(1); setScore(0); setCustomersServed(0); setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    setGoldCoins([]); setTotalGold(0);
     customerIdRef.current = 0; setPhase("playing");
     if (musicRef.current) musicRef.current.stop();
     musicRef.current = createMusicContext();
