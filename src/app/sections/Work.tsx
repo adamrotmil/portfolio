@@ -14,6 +14,8 @@ function CaseStudyCard({
   index: number;
 }) {
   const [hovered, setHovered] = useState(false);
+  const cardTitle =
+    study.slug === "miami" ? "My Wellness Research" : study.title;
 
   return (
     <Reveal
@@ -82,7 +84,7 @@ function CaseStudyCard({
         <div className="p-6 pb-7">
           <div className="flex justify-between items-baseline mb-2">
             <h3 className="font-serif text-2xl font-normal text-text-primary">
-              {study.title}
+              {cardTitle}
             </h3>
             <span className="font-sans text-[0.78rem] text-text-muted hidden sm:inline">
               {study.subtitle}
