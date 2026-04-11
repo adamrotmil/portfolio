@@ -59,16 +59,17 @@ export const COMPANY_BADGES = [
 
 export const LAB_ITEMS = [
   {
+    title: "SwiftUI Interaction Lab",
+    description:
+      "Native iOS and macOS interaction experiments I'm building in public while learning SwiftUI.",
+    url: "https://github.com/adamrotmil/swiftui-interaction-lab",
+    tech: "SwiftUI · iOS · macOS",
+  },
+  {
     title: "Client Headlines",
     description: "Hybrid AI + mad-libs headline generator",
     url: "https://adamrotmil.github.io/client-headlines/clients-say.html",
     tech: "Claude API · Cloudflare Workers",
-  },
-  {
-    title: "Coming Soon",
-    description: "Micro-interaction experiments",
-    url: null,
-    tech: "CSS · React",
   },
   {
     title: "Coming Soon",

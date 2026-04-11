@@ -288,7 +288,7 @@ export const PROJECTS: Project[] = [
     title: "AI Model Training",
     subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
     description:
-      "Contract work contributing to the development of OpenAI’s ChatGPT, Google’s Gemini, and other leading AI models through multi-axis evaluation, SFT rating, and RLHF — assessing groundedness, truthfulness, instruction-following, safety, and factual accuracy.",
+      "Improved frontier model behavior through multi-axis LLM evaluation for OpenAI, Google, and others.",
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
     color: "#10b981",
     featured: true,
@@ -371,120 +371,6 @@ export const PROJECTS: Project[] = [
       tools: ["DataAnnotation Platform", "Custom Evaluation Tools"],
     },
     nextProject: {
-      slug: "vulcan",
-      title: "Vulcan",
-      subtitle: "DoD Innovation Platform",
-    },
-  },
-  {
-    slug: "vulcan",
-    title: "Vulcan",
-    subtitle: "DoD Innovation Platform",
-    description:
-      "An innovation management platform where government agencies issue calls for entries and commercial-sector innovators submit proposals and technical demos. Part of the deep tech pipeline modernizing how SOCOM conducts BAAs and acquires new capabilities.",
-    tags: ["Defense", "GovTech", "Innovation", "Enterprise"],
-    color: "#475569",
-    thumbnail: "/images/vulcan/vulcan.png",
-    heroImage: "/images/vulcan/vulcan.png",
-    heroObjectPosition: "top",
-    meta: [
-      { label: "Client", value: "Cylitix / DoD (SOCOM)" },
-      { label: "Role", value: "Product Designer" },
-      { label: "Duration", value: "TBD" },
-      { label: "Platform", value: "Web" },
-    ],
-    sections: [
-      {
-        type: "text",
-        sectionNumber: "01",
-        sectionLabel: "Overview",
-        heading: "Modernizing how the Department of Defense discovers innovation",
-        body: [
-          "Vulcan is an innovation platform built for Cylitix with sponsorship from the Department of Defense. It modernizes the Broad Agency Announcement (BAA) process — how agencies like SOCOM issue calls for capabilities and how commercial-sector innovators respond with proposals and technical demonstrations.",
-          "The platform sits at the center of the deep tech pipeline, connecting government needs with commercial innovation in a structured, searchable, and evaluable way.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "02",
-        sectionLabel: "Call Authoring",
-        heading: "Building structured calls for innovation",
-        body: [
-          "Government program managers create calls through a multi-step authoring flow. The form builder supports conditional logic, branching, and custom question types — from technical focus areas to cost estimates and milestone timelines. Skip logic lets authors create adaptive submission forms that route innovators through relevant sections based on their domain.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            src: "/images/vulcan/form-skip-logic.png",
-            label: "Form builder with conditional skip logic",
-          },
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "03",
-        sectionLabel: "Question Types",
-        heading: "Flexible data collection for complex submissions",
-        body: [
-          "The platform supports a range of question types tailored to defense innovation evaluation — from ROM cost estimates and milestone timelines to technical capability assessments. Each question type is configurable with validation rules, optional fields, and rich text context.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            src: "/images/vulcan/8.png",
-            label: "ROM Cost Estimate question type",
-          },
-          {
-            src: "/images/vulcan/11.png",
-            label: "Milestone timeline configuration",
-          },
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "04",
-        sectionLabel: "Access Controls",
-        heading: "Managing collaboration across agencies",
-        body: [
-          "Calls involve multiple stakeholders across different government organizations. The access control system lets program managers invite editors, set visibility permissions, and manage who can view and modify call details — supporting the complex organizational dynamics of defense procurement.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            src: "/images/vulcan/Add an Editor and Set Visibility.png",
-            label: "Editor management and visibility controls",
-          },
-        ],
-      },
-      {
-        type: "quote",
-        quote: "Note: project content is illustrative.",
-      },
-    ],
-    outcome: {
-      heading: "Enabling the deep tech pipeline",
-      body: [
-        "The platform supports SOCOM’s modernized approach to capability acquisition, streamlining the path from government need to commercial innovation through structured authoring, evaluation, and collaboration tools.",
-      ],
-      contributions: [
-        "Product Design",
-        "Search UX",
-        "Information Architecture",
-        "Design System",
-      ],
-      collaborators: ["Cylitix Team", "DoD Stakeholders"],
-      tools: ["Figma"],
-    },
-    nextProject: {
       slug: "gator",
       title: "Gator",
       subtitle: "AI Tech Support Chatbot",
@@ -495,7 +381,7 @@ export const PROJECTS: Project[] = [
     title: "Gator",
     subtitle: "AI Tech Support Chatbot",
     description:
-      "Agentic diagnostic tool for technical workers. Multimodal scanning builds case context, then an LLM guides step-by-step actions with product-aware responses. Native iOS app.",
+      "Shortened service time with a multimodal AI support app for HVAC technicians.",
     tags: ["Mobile", "Conversational AI", "QR/Vision", "Field Service"],
     color: "#2d5a3d",
     thumbnail: "/images/gator/Gator cover.png",
@@ -654,7 +540,7 @@ export const PROJECTS: Project[] = [
     title: "Respond AI",
     subtitle: "LLM for Logistics",
     description:
-      "Integrating an LLM into a dispatch platform to pre-draft carrier responses. Human-in-the-loop design keeps operators in control while cutting response time dramatically.",
+      "Cut carrier response latency by designing an LLM dispatch workflow.",
     tags: ["AI / LLM", "Enterprise", "Human-in-the-Loop"],
     color: "#7c3aed",
     thumbnail: "/images/respond-ai/Respond Cover.png",
@@ -829,7 +715,7 @@ export const PROJECTS: Project[] = [
     title: "AstraZeneca Care",
     subtitle: "Remote Patient Monitoring",
     description:
-      "Leading design for a clinical research platform used in oncology R&D. Apps and tools for running trials, engaging patients and doctors, and managing health data.",
+      "Enabled remote oncology monitoring through leading research and product design for patient and clinician tools.",
     tags: ["Health Tech", "Clinical Trials", "Design Leadership"],
     color: "#0ea5e9",
     thumbnail: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
@@ -930,16 +816,16 @@ export const PROJECTS: Project[] = [
     },
     nextProject: {
       slug: "miami",
-      title: "Miami",
-      subtitle: "Clinical Dashboard",
+      title: "My Wellness Research — University of Miami",
+      subtitle: "Clinical Cancer Research Platform",
     },
   },
   {
     slug: "miami",
-    title: "University of Miami",
+    title: "My Wellness Research — University of Miami",
     subtitle: "Clinical Cancer Research Platform",
     description:
-      "Designing research tools at the intersection of clinical practice and patient engagement for one of the country’s leading academic medical centers.",
+      "Designed a remote monitoring platform used in published clinical trials at Sylvester Cancer Center, improving post-surgical recovery outcomes across 293 patients.",
     tags: ["Health Tech", "Research", "Mobile"],
     color: "#f97316",
     thumbnail: "/images/miami/University-Miami-cover.png",
@@ -956,10 +842,10 @@ export const PROJECTS: Project[] = [
         sectionNumber: "01",
         sectionLabel: "Overview",
         heading:
-          "A patient & doctor platform for clinical cancer research at the Sylvester Cancer Research Center.",
+          "A remote monitoring platform that became part of Sylvester's cancer data ecosystem",
         body: [
-          "The Sylvester Cancer Research Center at the University of Miami was conducting clinical trials for new cancer treatments but faced challenges in efficiently monitoring patient symptoms and correlating treatments with health outcomes.",
-          "They needed a platform that would allow patients to easily track their symptoms and enable doctors to remotely monitor health and make data-driven decisions. The study design used randomized controlled trials — participants assigned to either intervention or control groups — to prove causal impact, not just correlation.",
+          "I led product design for My Wellness Research, a HIPAA-compliant remote monitoring platform developed at the Sylvester Comprehensive Cancer Center, part of the University of Miami Miller School of Medicine. The platform enables cancer patients, health coaches, and clinicians to communicate and track progress in real time, collecting patient-generated data from wearables, video sessions, dietary assessments, and remote symptom reporting.",
+          "What began as a research tool has grown into a cornerstone of Sylvester's Cancer Data Ecosystem initiative, integrating lifestyle data with genomic, imaging, and clinical records to support personalized treatment planning across multiple active clinical trials.",
         ],
       },
       {
@@ -981,12 +867,12 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "02",
-        sectionLabel: "Discovery",
+        sectionLabel: "The Problem",
         heading:
-          "From patient interviews to storyboards and wireframes",
+          "Remote cancer care needed a platform built for home-based research",
         body: [
-          "Interviews with 8 cancer patients and 5 oncologists revealed that patients struggled to remember symptoms during clinic visits, and doctors needed real-time data for timely interventions. Both wanted a system that wouldn’t add burden.",
-          "I developed storyboards to map the patient journey — from daily check-ins to doctor reviews — and translated those into wireframes exploring video-based symptom capture, biometric data collection, and caregiver sharing flows.",
+          "Cancer care is increasingly moving from the clinic to the home, but most clinical research platforms were not designed for remote patient engagement. Researchers needed a way to monitor patients between visits, collect lifestyle and behavioral data at scale, and act on that data in real time.",
+          "The platform needed to serve three distinct user groups with very different needs: patients reporting symptoms and tracking daily behaviors, health coaches facilitating interventions and monitoring adherence, and clinicians reviewing population-level trends and individual risk signals.",
         ],
       },
       {
@@ -1006,11 +892,11 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "03",
-        sectionLabel: "Design & Prototyping",
-        heading: "Mapping complex user flows into clear, testable interactions",
+        sectionLabel: "What I Did",
+        heading: "Designing across patient, coach, and clinician experiences",
         body: [
-          "I created detailed user flows for both patient and clinician personas, mapping every interaction from app onboarding through daily symptom logging, video reflections, and data review. Each screen was annotated with functional specifications to guide development.",
-          "Key features included a mobile app for patients to log symptoms daily, a dashboard for doctors to view trends and receive alerts, and integration with wearable devices to automatically track health metrics.",
+          "I designed the end-to-end product experience across patient, coach, and clinician interfaces. This included remote symptom reporting flows, wearable data integration views, video session scheduling and recording, and dashboards that surfaced actionable trends for care teams. I worked directly with Dr. Tracy Crane's research team to understand clinical workflows and translate complex research protocols into intuitive digital experiences.",
+          "The design challenge was balancing clinical rigor with accessibility. Patients ranged widely in age, technical comfort, and language. The platform needed to feel simple and supportive for a patient going through cancer treatment, while giving researchers and coaches the depth of data they needed to run rigorous trials.",
         ],
       },
       {
@@ -1030,11 +916,11 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "04",
-        sectionLabel: "The Platform",
-        heading: "MyWellness — patient coaching with unprecedented precision",
+        sectionLabel: "Published Outcomes",
+        heading: "Peer-reviewed trials showed measurable recovery benefits",
         body: [
-          "The myWellness platform gives clinicians a comprehensive dashboard with food intake tracking, symptom severity trends, and real-time actigraphy data. Video coaching sessions allow face-to-face check-ins with patients while viewing their health data side by side.",
-          "An integrated messaging system supports ongoing communication between coaching sessions, with file sharing for photos and documents. The platform supports patient coaching with a level of precision that has not been possible before.",
+          "A randomized trial of 293 cancer surgery patients, published in npj Digital Medicine, found that patients monitored through the platform showed a 6% greater functional recovery rate by day 14 post-surgery and significantly fewer major complications compared to standard care.",
+          "A feasibility study published in JCO Oncology Practice documented the platform's use across a racially and ethnically diverse patient population, including the first large-scale deployment of validated Spanish-language patient-reported outcomes screening embedded in electronic health records.",
         ],
       },
       {
@@ -1058,10 +944,12 @@ export const PROJECTS: Project[] = [
       {
         type: "text",
         sectionNumber: "05",
-        sectionLabel: "Study Configuration",
-        heading: "Configurable study modules that adapt to each trial’s needs",
+        sectionLabel: "Ongoing Impact",
+        heading: "The platform continues to expand across trials and care programs",
         body: [
-          "The platform’s library system allows researchers to create and reuse questionnaire modules across studies. Each module supports configurable automation rules — if a patient misses a response or reports a severe symptom, the system can automatically notify the research team. This flexibility enabled new studies launched in partnership with Yale University.",
+          "The platform continues to grow beyond my original engagement. It now supports multiple active clinical trials at Sylvester, including an NCI-funded collaboration with Yale University studying nutrition interventions for ovarian cancer patients.",
+          "The research team has added AI and natural language processing capabilities to analyze patient coaching conversations, predict coaching needs, and identify retraining opportunities. A new pediatric sarcoma trial launched in 2026 uses the platform alongside 3D biomechanical software and wearable activity monitors.",
+          "My Wellness Research is now part of a broader ecosystem at Sylvester that includes the My Wellness Check screening tool, which went live system-wide for all Sylvester outpatients and has been associated with fewer emergency room visits and hospitalizations.",
         ],
       },
       {
@@ -1077,28 +965,29 @@ export const PROJECTS: Project[] = [
       {
         type: "stats",
         stats: [
-          { number: 200, suffix: "+", label: "Patients across 3 clinical trials" },
+          { number: 293, suffix: "", label: "Patients in randomized cancer surgery trial" },
           {
-            number: 17000,
-            suffix: "+",
-            label: "Hours of support call transcripts analyzed",
+            number: 6,
+            suffix: "%",
+            label: "Greater functional recovery by day 14",
           },
         ],
       },
       {
         type: "text",
         sectionNumber: "06",
-        sectionLabel: "Publications",
+        sectionLabel: "Credibility",
         heading: "Results written up in peer-reviewed journals",
         body: [
-          "The Remote Patient Monitoring System was successfully implemented in three clinical trials, involving over 200 patients. Research teams were able to analyze over 17,000 hours of support call transcripts captured via the MyWellness platform.",
+          "Platform used in published trials in npj Digital Medicine and JCO Oncology Practice. Active across multiple trials at Sylvester Comprehensive Cancer Center. NCI-funded collaboration with Yale University.",
         ],
       },
     ],
     outcome: {
-      heading: "Published research, real patient impact",
+      heading: "Product design with measurable clinical impact",
       body: [
-        "The MyWellness platform proved that thoughtful product design can directly impact clinical research outcomes. By making symptom tracking effortless for patients and data access immediate for doctors, the platform enabled a new paradigm in patient-centered cancer research.",
+        "Designed the patient, coach, and clinician experience for a platform that has directly contributed to published clinical evidence in cancer care.",
+        "The work sits at the intersection of product design and clinical research, where design decisions have measurable impact on patient recovery and quality of life.",
       ],
       contributions: [
         "Lead Product Design",
@@ -1126,7 +1015,7 @@ export const PROJECTS: Project[] = [
     title: "Content Studio",
     subtitle: "Cyber Security Training Environment",
     description:
-      "Designing a modular content authoring environment for cybersecurity educators to create competency-based assessments and hands-on training labs.",
+      "Accelerated cyber training authoring with a modular lab and learning platform.",
     tags: ["Defense", "Enterprise", "Canvas UI", "Design Systems"],
     color: "#06b6d4",
     thumbnail: "/images/content-studio/content-studio-cyber-training.png",
@@ -1224,7 +1113,7 @@ export const PROJECTS: Project[] = [
     title: "Wild Brains",
     subtitle: "Brain Wearable & Optimization App",
     description:
-      "A consumer brain wearable companion app that uses EEG biofeedback and behavioral tracking to help users optimize focus, creativity, and mental performance through personalized training programs.",
+      "Helped secure continued investment through end-to-end design of a brain training wearable app.",
     tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback"],
     color: "#a855f7",
     thumbnail: "/images/wb/upscale.png",
@@ -1579,12 +1468,12 @@ export const PROJECTS: Project[] = [
       subtitle: "U.S. Citizenship & Immigration Services",
     },
   },
-    {
+  {
     slug: "uscis",
     title: "USCIS",
     subtitle: "U.S. Citizenship & Immigration Services",
     description:
-      "Led the redesign of the main identity system (CIS 2) used by USCIS adjudicators to verify applicant qualifications and check historical encounters — serving 5,000+ users processing ~35k applications per day.",
+      "Streamlined identity verification for 5,000+ adjudicators by redesigning USCIS core identity platform.",
     tags: ["GovTech", "DHS", "Enterprise", "Identity & Access"],
     color: "#1e3a5f",
     heroImage: "/images/uscis/cis-1.webp",
@@ -1748,6 +1637,120 @@ export const PROJECTS: Project[] = [
       tools: ["Figma", "Prototyping"],
     },
     nextProject: {
+      slug: "vulcan",
+      title: "Vulcan",
+      subtitle: "DoD Innovation Platform",
+    },
+  },
+  {
+    slug: "vulcan",
+    title: "Vulcan",
+    subtitle: "DoD Innovation Platform",
+    description:
+      "An innovation management platform where government agencies issue calls for entries and commercial-sector innovators submit proposals and technical demos. Part of the deep tech pipeline modernizing how SOCOM conducts BAAs and acquires new capabilities.",
+    tags: ["Defense", "GovTech", "Innovation", "Enterprise"],
+    color: "#475569",
+    thumbnail: "/images/vulcan/vulcan.png",
+    heroImage: "/images/vulcan/vulcan.png",
+    heroObjectPosition: "top",
+    meta: [
+      { label: "Client", value: "Cylitix / DoD (SOCOM)" },
+      { label: "Role", value: "Product Designer" },
+      { label: "Duration", value: "2 Months" },
+      { label: "Platform", value: "Web" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "Overview",
+        heading: "Modernizing how the Department of Defense discovers innovation",
+        body: [
+          "Vulcan is an innovation platform built for Cylitix with sponsorship from the Department of Defense. It modernizes the Broad Agency Announcement (BAA) process — how agencies like SOCOM issue calls for capabilities and how commercial-sector innovators respond with proposals and technical demonstrations.",
+          "The platform sits at the center of the deep tech pipeline, connecting government needs with commercial innovation in a structured, searchable, and evaluable way.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Call Authoring",
+        heading: "Building structured calls for innovation",
+        body: [
+          "Government program managers create calls through a multi-step authoring flow. The form builder supports conditional logic, branching, and custom question types — from technical focus areas to cost estimates and milestone timelines. Skip logic lets authors create adaptive submission forms that route innovators through relevant sections based on their domain.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            src: "/images/vulcan/form-skip-logic.png",
+            label: "Form builder with conditional skip logic",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Question Types",
+        heading: "Flexible data collection for complex submissions",
+        body: [
+          "The platform supports a range of question types tailored to defense innovation evaluation — from ROM cost estimates and milestone timelines to technical capability assessments. Each question type is configurable with validation rules, optional fields, and rich text context.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            src: "/images/vulcan/8.png",
+            label: "ROM Cost Estimate question type",
+          },
+          {
+            src: "/images/vulcan/11.png",
+            label: "Milestone timeline configuration",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Access Controls",
+        heading: "Managing collaboration across agencies",
+        body: [
+          "Calls involve multiple stakeholders across different government organizations. The access control system lets program managers invite editors, set visibility permissions, and manage who can view and modify call details — supporting the complex organizational dynamics of defense procurement.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            src: "/images/vulcan/Add an Editor and Set Visibility.png",
+            label: "Editor management and visibility controls",
+          },
+        ],
+      },
+      {
+        type: "quote",
+        quote: "Note: project content is illustrative.",
+      },
+    ],
+    outcome: {
+      heading: "Enabling the deep tech pipeline",
+      body: [
+        "The platform supports SOCOM’s modernized approach to capability acquisition, streamlining the path from government need to commercial innovation through structured authoring, evaluation, and collaboration tools.",
+      ],
+      contributions: [
+        "Product Design",
+        "Search UX",
+        "Information Architecture",
+        "Design System",
+      ],
+      collaborators: ["Cylitix Team", "DoD Stakeholders"],
+      tools: ["Figma"],
+    },
+    nextProject: {
       slug: "t-rowe-price",
       title: "T. Rowe Price",
       subtitle: "Retirement Investment Platform",
@@ -1758,7 +1761,7 @@ export const PROJECTS: Project[] = [
     title: "T. Rowe Price",
     subtitle: "Retail Investment 401(k) Platform",
     description:
-      "Creating a self-service platform that empowered retail investors to manage their 401(k) accounts with guidance, reducing support calls by 40%.",
+      "Reduced support calls by 40% by redesigning 401(k) self-serve and guidance flows.",
     tags: ["Finance", "Enterprise", "Design Leadership"],
     color: "#0891b2",
     thumbnail: "/images/trowe-price/Landing-page-401k-overview.jpg",

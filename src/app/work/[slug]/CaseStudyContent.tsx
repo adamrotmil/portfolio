@@ -545,7 +545,7 @@ export default function CaseStudyContent({ project }: { project: Project }) {
                   items: project.outcome.contributions,
                 },
                 {
-                  label: "Collaborators",
+                  label: project.slug === "gator" ? "Deliverables" : "Collaborators",
                   items: project.outcome.collaborators,
                 },
                 { label: "Tools", items: project.outcome.tools },

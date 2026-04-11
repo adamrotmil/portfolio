@@ -426,7 +426,7 @@ function drawBackground(ctx: CanvasRenderingContext2D) {
   px(ctx, dx + 7, 19, 1, 1, "#DAA520");
 }
 
-function drawCustomerSprite(ctx: CanvasRenderingContext2D, x: number, y: number, paletteIdx: number, walking: boolean, facing: "left" | "right") {
+function drawCustomerSprite(ctx: CanvasRenderingContext2D, x: number, y: number, paletteIdx: number, walking: boolean) {
   const pal = TAMA_PALETTES[paletteIdx % TAMA_PALETTES.length];
   const bobY = walking ? Math.floor(Math.sin(Date.now() / 200) * 1.5) : 0;
   const legAnim = walking ? Math.floor(Math.sin(Date.now() / 150) * 1) : 0;
@@ -549,7 +549,6 @@ function lightenColor(hex: string, amt: number): string {
 function drawCone(ctx: CanvasRenderingContext2D, x: number, y: number, scoops: Flavor[], toppings: Topping[], toppingsDone: number) {
   // Waffle cone
   const coneTop = y;
-  const coneBot = y + 16;
   for (let dy = 0; dy <= 16; dy++) {
     const halfW = Math.max(1, Math.floor(6 - dy * 0.3));
     for (let dx = -halfW; dx <= halfW; dx++) {
@@ -768,13 +767,17 @@ function drawGoldCoin(ctx: CanvasRenderingContext2D, cx: number, cy: number, siz
 export default function IceCreamGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [phase, setPhase] = useState<GamePhase>("menu");
-  const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [customersServed, setCustomersServed] = useState(0);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [scoopsDone, setScoopsDone] = useState(0);
   const [coneScoops, setConeScoops] = useState<Flavor[]>([]);
-  const [highScore, setHighScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = window.localStorage.getItem("scoopstack-highscore");
+    const parsed = saved ? Number.parseInt(saved, 10) : 0;
+    return Number.isNaN(parsed) ? 0 : parsed;
+  });
   const [toppingsDone, setToppingsDone] = useState(0);
   const [toppingsPhase, setToppingsPhase] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
@@ -792,19 +795,7 @@ export default function IceCreamGame() {
   const [chatDialogue, setChatDialogue] = useState<DialogueNode[]>([]);
   const [chatNodeIdx, setChatNodeIdx] = useState(0);
   const chatHistoryRef = useRef<{ customer: number[]; scoopy: number[] }>({ customer: [], scoopy: [] });
-
-  // Load high score
-  useEffect(() => {
-    const saved = localStorage.getItem("scoopstack-highscore");
-    if (saved) setHighScore(parseInt(saved));
-  }, []);
-
-  useEffect(() => {
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem("scoopstack-highscore", score.toString());
-    }
-  }, [score, highScore]);
+  const level = Math.floor(customersServed / 3) + 1;
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
@@ -833,8 +824,7 @@ export default function IceCreamGame() {
           Math.round(cust.x),
           76,
           cust.spriteIdx,
-          cust.state === "walking-in" || cust.state === "walking-out",
-          cust.state === "walking-out" ? "right" : "left"
+          cust.state === "walking-in" || cust.state === "walking-out"
         );
 
         // Speech bubble
@@ -935,7 +925,7 @@ export default function IceCreamGame() {
 
   // Gentle nudges (no timer - customers never leave)
   useEffect(() => {
-    if (!customer || customer.state !== "waiting" || phase !== "playing") return;
+    if (customer?.state !== "waiting" || phase !== "playing") return;
     const interval = setInterval(() => {
       setCustomer((prev) => {
         if (!prev || prev.state !== "waiting") return prev;
@@ -977,12 +967,6 @@ export default function IceCreamGame() {
   }, [customer, phase, level, walkCustomerIn]);
 
   // Level up every 3 customers
-  useEffect(() => {
-    if (customersServed > 0 && customersServed % 3 === 0) {
-      setLevel(Math.floor(customersServed / 3) + 1);
-    }
-  }, [customersServed]);
-
   // Gold coin animation aging
   useEffect(() => {
     if (goldCoins.length === 0) return;
@@ -999,7 +983,13 @@ export default function IceCreamGame() {
   const completeOrder = useCallback(() => {
     if (!customer) return;
     const coinCount = 1 + customer.order.length + customer.toppings.length;
-    setScore((s) => s + 100 + customer.toppings.length * 25);
+    const pointsEarned = 100 + customer.toppings.length * 25;
+    const nextScore = score + pointsEarned;
+    setScore(nextScore);
+    if (nextScore > highScore) {
+      setHighScore(nextScore);
+      window.localStorage.setItem("scoopstack-highscore", nextScore.toString());
+    }
     setTotalGold((g) => g + coinCount);
     setCustomersServed((c) => c + 1);
     playCoinSound();
@@ -1019,7 +1009,7 @@ export default function IceCreamGame() {
     setTimeout(() => {
       setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
     }, 1400);
-  }, [customer]);
+  }, [customer, highScore, score]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -1077,7 +1067,7 @@ export default function IceCreamGame() {
   const startGame = useCallback(async () => {
     // Initialize shared audio context on user gesture (critical for mobile)
     await initAudio();
-    setLevel(1); setScore(0); setCustomersServed(0); setCustomer(null);
+    setScore(0); setCustomersServed(0); setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
     setGoldCoins([]); setTotalGold(0);
     setChatActive(false); setChatTarget(null);
