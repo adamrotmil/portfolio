@@ -510,10 +510,10 @@ export const PROJECTS: Project[] = [
       },
     ],
     outcome: {
-      heading: "Ready for development",
+      heading: "In development with beta launching in 2026",
       body: [
-        "The Gator prototype is fully designed in Figma with a wired click-through demo that covers the complete user journey from sign-in to completed repair. The design is ready for iOS development, with detailed specs, component documentation, and interaction annotations.",
-        "Designing Gator reinforced something I believe deeply: the most sophisticated AI is useless if the interface doesn’t meet people where they are. A technician doesn’t care about the model architecture — they care about fixing the AC before the customer gets home.",
+        "Gator moved from concept into active iOS development. I designed the full end-to-end product experience in Figma and worked directly with the developer during handoff, with a wired prototype covering the journey from sign-in through diagnosis and guided repair.",
+        "What mattered most was making advanced AI feel useful in the real conditions of field work: fast context gathering, voice-first interaction when hands are busy, and structured guidance when a technician needs the next right step.",
       ],
       contributions: [
         "UI Design",

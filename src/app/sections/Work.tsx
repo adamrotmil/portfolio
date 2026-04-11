@@ -6,6 +6,8 @@ import Reveal from "@/components/Reveal";
 import { PROJECTS } from "@/data/projects";
 import { assetPath } from "@/lib/basePath";
 
+const PRIORITY_ORDER = ["clarvos", "gator", "respond-ai", "ai-training"];
+
 function CaseStudyCard({
   study,
   index,
@@ -110,6 +112,16 @@ function CaseStudyCard({
 }
 
 export default function Work() {
+  const orderedProjects = [...PROJECTS].sort((a, b) => {
+    const aPriority = PRIORITY_ORDER.indexOf(a.slug);
+    const bPriority = PRIORITY_ORDER.indexOf(b.slug);
+
+    if (aPriority === -1 && bPriority === -1) return 0;
+    if (aPriority === -1) return 1;
+    if (bPriority === -1) return -1;
+    return aPriority - bPriority;
+  });
+
   return (
     <section
       id="work"
@@ -127,7 +139,7 @@ export default function Work() {
       </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {PROJECTS.map((study, i) => (
+        {orderedProjects.map((study, i) => (
           <CaseStudyCard key={study.slug} study={study} index={i} />
         ))}
       </div>
