@@ -22,9 +22,9 @@ export default function Play() {
 
       <Reveal>
         <p className="font-sans text-base text-text-secondary leading-[1.6] max-w-[620px] mb-8">
-          Not everything here is career positioning. Some projects are just for
-          fun. This one is a tiny pixel-art ice cream game I made with my
-          daughter, who is eight.
+          Not everything is about career. This one is a tiny pixel-art ice
+          cream game I made with my daughter, who is eight. Getting her into
+          Claude Code and Codex early!
         </p>
       </Reveal>
 
