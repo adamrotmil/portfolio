@@ -407,7 +407,7 @@ export const PROJECTS: Project[] = [
       {
         type: "quote",
         quote:
-          "The best interface for a technician with greasy hands and a flashlight in their mouth is a conversation.",
+          "The best interface for a technician with a flashlight is voice mode.",
       },
       {
         type: "text",
@@ -488,7 +488,7 @@ export const PROJECTS: Project[] = [
       {
         type: "quote",
         quote:
-          "Diagnosis needs the freedom of conversation. Repair needs the structure of a checklist. The trick is knowing when to shift between them.",
+          "Multimodal diagnosis democratizes expertise. Structured guidance from a deep context layer makes the delivery scalable. The art is to bring next-gen AI to working class folks in a way that fits into their normal lives.",
       },
       {
         type: "text",

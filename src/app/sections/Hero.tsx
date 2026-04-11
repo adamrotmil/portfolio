@@ -22,8 +22,8 @@ export default function Hero() {
 
       <Reveal delay={0.2}>
         <p className="font-sans text-[1.15rem] leading-[1.65] text-text-secondary max-w-[560px] mb-8">
-          20 years of design leadership across AI, health tech, and finance.
-          Currently building agentic systems at Clarvos and shipping code.
+          Building agents that grow brands at Clarvos AI. 20 years designing
+          across health tech, finance, and defense.
         </p>
       </Reveal>
 
