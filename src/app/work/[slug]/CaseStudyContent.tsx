@@ -323,7 +323,9 @@ function RenderSection({ section }: { section: ProjectSection }) {
         </section>
       );
 
-    case "video":
+    case "video": {
+      const isControlled = section.videoControls ?? false;
+
       if (section.layout === "phone-gallery") {
         return (
           <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
@@ -331,9 +333,10 @@ function RenderSection({ section }: { section: ProjectSection }) {
               <Reveal>
                 <video
                   src={assetPath(section.videoSrc || "")}
-                  autoPlay
-                  loop
-                  muted
+                  autoPlay={!isControlled}
+                  loop={!isControlled}
+                  muted={!isControlled}
+                  controls={isControlled}
                   playsInline
                   preload="metadata"
                   className="h-auto block max-h-[80vh] rounded-[12px]"
@@ -365,9 +368,10 @@ function RenderSection({ section }: { section: ProjectSection }) {
                   </div>
                   <video
                     src={assetPath(section.videoSrc || "")}
-                    autoPlay
-                    loop
-                    muted
+                    autoPlay={!isControlled}
+                    loop={!isControlled}
+                    muted={!isControlled}
+                    controls={isControlled}
                     playsInline
                     preload="metadata"
                     className="w-full h-auto block"
@@ -384,9 +388,10 @@ function RenderSection({ section }: { section: ProjectSection }) {
             <Reveal>
               <video
                 src={assetPath(section.videoSrc || "")}
-                autoPlay
-                loop
-                muted
+                autoPlay={!isControlled}
+                loop={!isControlled}
+                muted={!isControlled}
+                controls={isControlled}
                 playsInline
                 preload="metadata"
                 className="w-full h-auto block"
@@ -395,6 +400,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
           </div>
         </section>
       );
+    }
 
     default:
       return null;

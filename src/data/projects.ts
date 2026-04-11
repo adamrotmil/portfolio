@@ -11,6 +11,7 @@ export interface ProjectSection {
   layout?: "phone-gallery" | "desktop-showcase" | "photo-grid";
   videoSrc?: string;
   videoLabel?: string;
+  videoControls?: boolean;
 }
 
 export interface Project {
@@ -847,6 +848,13 @@ export const PROJECTS: Project[] = [
           "I led product design for My Wellness Research, a HIPAA-compliant remote monitoring platform developed at the Sylvester Comprehensive Cancer Center, part of the University of Miami Miller School of Medicine. The platform enables cancer patients, health coaches, and clinicians to communicate and track progress in real time, collecting patient-generated data from wearables, video sessions, dietary assessments, and remote symptom reporting.",
           "What began as a research tool has grown into a cornerstone of Sylvester's Cancer Data Ecosystem initiative, integrating lifestyle data with genomic, imaging, and clinical records to support personalized treatment planning across multiple active clinical trials.",
         ],
+      },
+      {
+        type: "video",
+        layout: "desktop-showcase",
+        videoSrc: "/images/miami/mwr-sizzle-reel-oct-2023.mp4",
+        videoLabel: "My Wellness Research - Product Overview",
+        videoControls: true,
       },
       {
         type: "images",
