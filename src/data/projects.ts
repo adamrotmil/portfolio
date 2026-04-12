@@ -279,9 +279,9 @@ export const PROJECTS: Project[] = [
       tools: ["Figma", "Figjam", "Miro", "Notion", "Claude", "Cursor"],
     },
     nextProject: {
-      slug: "ai-training",
-      title: "AI Model Training",
-      subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
+      slug: "gator",
+      title: "Gator",
+      subtitle: "AI Tech Support Chatbot",
     },
   },
   {
@@ -372,9 +372,9 @@ export const PROJECTS: Project[] = [
       tools: ["DataAnnotation Platform", "Custom Evaluation Tools"],
     },
     nextProject: {
-      slug: "gator",
-      title: "Gator",
-      subtitle: "AI Tech Support Chatbot",
+      slug: "miami",
+      title: "My Wellness Research — University of Miami",
+      subtitle: "Clinical Cancer Research Platform",
     },
   },
   {
@@ -706,9 +706,9 @@ export const PROJECTS: Project[] = [
       tools: ["Figma", "FigJam", "Miro", "Notion"],
     },
     nextProject: {
-      slug: "miami",
-      title: "My Wellness Research — University of Miami",
-      subtitle: "Clinical Cancer Research Platform",
+      slug: "ai-training",
+      title: "AI Model Training",
+      subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
     },
   },
   {
