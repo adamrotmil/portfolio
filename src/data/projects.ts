@@ -706,116 +706,6 @@ export const PROJECTS: Project[] = [
       tools: ["Figma", "FigJam", "Miro", "Notion"],
     },
     nextProject: {
-      slug: "astrazeneca",
-      title: "AstraZeneca",
-      subtitle: "Clinical Trial Platform",
-    },
-  },
-  {
-    slug: "astrazeneca",
-    title: "AstraZeneca Care",
-    subtitle: "Remote Patient Monitoring",
-    description:
-      "Enabled remote oncology monitoring through leading research and product design for patient and clinician tools.",
-    tags: ["Health Tech", "Clinical Trials", "Design Leadership"],
-    color: "#0ea5e9",
-    thumbnail: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
-    heroImage: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
-    meta: [
-      { label: "Client", value: "AstraZeneca" },
-      { label: "Role", value: "Product Discovery & Design Lead" },
-      { label: "Duration", value: "3 Months" },
-      { label: "Platform", value: "Mobile & Web" },
-    ],
-    sections: [
-      {
-        type: "text",
-        sectionNumber: "01",
-        sectionLabel: "Overview",
-        heading:
-          "A digital platform to enable remote patient monitoring in the context of clinical research.",
-        body: [
-          "As a product design and discovery lead at AstraZeneca, I worked on cancer research platforms in the digital health oncology division. I designed a digital platform to enable remote patient monitoring in the context of patient-reported outcomes (PRO) clinical measures.",
-          "In addition to regular doctor visits, patients used the platform to keep track of their symptoms and treatment side effects on a daily basis. Studies have shown that doing so tends to have a very significant benefit to long-term health outcomes, as well as longevity and patient quality of life.",
-          "I interviewed dozens of patients, doctors, RNs, and research staff to inform this work. As a team lead, I directed bi-weekly design sprints, each of which had specific hypotheses under consideration, always with user testing via prototype.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "02",
-        sectionLabel: "Voice Symptom Tracking",
-        heading:
-          "Patients can track their symptoms just by speaking in plain language.",
-        body: [
-          "The system uses an LLM to extract and normalize keywords from a one-minute voice recording. PPG technology is also used to gather health metrics by reading the bloodflow through the patient’s skin while they speak.",
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "03",
-        sectionLabel: "Quick Check-in",
-        heading: "Two core user journeys for different moments",
-        body: [
-          "Some patients would want to do an ad-hoc check in to capture a health update. This needed to take less than one minute. At other key points, patients would need to sit down and do a guided check-in, more comprehensively, which would take up to 10 minutes.",
-          "Designing for both ensured rich data capture while giving patients a mechanism for low-impact participation during little pockets of time, fitting with their actual lived experience.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Patient-Reported Outcomes — Weekly Insight & Pain Tracking",
-            src: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
-          },
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "04",
-        sectionLabel: "Concept Exploration",
-        heading: "Iterating on data visualization through rapid concept testing",
-        body: [
-          "Based on research insights, I led ideation through sketching and collaborative workshops with stakeholders. Multiple concept variations were developed to explore how patients could best understand their symptom data — from weekly insights and community comparisons to actionable pain management articles.",
-          "Each concept was tested with real patients to understand which data presentations felt most useful and least overwhelming. This iterative process helped us converge on a design that balanced clinical rigor with genuine patient empathy.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Concept Testing — Symptom Data Visualization Explorations",
-            src: "/images/astrazeneca/Concepts-Testing.png",
-          },
-          {
-            label: "Design Variations — Pain Tracking Interface Iterations",
-            src: "/images/astrazeneca/Variations.png",
-          },
-        ],
-      },
-    ],
-    outcome: {
-      heading: "Impact on clinical research",
-      body: [
-        "Through the iterative process, I led the team in designing an experience that patients loved, and that delivered rich data for the cancer research team. The platform demonstrated that thoughtful design can make clinical research more humane while simultaneously producing better data.",
-      ],
-      contributions: [
-        "Product Discovery",
-        "Design Leadership",
-        "Interaction Design",
-        "User Research",
-        "Design Sprints",
-      ],
-      collaborators: [
-        "Clinical Research Team",
-        "Patients & Oncologists",
-        "Engineering",
-        "Product Management",
-      ],
-      tools: ["Figma", "FigJam", "Miro", "Sketch"],
-    },
-    nextProject: {
       slug: "miami",
       title: "My Wellness Research — University of Miami",
       subtitle: "Clinical Cancer Research Platform",
@@ -1013,68 +903,58 @@ export const PROJECTS: Project[] = [
       tools: ["Figma", "Sketch", "InVision", "Miro"],
     },
     nextProject: {
-      slug: "content-studio",
-      title: "Content Studio",
-      subtitle: "Enterprise Content Platform",
+      slug: "astrazeneca",
+      title: "AstraZeneca",
+      subtitle: "Clinical Trial Platform",
     },
   },
   {
-    slug: "content-studio",
-    title: "Content Studio",
-    subtitle: "Cyber Security Training Environment",
+    slug: "astrazeneca",
+    title: "AstraZeneca Care",
+    subtitle: "Remote Patient Monitoring",
     description:
-      "Accelerated cyber training authoring with a modular lab and learning platform.",
-    tags: ["Defense", "Enterprise", "Canvas UI", "Design Systems"],
-    color: "#06b6d4",
-    thumbnail: "/images/content-studio/content-studio-cyber-training.png",
-    heroImage: "/images/content-studio/content-studio-cyber-training.png",
+      "Enabled remote oncology monitoring through leading research and product design for patient and clinician tools.",
+    tags: ["Health Tech", "Clinical Trials", "Design Leadership"],
+    color: "#0ea5e9",
+    thumbnail: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
+    heroImage: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
     meta: [
-      { label: "Client", value: "Ultimate Knowledge Inst. / CYBERCOM" },
-      { label: "Role", value: "Lead Product Designer" },
-      { label: "Duration", value: "2 Months" },
-      { label: "Platform", value: "Web / Windows" },
+      { label: "Client", value: "AstraZeneca" },
+      { label: "Role", value: "Product Discovery & Design Lead" },
+      { label: "Duration", value: "3 Months" },
+      { label: "Platform", value: "Mobile & Web" },
     ],
     sections: [
       {
         type: "text",
         sectionNumber: "01",
-        sectionLabel: "Background",
+        sectionLabel: "Overview",
         heading:
-          "An enterprise LMS with an integrated, highly configurable virtual lab environment.",
+          "A digital platform to enable remote patient monitoring in the context of clinical research.",
         body: [
-          "As cyber threats continue to evolve, there is an increasing need for hands-on, realistic training environments for cybersecurity professionals. Traditional learning methods often fall short in providing practical experience with complex network topologies and diverse operating systems.",
-          "The challenge was to design and implement an enterprise-level Learning Management System with an integrated, highly configurable virtual lab environment for cybersecurity staff to test and enhance their competencies.",
+          "As a product design and discovery lead at AstraZeneca, I worked on cancer research platforms in the digital health oncology division. I designed a digital platform to enable remote patient monitoring in the context of patient-reported outcomes (PRO) clinical measures.",
+          "In addition to regular doctor visits, patients used the platform to keep track of their symptoms and treatment side effects on a daily basis. Studies have shown that doing so tends to have a very significant benefit to long-term health outcomes, as well as longevity and patient quality of life.",
+          "I interviewed dozens of patients, doctors, RNs, and research staff to inform this work. As a team lead, I directed bi-weekly design sprints, each of which had specific hypotheses under consideration, always with user testing via prototype.",
         ],
       },
       {
         type: "text",
         sectionNumber: "02",
-        sectionLabel: "Canvas Environment",
+        sectionLabel: "Voice Symptom Tracking",
         heading:
-          "A modular Miro-style canvas for content authors to create training labs.",
+          "Patients can track their symptoms just by speaking in plain language.",
         body: [
-          "I designed a content authoring environment for educators and trainers to create competency-based assessments, as well as to design hands-on exercises. These tools serve the purpose of teaching new skills to existing staff (upskilling), as well as verifying competencies for new joiners.",
-          "Users needed the ability to create custom palettes of containers and virtual machines, define network topology maps using subnet masks, routers, and connections, and inspect details like CPU cores and memory management. Crucially, the canvas supports creating intentionally broken scenarios — since diagnosing and fixing network issues is part of the skillset being taught.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Network Topology Canvas — Virtual Lab Designer",
-            src: "/images/content-studio/content-studio-cyber-training.png",
-          },
+          "The system uses an LLM to extract and normalize keywords from a one-minute voice recording. PPG technology is also used to gather health metrics by reading the bloodflow through the patient’s skin while they speak.",
         ],
       },
       {
         type: "text",
         sectionNumber: "03",
-        sectionLabel: "Content Authoring",
-        heading: "A page workbench for building courses and interactive exercises",
+        sectionLabel: "Quick Check-in",
+        heading: "Two core user journeys for different moments",
         body: [
-          "Beyond the virtual lab canvas, Content Studio includes a rich page editor for authoring course content. Educators can build structured curricula with rich text, embedded media, and interactive exercise blocks — including multiple-choice questions with automated grading and detailed explanations.",
-          "The workbench supports courses ranging from introductory social engineering awareness to hands-on router configuration, all within a consistent authoring experience.",
+          "Some patients would want to do an ad-hoc check in to capture a health update. This needed to take less than one minute. At other key points, patients would need to sit down and do a guided check-in, more comprehensively, which would take up to 10 minutes.",
+          "Designing for both ensured rich data capture while giving patients a mechanism for low-impact participation during little pockets of time, fitting with their actual lived experience.",
         ],
       },
       {
@@ -1082,33 +962,55 @@ export const PROJECTS: Project[] = [
         layout: "desktop-showcase",
         images: [
           {
-            label: "Page Workbench — Course Content Editor",
-            src: "/images/content-studio/Page-Workbench-1.png",
+            label: "Patient-Reported Outcomes — Weekly Insight & Pain Tracking",
+            src: "/images/astrazeneca/CARE-patient-reported-outcomes.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Concept Exploration",
+        heading: "Iterating on data visualization through rapid concept testing",
+        body: [
+          "Based on research insights, I led ideation through sketching and collaborative workshops with stakeholders. Multiple concept variations were developed to explore how patients could best understand their symptom data — from weekly insights and community comparisons to actionable pain management articles.",
+          "Each concept was tested with real patients to understand which data presentations felt most useful and least overwhelming. This iterative process helped us converge on a design that balanced clinical rigor with genuine patient empathy.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Concept Testing — Symptom Data Visualization Explorations",
+            src: "/images/astrazeneca/Concepts-Testing.png",
           },
           {
-            label: "Exercise Builder — Interactive Assessment Creation",
-            src: "/images/content-studio/Create-New-Block.png",
+            label: "Design Variations — Pain Tracking Interface Iterations",
+            src: "/images/astrazeneca/Variations.png",
           },
         ],
       },
     ],
     outcome: {
-      heading: "Shipped within Sprint Zero",
+      heading: "Impact on clinical research",
       body: [
-        "The Content Studio design was completed within the Sprint Zero phase and handed off for development. The design system and canvas-based authoring environment established a scalable foundation for the training platform.",
+        "Through the iterative process, I led the team in designing an experience that patients loved, and that delivered rich data for the cancer research team. The platform demonstrated that thoughtful design can make clinical research more humane while simultaneously producing better data.",
       ],
       contributions: [
-        "Lead Product Design",
-        "Design System Creation",
-        "Canvas UI Design",
-        "Enterprise UX",
+        "Product Discovery",
+        "Design Leadership",
+        "Interaction Design",
+        "User Research",
+        "Design Sprints",
       ],
       collaborators: [
-        "Development Team",
-        "Cybersecurity SMEs",
-        "Training Specialists",
+        "Clinical Research Team",
+        "Patients & Oncologists",
+        "Engineering",
+        "Product Management",
       ],
-      tools: ["Figma", "FigJam", "Miro"],
+      tools: ["Figma", "FigJam", "Miro", "Sketch"],
     },
     nextProject: {
       slug: "wild-brains",
@@ -1371,6 +1273,104 @@ export const PROJECTS: Project[] = [
       ],
       collaborators: ["Founder", "Engineering Team"],
       tools: ["Figma"],
+    },
+    nextProject: {
+      slug: "content-studio",
+      title: "Content Studio",
+      subtitle: "Enterprise Content Platform",
+    },
+  },
+  {
+    slug: "content-studio",
+    title: "Content Studio",
+    subtitle: "Cyber Security Training Environment",
+    description:
+      "Accelerated cyber training authoring with a modular lab and learning platform.",
+    tags: ["Defense", "Enterprise", "Canvas UI", "Design Systems"],
+    color: "#06b6d4",
+    thumbnail: "/images/content-studio/content-studio-cyber-training.png",
+    heroImage: "/images/content-studio/content-studio-cyber-training.png",
+    meta: [
+      { label: "Client", value: "Ultimate Knowledge Inst. / CYBERCOM" },
+      { label: "Role", value: "Lead Product Designer" },
+      { label: "Duration", value: "2 Months" },
+      { label: "Platform", value: "Web / Windows" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "Background",
+        heading:
+          "An enterprise LMS with an integrated, highly configurable virtual lab environment.",
+        body: [
+          "As cyber threats continue to evolve, there is an increasing need for hands-on, realistic training environments for cybersecurity professionals. Traditional learning methods often fall short in providing practical experience with complex network topologies and diverse operating systems.",
+          "The challenge was to design and implement an enterprise-level Learning Management System with an integrated, highly configurable virtual lab environment for cybersecurity staff to test and enhance their competencies.",
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Canvas Environment",
+        heading:
+          "A modular Miro-style canvas for content authors to create training labs.",
+        body: [
+          "I designed a content authoring environment for educators and trainers to create competency-based assessments, as well as to design hands-on exercises. These tools serve the purpose of teaching new skills to existing staff (upskilling), as well as verifying competencies for new joiners.",
+          "Users needed the ability to create custom palettes of containers and virtual machines, define network topology maps using subnet masks, routers, and connections, and inspect details like CPU cores and memory management. Crucially, the canvas supports creating intentionally broken scenarios — since diagnosing and fixing network issues is part of the skillset being taught.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Network Topology Canvas — Virtual Lab Designer",
+            src: "/images/content-studio/content-studio-cyber-training.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Content Authoring",
+        heading: "A page workbench for building courses and interactive exercises",
+        body: [
+          "Beyond the virtual lab canvas, Content Studio includes a rich page editor for authoring course content. Educators can build structured curricula with rich text, embedded media, and interactive exercise blocks — including multiple-choice questions with automated grading and detailed explanations.",
+          "The workbench supports courses ranging from introductory social engineering awareness to hands-on router configuration, all within a consistent authoring experience.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Page Workbench — Course Content Editor",
+            src: "/images/content-studio/Page-Workbench-1.png",
+          },
+          {
+            label: "Exercise Builder — Interactive Assessment Creation",
+            src: "/images/content-studio/Create-New-Block.png",
+          },
+        ],
+      },
+    ],
+    outcome: {
+      heading: "Shipped within Sprint Zero",
+      body: [
+        "The Content Studio design was completed within the Sprint Zero phase and handed off for development. The design system and canvas-based authoring environment established a scalable foundation for the training platform.",
+      ],
+      contributions: [
+        "Lead Product Design",
+        "Design System Creation",
+        "Canvas UI Design",
+        "Enterprise UX",
+      ],
+      collaborators: [
+        "Development Team",
+        "Cybersecurity SMEs",
+        "Training Specialists",
+      ],
+      tools: ["Figma", "FigJam", "Miro"],
     },
     nextProject: {
       slug: "collab-match",

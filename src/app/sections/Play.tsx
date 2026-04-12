@@ -65,7 +65,10 @@ export default function Play() {
                 <span className="font-sans text-[0.78rem] uppercase tracking-[0.08em] text-text-muted">
                   Open the game
                 </span>
-                <span className="font-serif text-4xl text-text-primary">{"->"}</span>
+                <span className="flex items-center gap-3 text-text-primary">
+                  <span className="font-sans text-sm md:text-base">¯\_(ツ)_/¯</span>
+                  <span className="font-serif text-4xl">⟶</span>
+                </span>
               </div>
             </div>
           </div>
