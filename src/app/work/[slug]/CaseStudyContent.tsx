@@ -337,6 +337,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                   loop={!isControlled}
                   muted={!isControlled}
                   controls={isControlled}
+                  poster={section.videoPoster ? assetPath(section.videoPoster) : undefined}
                   playsInline
                   preload="metadata"
                   className="h-auto block max-h-[80vh] rounded-[12px]"
@@ -372,6 +373,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                     loop={!isControlled}
                     muted={!isControlled}
                     controls={isControlled}
+                    poster={section.videoPoster ? assetPath(section.videoPoster) : undefined}
                     playsInline
                     preload="metadata"
                     className="w-full h-auto block"
@@ -392,6 +394,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                 loop={!isControlled}
                 muted={!isControlled}
                 controls={isControlled}
+                poster={section.videoPoster ? assetPath(section.videoPoster) : undefined}
                 playsInline
                 preload="metadata"
                 className="w-full h-auto block"

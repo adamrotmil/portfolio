@@ -12,6 +12,7 @@ export interface ProjectSection {
   videoSrc?: string;
   videoLabel?: string;
   videoControls?: boolean;
+  videoPoster?: string;
 }
 
 export interface Project {
@@ -745,6 +746,7 @@ export const PROJECTS: Project[] = [
         videoSrc: "/images/miami/mwr-sizzle-reel-oct-2023.mp4",
         videoLabel: "My Wellness Research - Product Overview",
         videoControls: true,
+        videoPoster: "/images/miami/University-Miami-cover.png",
       },
       {
         type: "images",
@@ -755,12 +757,6 @@ export const PROJECTS: Project[] = [
             src: "/images/miami/miami-average-treatment-effect.png",
           },
         ],
-      },
-      {
-        type: "video",
-        layout: "desktop-showcase",
-        videoSrc: "/images/miami/Reflect-Demo.mov",
-        videoLabel: "Reflect — Patient Video Check-in Demo",
       },
       {
         type: "text",
@@ -795,20 +791,6 @@ export const PROJECTS: Project[] = [
         body: [
           "I designed the end-to-end product experience across patient, coach, and clinician interfaces. This included remote symptom reporting flows, wearable data integration views, video session scheduling and recording, and dashboards that surfaced actionable trends for care teams. I worked directly with Dr. Tracy Crane's research team to understand clinical workflows and translate complex research protocols into intuitive digital experiences.",
           "The design challenge was balancing clinical rigor with accessibility. Patients ranged widely in age, technical comfort, and language. The platform needed to feel simple and supportive for a patient going through cancer treatment, while giving researchers and coaches the depth of data they needed to run rigorous trials.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "photo-grid",
-        images: [
-          {
-            label: "User Flow — Patient & Clinician Interaction Paths",
-            src: "/images/miami/User-Flow.png",
-          },
-          {
-            label: "Annotated Screens — Video Check-in Functional Specifications",
-            src: "/images/miami/Annotations.png",
-          },
         ],
       },
       {
@@ -955,6 +937,26 @@ export const PROJECTS: Project[] = [
         body: [
           "Some patients would want to do an ad-hoc check in to capture a health update. This needed to take less than one minute. At other key points, patients would need to sit down and do a guided check-in, more comprehensively, which would take up to 10 minutes.",
           "Designing for both ensured rich data capture while giving patients a mechanism for low-impact participation during little pockets of time, fitting with their actual lived experience.",
+        ],
+      },
+      {
+        type: "video",
+        layout: "desktop-showcase",
+        videoSrc: "/images/astrazeneca/Reflect-Demo.mov",
+        videoLabel: "Reflect — Patient Video Check-in Demo",
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            label: "User Flow — Patient & Clinician Interaction Paths",
+            src: "/images/astrazeneca/User-Flow.png",
+          },
+          {
+            label: "Annotated Screens — Video Check-in Functional Specifications",
+            src: "/images/astrazeneca/Annotations.png",
+          },
         ],
       },
       {
