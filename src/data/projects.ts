@@ -746,7 +746,7 @@ export const PROJECTS: Project[] = [
         videoSrc: "/images/miami/mwr-sizzle-reel-oct-2023.mp4",
         videoLabel: "My Wellness Research - Product Overview",
         videoControls: true,
-        videoPoster: "/images/miami/University-Miami-cover.png",
+        videoPoster: "/images/miami/cover-image-mwr.png",
       },
       {
         type: "images",
