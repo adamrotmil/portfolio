@@ -72,10 +72,10 @@ export const LAB_ITEMS = [
     tech: "Claude API · Cloudflare Workers",
   },
   {
-    title: "Coming Soon",
-    description: "Generative design explorations",
-    url: null,
-    tech: "Canvas · WebGL",
+    title: "Know Your Design Trivia",
+    description: "Know your design trivia!",
+    url: "https://github.com/adamrotmil/know-your-design-trivia",
+    tech: "HTML · CSS · JavaScript",
   },
 ];
 
