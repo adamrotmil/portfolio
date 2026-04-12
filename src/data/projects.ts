@@ -45,7 +45,7 @@ export const PROJECTS: Project[] = [
     title: "Clarvos",
     subtitle: "Agentic AI Ad Platform",
     description:
-      "Designing an autonomous system that creates, launches, and optimizes ad campaigns across social platforms — from trend discovery to creative generation to performance monitoring.",
+      "Designed the product vision for an agentic AI platform — from initial MVP through a strategic pivot I proposed, to a rebrand and launch out of stealth.",
     tags: ["AI / Agents", "SaaS", "Video Editor", "Campaign Management"],
     color: "#6366f1",
     featured: true,
@@ -60,37 +60,81 @@ export const PROJECTS: Project[] = [
       { label: "Platform", value: "Web SaaS" },
     ],
     sections: [
-      {
-        type: "video",
-        videoSrc: "/images/clarvos/clarvos-core-flow.mp4",
-        videoLabel: "Clarvos — Full Flow",
-      },
+      // ── Phase 1: The Starting Point ──────────────────────────
       {
         type: "text",
         sectionNumber: "01",
-        sectionLabel: "Overview",
+        sectionLabel: "The Starting Point",
         heading:
-          "The advertising industry runs on manual workflows. What if an AI could handle the entire pipeline?",
+          "The company started in data science. The product needed to start with people.",
         body: [
-          "Clarvos is an agentic AI platform that autonomously manages advertising campaigns end-to-end. It discovers trending topics, generates on-brand creative assets (images and video), launches campaigns across social media platforms, monitors performance in real-time, and optimizes spend — all with minimal human intervention.",
-          "My role as Lead Product Designer was to make an extraordinarily complex system feel approachable. The challenge wasn’t just designing screens — it was designing trust. Users needed to understand what the AI was doing, why, and feel confident handing over creative and financial decisions to an autonomous agent.",
+          "Clarvos began as a data science company, recently acquired and spun out of a parent organization. The starting hypothesis was to surface societal trends by analyzing large volumes of posts and documents online — and give marketers the tools to act on them.",
+          "From that vantage point, I designed the first end-to-end product: a metrics-oriented platform with parallel feeds of granular posts, daily trend briefings, audience analytics, and a strategy builder. It was functional, comprehensive, and entirely manual — closer to Wix or HubSpot than what the product would eventually become.",
         ],
       },
       {
-        type: "video",
-        videoSrc: "/images/clarvos/clarvos-feed-hd-wide.mp4",
-        videoLabel: "Clarvos — Feed",
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "V1 — Audience Discovery & Strategy Builder",
+            src: "/images/clarvos/v1/homepage.png",
+          },
+          {
+            label: "V1 — Content Feed with Trend Highlights",
+            src: "/images/clarvos/v1/feed.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "V1 — Analytics Dashboard",
+            src: "/images/clarvos/v1/analytics.png",
+          },
+          {
+            label: "V1 — Onboarding Setup Guide",
+            src: "/images/clarvos/v1/setup-guide.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        body: [
+          "This first version shipped and gave us a working product — but as the company pivoted from data science to an AI-native orientation, the product needed to evolve with it. Data science moved under the product organization, an AI/ML team stood up, and our target market came into focus: small business owners who needed to compete for market share but didn’t have sophisticated marketing experience.",
+        ],
+      },
+      // ── Phase 2: The Pivot ───────────────────────────────────
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "The Pivot",
+        heading:
+          "I proposed that the user shouldn’t have to do anything at all.",
+        body: [
+          "The exec team asked for a complete product rethink — and it had to happen fast. They flew me down for a two-day private brainstorm retreat: me, the CEO, CTO, and CPO. Four people, two days.",
+          "I had been studying the opportunity space for agentic AI and arrived with a core design principle: non-action, non-doing. The user should never have to take actions that the system could handle autonomously. I proposed an architecture where AI agents would surface social trends, generate campaign plans, create micro-targeted creatives, and package everything up — so that from the user’s perspective, a Pinterest-style feed of ready-to-run campaigns would appear each morning, powered by ongoing social listening and a behind-the-scenes orchestration layer.",
+          "I mocked up the full end-to-end vision in two days using Claude Code and Figma. The CEO’s response: \"This is it.\"",
+        ],
       },
       {
         type: "quote",
         quote:
-          "The hardest design problem in agentic AI isn’t the interface — it’s designing the right level of human oversight without killing the autonomy.",
+          "The scariest part was that a seamless agentic experience meant orchestrating everything from day one. It was like starting with a driverless car — typically a wave-three vision, not an MVP.",
       },
       {
         type: "text",
         body: [
-          "I led product discovery, interaction design, prototyping, and design system creation. Working closely with product managers, engineers, and the AI/ML team, I shaped both the user experience and the product strategy — defining not just how the system looks, but how it thinks and communicates its decisions.",
+          "We also ran moderated user research at the workshop. The signal was clear — participants didn’t ask \"how does it work\" or \"what does the algorithm do.\" They asked, \"How do I sign up?\"",
+          "We flew back with an end-to-end prototype, executive alignment, and a clear path forward. From there, we scaled the engineering team and built it out.",
         ],
+      },
+      {
+        type: "video",
+        videoSrc: "/images/clarvos/clarvos-core-flow.mp4",
+        videoLabel: "V2 — Agentic Platform Flow",
       },
       {
         type: "stats",
@@ -117,50 +161,20 @@ export const PROJECTS: Project[] = [
           },
         ],
       },
-      {
-        type: "text",
-        sectionNumber: "02",
-        sectionLabel: "Creative Intelligence",
-        heading: "AI-generated creatives that actually look good",
-        body: [
-          "The platform generates on-brand ad creatives — images and video — by understanding a brand’s visual identity, tone, and audience. Rather than outputting generic AI slop, the system produces polished, production-quality assets that feel intentionally designed.",
-          "I designed the creative library as a command center where marketers can organize, review, and curate AI-generated variants. Assets are grouped into sets by campaign, with contextual actions for comparing, downloading, and reassigning creatives across platforms.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Creative Library — Organizing AI-Generated Assets",
-            src: "/images/clarvos/Creatives-Library.png",
-          },
-        ],
-      },
-      {
-        type: "text",
-        body: [
-          "Every creative asset surfaces a hybrid quality score that combines AI analysis with human judgment. The scoring system evaluates intent, style, composition, and emotional valence — giving marketers data-driven confidence in which variants to promote, remix, or retire.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Hybrid Scoring — AI Quality Analysis & Style Controls",
-            src: "/images/clarvos/Hybrid Score + Insights.png",
-          },
-          {
-            label: "AI Image Editor — Prompt-Driven Variant Generation",
-            src: "/images/clarvos/AI Edit Image.png",
-          },
-        ],
-      },
+      // ── Phase 2: The Agentic Experience ──────────────────────
       {
         type: "text",
         sectionNumber: "03",
-        sectionLabel: "Trend Discovery",
+        sectionLabel: "The Agentic Experience",
+        heading:
+          "Designing trust in a system that makes decisions for you",
+        body: [
+          "The hardest design problem in agentic AI isn’t the interface — it’s calibrating how much autonomy the system should take, and how to communicate its reasoning. Users needed to understand what the AI was doing, why, and feel confident handing over creative and financial decisions to an autonomous agent.",
+          "I led product discovery, interaction design, prototyping, and design system creation. Working closely with product managers, engineers, and the AI/ML team, I shaped both the user experience and the product strategy — defining not just how the system looks, but how it thinks and communicates its decisions.",
+        ],
+      },
+      {
+        type: "text",
         heading: "Campaigns that start with what’s already working",
         body: [
           "Rather than guessing what content will resonate, Clarvos surfaces trending topics across social platforms in real time. The discover view ranks trends by volume, velocity, and audience alignment — then lets marketers launch a campaign directly from any trend with one click.",
@@ -183,8 +197,38 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "text",
-        sectionNumber: "04",
-        sectionLabel: "Campaign Builder",
+        heading: "AI-generated creatives that actually look good",
+        body: [
+          "The platform generates on-brand ad creatives — images and video — by understanding a brand’s visual identity, tone, and audience. Rather than outputting generic AI slop, the system produces polished, production-quality assets that feel intentionally designed.",
+          "I designed the creative library as a command center where marketers can organize, review, and curate AI-generated variants. Every asset surfaces a hybrid quality score that combines AI analysis with human judgment — evaluating intent, style, composition, and emotional valence.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Creative Library — Organizing AI-Generated Assets",
+            src: "/images/clarvos/Creatives-Library.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Hybrid Scoring — AI Quality Analysis & Style Controls",
+            src: "/images/clarvos/Hybrid Score + Insights.png",
+          },
+          {
+            label: "AI Image Editor — Prompt-Driven Variant Generation",
+            src: "/images/clarvos/AI Edit Image.png",
+          },
+        ],
+      },
+      {
+        type: "text",
         heading: "From blank slate to live campaign in minutes",
         body: [
           "The campaign builder surfaces an AI-generated plan with budget allocation, ROAS predictions, and audience targeting already filled in. Marketers can accept the defaults, adjust any parameter, or override the AI entirely. The system explains why it made each recommendation, building trust through transparency.",
@@ -207,12 +251,9 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "text",
-        sectionNumber: "05",
-        sectionLabel: "Video Editor",
         heading: "Prompt-driven video editing for non-editors",
         body: [
-          "One of the most technically ambitious features: a scene-based video editor that lets marketers describe what they want in natural language. The AI generates video scenes from text prompts, complete with start frames, end frames, and transitions.",
-          "I designed the editor around a timeline metaphor familiar to anyone who’s used iMovie or Premiere, but replaced the complexity with AI-powered controls. Users compose scenes by describing them, preview variations, and assemble final videos with drag-and-drop — no editing skills required.",
+          "One of the most technically ambitious features: a scene-based video editor that lets marketers describe what they want in natural language. I designed it around a timeline metaphor familiar to anyone who’s used iMovie or Premiere, but replaced the complexity with AI-powered controls. Users compose scenes by describing them, preview variations, and assemble final videos — no editing skills required.",
         ],
       },
       {
@@ -226,13 +267,20 @@ export const PROJECTS: Project[] = [
         ],
       },
       {
+        type: "video",
+        videoSrc: "/images/clarvos/clarvos-feed-hd-wide.mp4",
+        videoLabel: "V2 — AI Campaign Feed",
+      },
+      // ── Phase 3: Rebrand & Launch ────────────────────────────
+      {
         type: "text",
-        sectionNumber: "06",
-        sectionLabel: "Performance",
-        heading: "Closing the loop from spend to insight",
+        sectionNumber: "04",
+        sectionLabel: "Rebrand & Launch",
+        heading:
+          "Three weeks from rebrand to launch out of stealth",
         body: [
-          "The performance dashboard aggregates metrics across every connected platform — Facebook, TikTok, Google, Instagram, Pinterest, Snapchat — into a single view. Marketers see real spend, real results, and real trends without switching between six different ad managers.",
-          "I designed the dashboard around progressive disclosure: top-level KPIs surface the headline numbers, the trend graph reveals patterns over time, and the campaign table lets users drill into individual ad performance. Every row is actionable — one click to pause, boost, or duplicate a campaign.",
+          "The company initiated a full rebrand, and since the redesign touched every surface end-to-end, it became an opportunity to improve the information architecture — not just reskin it.",
+          "From additional user testing, we learned that marketers with existing campaign assets wanted manual flows alongside the agentic ones. I designed a modular architecture where users could take the AI-optimized campaigns ready to run, but also use individual tools independently — just generate creatives, just run the customer simulator, or build a campaign manually from scratch. Maximum flexibility without compromising the core autonomous experience.",
         ],
       },
       {
@@ -240,44 +288,101 @@ export const PROJECTS: Project[] = [
         layout: "desktop-showcase",
         images: [
           {
-            label: "Performance Dashboard — Cross-Platform Campaign Analytics",
-            src: "/images/clarvos/Performance-Dashboard.png",
+            label: "V3 — Redesigned Dashboard with Discover, Create & Test, Campaign",
+            src: "/images/clarvos/v3/dashboard.png",
           },
         ],
       },
       {
         type: "text",
-        sectionNumber: "07",
-        sectionLabel: "Design Decisions",
-        heading: "Three principles that shaped everything",
+        heading: "Synthetic focus groups that test creative before it goes live",
         body: [
-          "Progressive Autonomy: Rather than presenting the AI as a black box, I designed a transparency model where users can see exactly what the agent is doing at each step. Users start with full manual control and gradually allow more autonomy as they gain confidence.",
-          "Familiar Metaphors for Unfamiliar Technology: The video editor uses a timeline. The creative gallery uses a card grid. The campaign builder uses a wizard. Every complex AI interaction is wrapped in a pattern users already understand.",
-          "Designed for Iteration, Not Perfection: AI outputs aren’t always right on the first try. I designed every creative surface with inline editing, quick regeneration, and A/B variant comparison built in.",
+          "I designed the synthetic focus group system: LLM swarms of 50 personas modeled on specific consumer segments, providing qualitative feedback with variance smoothing. Rather than one model representing an entire segment, groups of 50 bring the modeling closer to empirical observation — a feature rooted in the company’s data science DNA, expressed through an agentic AI interface.",
+          "The \"Why This Plan Works\" explainer followed a principle from behavioral science: even users who say \"just handle everything\" gain credibility from knowing an explanation is one click away. The paradigm remained non-action, but with transparency always available.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Optimize Creative — Customer Signal Scoring & Persona Feedback",
+            src: "/images/clarvos/v3/synthetic-feedback.png",
+          },
+          {
+            label: "AI Agents Annotating Creative in Real Time",
+            src: "/images/clarvos/v3/test-learn-agents-active.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Synthetic Focus Group — Member Quotes, Score Factors & Transcript",
+            src: "/images/clarvos/v3/trend-sensitive-shoppers.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Campaign Plan — BrandMatch Score & \"Why This Plan Works\"",
+            src: "/images/clarvos/v3/campaign-plan.png",
+          },
+          {
+            label: "Trending Topics — Match Scoring & Spark Lines",
+            src: "/images/clarvos/v3/trending-topics.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        body: [
+          "I folded all of this into the v3 redesign — branding, design system, UI styling, and reworked product flows — in three weeks. I used Codex and Figma MCP to accelerate initial designs, then refined visual designs in Figma including all design system components. I also coordinated with the branding agency and GTM team to deploy the new UI on the landing page and in the press release.",
+          "This led to a successful launch out of stealth on April 7, 2026, covered by BusinessWire, SiliconANGLE, and MarTech Series. Our first beta customers are already in the platform, and we’re gathering voice-of-customer insights to inform further iteration.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "V3 — Performance Dashboard with Campaign Plans",
+            src: "/images/clarvos/v3/campaign-plans-view.png",
+          },
+          {
+            label: "V3 — Ad Type Selection & Creative Direction",
+            src: "/images/clarvos/v3/test-learn-ad-type.png",
+          },
         ],
       },
     ],
     outcome: {
-      heading: "From concept to production",
+      heading: "From data science startup to agentic AI platform",
       body: [
-        "Clarvos is actively in production and evolving. The platform manages real ad spend across multiple social platforms, generating and optimizing campaigns autonomously. The design work established the interaction patterns and trust framework that make it possible for marketers to confidently delegate complex decisions to an AI agent.",
-        "This project reinforced a conviction I carry into every engagement: the best AI products don’t replace human judgment — they amplify it. Design is the bridge that makes that amplification feel natural.",
+        "Over 18 months, I led the product design through three complete iterations — from a metrics dashboard to an agentic platform to a rebranded launch product. The work spanned product strategy, interaction design, design systems, user research, and cross-functional coordination with engineering, AI/ML, branding, and GTM.",
+        "The core design principle — non-action, non-doing — survived from the two-day brainstorm through to the shipped product. That’s rare, and it means the initial insight was right and the execution held up.",
       ],
       contributions: [
+        "Product Strategy",
         "Product Discovery",
         "Interaction Design",
         "Design System",
         "Prototyping",
         "User Research",
-        "Product Strategy",
       ],
       collaborators: [
-        "Product Managers",
+        "CEO, CTO & CPO",
         "AI/ML Engineers",
         "Full-Stack Engineers",
-        "Marketing Team",
+        "Branding Agency",
+        "GTM Team",
       ],
-      tools: ["Figma", "Figjam", "Miro", "Notion", "Claude", "Cursor"],
+      tools: ["Figma", "Figma MCP", "Figjam", "Claude Code", "Codex", "Cursor", "Notion"],
     },
     nextProject: {
       slug: "gator",
