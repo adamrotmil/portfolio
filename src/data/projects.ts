@@ -2234,6 +2234,7 @@ export const PROJECTS: Project[] = [
     color: "#1e3a5f",
     thumbnail: "/images/goldman-sachs/dashboard-fixed-income.jpg",
     heroImage: "/images/goldman-sachs/dashboard-fixed-income.jpg",
+    heroObjectPosition: "top",
     meta: [
       { label: "Client", value: "Goldman Sachs" },
       { label: "Role", value: "Product Designer" },
