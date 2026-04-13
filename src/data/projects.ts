@@ -2114,6 +2114,12 @@ export const PROJECTS: Project[] = [
     ],
     sections: [
       {
+        type: "video",
+        layout: "desktop-showcase",
+        videoSrc: "/images/benchling/area.mp4",
+        videoLabel: "Benchling — Live Site",
+      },
+      {
         type: "text",
         sectionNumber: "01",
         sectionLabel: "The Brief",
