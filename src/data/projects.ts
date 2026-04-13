@@ -2092,6 +2092,134 @@ export const PROJECTS: Project[] = [
       tools: ["Sketch", "InVision", "Miro", "Jira"],
     },
     nextProject: {
+      slug: "benchling",
+      title: "Benchling",
+      subtitle: "Life Sciences Marketing Site & Component System",
+    },
+  },
+  {
+    slug: "benchling",
+    title: "Benchling",
+    subtitle: "Life Sciences Marketing Site & Component System",
+    description:
+      "Redesigned the marketing site for a $6B life sciences R&D platform — structuring content strategy, zone diagrams, and a scalable component system built for CMS.",
+    tags: ["SaaS", "Biotech", "Component System", "Marketing"],
+    color: "#1652f0",
+    thumbnail: "/images/benchling/homepage.png",
+    heroImage: "/images/benchling/homepage.png",
+    meta: [
+      { label: "Client", value: "Benchling (via Code & Theory)" },
+      { label: "Role", value: "Product Designer" },
+      { label: "Duration", value: "3 Months" },
+      { label: "Platform", value: "Web" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "The Brief",
+        heading:
+          "A $6B biotech platform needed a marketing site that could scale with the product",
+        body: [
+          "Benchling is a life sciences R&D cloud platform used by over 200,000 scientists at companies like Moderna, Regeneron, and Gilead. Their existing marketing site hadn't kept pace with the product — it lacked a high-end visual style, wasn't structured systematically, and couldn't scale as the company added new product lines, use cases, and content.",
+          "Working with Code & Theory, I was part of a three-person design team — myself, a UX designer, and a visual designer. We collaboratively tackled the content strategy, zone diagrams, visual look and feel, and component architecture for a comprehensive redesign of the product and company marketing site.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Homepage — The Life Sciences R&D Cloud",
+            src: "/images/benchling/homepage.png",
+          },
+          {
+            label: "Homepage — Alternate Direction",
+            src: "/images/benchling/homepage-alt.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Systematic Design",
+        heading:
+          "Zone diagrams and components that tell stories in a repeatable way",
+        body: [
+          "The core challenge wasn't just making it look better — it was making it scalable. Every page needed to be built from reusable zones and components that could be assembled and maintained through a CMS. I focused on standardizing and componentizing everything so that as Benchling added product pages, use cases, and landing pages, the team could build them consistently without starting from scratch each time.",
+          "We designed zone diagrams that structured content into repeatable narrative patterns — hero sections, product feature breakdowns, customer proof points, CTAs — and delivered a comprehensive template guide covering desktop and mobile specifications for every component.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Notebook Product Page — Feature Breakdown & Social Proof",
+            src: "/images/benchling/notebook-product.png",
+          },
+          {
+            label: "Validated Cloud — Enterprise Compliance & Security",
+            src: "/images/benchling/validated-cloud.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Benchling for Startups — Onboarding & Pricing",
+            src: "/images/benchling/startups.png",
+          },
+          {
+            label: "Careers — Mission & Culture",
+            src: "/images/benchling/careers.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Component System",
+        heading:
+          "A template guide that made the system buildable and maintainable",
+        body: [
+          "The template guide documented every component across desktop and mobile — specifying layout, spacing, content requirements, and responsive behavior. This wasn't a design system in the traditional sense — it was a production blueprint that gave the engineering and content teams everything they needed to build and extend the site independently.",
+        ],
+      },
+      {
+        type: "images",
+        images: [
+          {
+            label: "Template Guide — Full Component Inventory (Desktop & Mobile)",
+            src: "/images/benchling/template-guide.jpg",
+            height: 600,
+          },
+        ],
+      },
+    ],
+    outcome: {
+      heading: "A scalable foundation still in use today",
+      body: [
+        "The site shipped and Benchling continues to use the structural and strategic foundation we designed. They've extended and improved it since, but the zone-based architecture and component approach remain in place — exactly the kind of longevity you want from a systematic design engagement.",
+      ],
+      contributions: [
+        "Component Architecture",
+        "Content Strategy",
+        "Zone Diagrams (UX)",
+        "Visual Design",
+        "Responsive Design",
+      ],
+      collaborators: [
+        "Code & Theory",
+        "UX Designer",
+        "Visual Designer",
+        "Benchling Marketing Team",
+      ],
+      tools: ["Figma", "Sketch"],
+    },
+    nextProject: {
       slug: "goldman-sachs",
       title: "Goldman Sachs",
       subtitle: "Equities & Fixed Income Advisory Platform",
