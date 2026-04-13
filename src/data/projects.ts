@@ -617,9 +617,9 @@ export const PROJECTS: Project[] = [
       },
     ],
     outcome: {
-      heading: "From concept to MVP in six weeks — shipped with zero changes",
+      heading: "From concept to MVP in six weeks",
       body: [
-        "I delivered the complete product vision in six weeks: 30+ unique screens, a full click-through prototype, and all states documented. The founder made literally no changes — he took the designs directly into iOS development.",
+        "I delivered the complete product vision in six weeks: 30+ unique screens, a full click-through prototype, and all states documented. The founder saw no need for changes and took the designs directly into iOS development.",
         "What mattered most was making advanced AI feel useful in the real conditions of field work: fast context gathering, voice-first interaction when hands are busy, and structured guidance when a technician needs the next right step.",
       ],
       contributions: [
