@@ -2092,6 +2092,115 @@ export const PROJECTS: Project[] = [
       tools: ["Sketch", "InVision", "Miro", "Jira"],
     },
     nextProject: {
+      slug: "goldman-sachs",
+      title: "Goldman Sachs",
+      subtitle: "Equities & Fixed Income Advisory Platform",
+    },
+  },
+  {
+    slug: "goldman-sachs",
+    title: "Goldman Sachs",
+    subtitle: "Equities & Fixed Income Advisory Platform",
+    description:
+      "Replaced a homegrown spreadsheet system with a scalable strategy advisory platform used by Goldman Sachs financial advisors and registered franchise partners.",
+    tags: ["Finance", "Enterprise", "Internal Tools"],
+    color: "#1e3a5f",
+    thumbnail: "/images/goldman-sachs/dashboard-fixed-income.jpg",
+    heroImage: "/images/goldman-sachs/dashboard-fixed-income.jpg",
+    meta: [
+      { label: "Client", value: "Goldman Sachs" },
+      { label: "Role", value: "Product Designer" },
+      { label: "Duration", value: "1 Month" },
+      { label: "Platform", value: "Web App" },
+    ],
+    sections: [
+      {
+        type: "text",
+        sectionNumber: "01",
+        sectionLabel: "The Problem",
+        heading:
+          "Financial advisors were running portfolio strategy on spreadsheets",
+        body: [
+          "Goldman Sachs Asset Management needed to scale a critical internal workflow. An advisor inside the firm had developed a homegrown set of spreadsheets for evaluating and recommending investment strategies to clients. It worked for her — but it didn't scale across the firm or to the registered advisors who use the GS franchise.",
+          "The firm made her the product owner for turning it into a real product. I worked with her, another UX designer, and a visual designer to design a web-based strategy advisory platform — under the constraint that everything had to speak Goldman Sachs's existing visual language.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Advisor Dashboard — Portfolio Overview & Strategy Exploration",
+            src: "/images/goldman-sachs/dashboard-fixed-income.jpg",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "02",
+        sectionLabel: "Strategy Selection",
+        heading:
+          "Helping advisors find the right strategy in minutes, not hours",
+        body: [
+          "The core flow lets advisors enter a few basic account criteria — investment amount, time horizon, risk profile — and quickly narrow down which fixed income or equity strategies to recommend. The platform surfaces strategy descriptions, available offerings, and key metrics like yield and duration, then lets advisors run a transition analysis or generate a client-ready report.",
+          "I designed the strategy selection experience with progressive disclosure: advisors start with a clean, scannable overview, then drill into strategy details only when they need depth. Filtering by themes, tax status, and asset class lets them narrow options without losing context on what's available.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Choose a Strategy — Account Criteria & Offering Comparison",
+            src: "/images/goldman-sachs/choose-strategy.png",
+          },
+          {
+            label: "Strategy Filters — Theme-Based Exploration",
+            src: "/images/goldman-sachs/strategy-filter-themes.png",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "Strategy Detail",
+        heading:
+          "From overview to recommendation with full context",
+        body: [
+          "Each strategy detail page gives advisors everything they need to make a recommendation: a strategy snapshot with risk and return characteristics, available offerings with yield and duration comparisons, and a learning center with relevant research and fact sheets. Advisors can request a transition analysis directly from the detail page — replacing a process that previously required back-and-forth emails with the internal team.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Municipal Fixed Income — Strategy Detail & Transition Analysis",
+            src: "/images/goldman-sachs/municipal-fixed-income-detail.png",
+          },
+        ],
+      },
+    ],
+    outcome: {
+      heading: "From spreadsheets to scalable product",
+      body: [
+        "The firm transitioned away from the spreadsheet-based workflow and into a scalable advisory platform — usable not only by internal advisors but also by registered advisors across the Goldman Sachs franchise for portfolio transition recommendations.",
+        "The project demonstrated how to take an expert's homegrown workflow and turn it into a product that preserves her domain expertise while making it accessible to hundreds of advisors across the firm.",
+      ],
+      contributions: [
+        "Product Design",
+        "Information Architecture",
+        "Interaction Design",
+      ],
+      collaborators: [
+        "Product Owner (Internal Advisor)",
+        "UX Designer",
+        "Visual Designer",
+        "Engineering Team",
+      ],
+      tools: ["Figma"],
+    },
+    nextProject: {
       slug: "clarvos",
       title: "Clarvos",
       subtitle: "Agentic AI Ad Platform",
