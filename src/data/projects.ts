@@ -822,57 +822,37 @@ export const PROJECTS: Project[] = [
     title: "My Wellness Research — University of Miami",
     subtitle: "Clinical Cancer Research Platform",
     description:
-      "Designed a remote monitoring platform used in published clinical trials at Sylvester Cancer Center, improving post-surgical recovery outcomes across 293 patients.",
+      "Sole designer of a multi-sided clinical research platform — patient mobile app, health coach dashboard, and research ops system — now used in NIH-funded trials and published in peer-reviewed journals.",
     tags: ["Health Tech", "Research", "Mobile"],
     color: "#f97316",
     thumbnail: "/images/miami/University-Miami-cover.png",
     heroImage: "/images/miami/University-Miami-cover.png",
     meta: [
       { label: "Client", value: "University of Miami" },
-      { label: "Role", value: "Lead Product Designer" },
+      { label: "Role", value: "Sole Product Designer" },
       { label: "Duration", value: "9 Months" },
       { label: "Platform", value: "Mobile & Web" },
     ],
     sections: [
+      // ── 01: The Brief ───────────────────────────────────────
       {
         type: "text",
         sectionNumber: "01",
-        sectionLabel: "Overview",
+        sectionLabel: "The Brief",
         heading:
-          "A remote monitoring platform that became part of Sylvester's cancer data ecosystem",
+          "Translating cancer research from paper forms to a living data platform",
         body: [
-          "I led product design for My Wellness Research, a HIPAA-compliant remote monitoring platform developed at the Sylvester Comprehensive Cancer Center, part of the University of Miami Miller School of Medicine. The platform enables cancer patients, health coaches, and clinicians to communicate and track progress in real time, collecting patient-generated data from wearables, video sessions, dietary assessments, and remote symptom reporting.",
-          "What began as a research tool has grown into a cornerstone of Sylvester's Cancer Data Ecosystem initiative, integrating lifestyle data with genomic, imaging, and clinical records to support personalized treatment planning across multiple active clinical trials.",
+          "I was brought in as the sole product designer to build My Wellness Research, a HIPAA-compliant remote monitoring platform at the Sylvester Comprehensive Cancer Center, part of the University of Miami Miller School of Medicine. I worked directly with Dr. Tracy Crane and Grey Freylersythe at Sylvester to translate their research vision into a multi-sided digital product.",
+          "The starting brief was electronic patient-reported outcomes (ePRO) in oncology — replacing paper-based symptom reporting with real-time digital collection. I knew from Dr. Ethan Basche's foundational work that this transition reduces recall bias and provides richer data for clinicians. But the team wanted to go further: alongside standard ePRO reporting, they needed dietary tracking, behavioral coaching, and wearable device integration — a full lifestyle data platform embedded in active clinical trials.",
         ],
       },
       {
         type: "video",
         layout: "desktop-showcase",
         videoSrc: "/images/miami/mwr-sizzle-reel-oct-2023.mp4",
-        videoLabel: "My Wellness Research - Product Overview",
+        videoLabel: "My Wellness Research — Product Overview",
         videoControls: true,
         videoPoster: "/images/miami/cover-image-mwr.png",
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            label: "Randomized Controlled Trial Design — Intervention vs. Control",
-            src: "/images/miami/miami-average-treatment-effect.png",
-          },
-        ],
-      },
-      {
-        type: "text",
-        sectionNumber: "02",
-        sectionLabel: "The Problem",
-        heading:
-          "Remote cancer care needed a platform built for home-based research",
-        body: [
-          "Cancer care is increasingly moving from the clinic to the home, but most clinical research platforms were not designed for remote patient engagement. Researchers needed a way to monitor patients between visits, collect lifestyle and behavioral data at scale, and act on that data in real time.",
-          "The platform needed to serve three distinct user groups with very different needs: patients reporting symptoms and tracking daily behaviors, health coaches facilitating interventions and monitoring adherence, and clinicians reviewing population-level trends and individual risk signals.",
-        ],
       },
       {
         type: "images",
@@ -888,24 +868,42 @@ export const PROJECTS: Project[] = [
           },
         ],
       },
+      // ── 02: Three Audiences ─────────────────────────────────
       {
         type: "text",
-        sectionNumber: "03",
-        sectionLabel: "What I Did",
-        heading: "Designing across patient, coach, and clinician experiences",
+        sectionNumber: "02",
+        sectionLabel: "Three Audiences, One Platform",
+        heading:
+          "A consumer app for patients, a clinical tool for coaches, a research engine for scientists",
         body: [
-          "I designed the end-to-end product experience across patient, coach, and clinician interfaces. This included remote symptom reporting flows, wearable data integration views, video session scheduling and recording, and dashboards that surfaced actionable trends for care teams. I worked directly with Dr. Tracy Crane's research team to understand clinical workflows and translate complex research protocols into intuitive digital experiences.",
-          "The design challenge was balancing clinical rigor with accessibility. Patients ranged widely in age, technical comfort, and language. The platform needed to feel simple and supportive for a patient going through cancer treatment, while giving researchers and coaches the depth of data they needed to run rigorous trials.",
+          "I designed experiences for three distinct user groups with fundamentally different needs, contexts, and technical comfort levels — all working within the same data ecosystem.",
+          "For patients, I designed a mobile experience that feels consumer-grade — closer to Noom than a clinical tool. Patients going through chemotherapy often have tingling hands and numbness, so every interaction needed to be simple, forgiving, and supportive. The app includes daily check-ins, wearable device syncing, dietary logging, and trend visualization.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "phone-gallery",
+        images: [
+          {
+            label: "Patient Mobile — Home Dashboard with Device Sync & Trends",
+            src: "/images/miami/patient-mobile-input.png",
+          },
         ],
       },
       {
         type: "text",
-        sectionNumber: "04",
-        sectionLabel: "Published Outcomes",
-        heading: "Peer-reviewed trials showed measurable recovery benefits",
         body: [
-          "A randomized trial of 293 cancer surgery patients, published in npj Digital Medicine, found that patients monitored through the platform showed a 6% greater functional recovery rate by day 14 post-surgery and significantly fewer major complications compared to standard care.",
-          "A feasibility study published in JCO Oncology Practice documented the platform's use across a racially and ethnically diverse patient population, including the first large-scale deployment of validated Spanish-language patient-reported outcomes screening embedded in electronic health records.",
+          "For health coaches, I designed a web dashboard for managing participant care — video calls, messaging, scheduling, and a kanban-style task board for tracking each patient's goals and progress. Coaches needed to see a participant's full context at a glance during live sessions, so I designed a split-screen layout that surfaces the patient profile, active goals, and guided module input alongside the video call.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Participant Profile — Kanban Goals, Video Call & Guided Module Input",
+            src: "/images/miami/ppt-full-profile-video.png",
+          },
         ],
       },
       {
@@ -917,24 +915,78 @@ export const PROJECTS: Project[] = [
             src: "/images/miami/my-wellness-dashboard.png",
           },
           {
-            label: "Video Coaching — Face-to-Face Patient Check-in",
-            src: "/images/miami/Patient-coaching.png",
-          },
-          {
-            label: "Messaging — Ongoing Patient-Clinician Communication",
-            src: "/images/miami/Messaging.png",
+            label: "Scheduling — Appointment Calendar with Clinic Visit Details",
+            src: "/images/miami/scheduling.png",
           },
         ],
       },
       {
         type: "text",
-        sectionNumber: "05",
-        sectionLabel: "Ongoing Impact",
-        heading: "The platform continues to expand across trials and care programs",
         body: [
-          "The platform continues to grow beyond my original engagement. It now supports multiple active clinical trials at Sylvester, including an NCI-funded collaboration with Yale University studying nutrition interventions for ovarian cancer patients.",
-          "The research team has added AI and natural language processing capabilities to analyze patient coaching conversations, predict coaching needs, and identify retraining opportunities. A new pediatric sarcoma trial launched in 2026 uses the platform alongside 3D biomechanical software and wearable activity monitors.",
-          "My Wellness Research is now part of a broader ecosystem at Sylvester that includes the My Wellness Check screening tool, which went live system-wide for all Sylvester outpatients and has been associated with fewer emergency room visits and hospitalizations.",
+          "For researchers, I designed a super-admin layer with cohort-level views, study arm configuration, and a modular ePRO library where admins can fully define and configure their own assessment instruments, targets, triggers, and scoring logic.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Study Configuration — Interventions, Assessments & Data Collection",
+            src: "/images/miami/participant-profile-modules.png",
+          },
+          {
+            label: "ePRO Module Library — Physical Wellbeing with Study Associations",
+            src: "/images/miami/module-setup.png",
+          },
+        ],
+      },
+      // ── 03: Coaching Experience ─────────────────────────────
+      {
+        type: "text",
+        sectionNumber: "03",
+        sectionLabel: "The Coaching Experience",
+        heading:
+          "Video calls that capture data while delivering empathy",
+        body: [
+          "The video coaching integration was more than a communication tool — it was a data capture system. Every coaching session transcript was captured and processed through machine learning and NLP analysis. In the LIVES study (Lifestyle Intervention for oVarian Cancer Enhanced Survival), the research team analyzed 17,000 hours of health coaching calls to predict diet and exercise changes among ovarian cancer survivors.",
+          "This data source used to be thrown out entirely — there was simply no way to process it at scale. The platform I designed made it capturable, structured, and analyzable. I designed the recording interface with a \"Record Touchpoint\" toggle, internal notes field, and patient goals sidebar so that coaches could focus on the human interaction while the system handled data collection.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Video Coaching — Face-to-Face Session with Patient Goals & Notes",
+            src: "/images/miami/video-with-ppt.png",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Messaging Inbox — Multi-Channel Patient Communication",
+            src: "/images/miami/messaging-inbox.png",
+          },
+          {
+            label: "Messaging Thread — Patient Chat with Shared Files",
+            src: "/images/miami/messaging-thread.png",
+          },
+        ],
+      },
+      // ── 04: Research Ops ─────────────────────────────────────
+      {
+        type: "text",
+        sectionNumber: "04",
+        sectionLabel: "Research Ops & Study Design",
+        heading:
+          "Configuring thousands of parallel studies from a single admin panel",
+        body: [
+          "The study design configuration became the most technically complex part of the platform. As partnerships expanded, we needed to support studies at every phase — from animal studies to dose escalation trials to large-scale behavioral interventions with ePRO data and coaching.",
+          "I designed an ePRO library where admins can fully define assessment instruments with configurable targets, triggers, and automation logic. The system includes SMS integrations with rule-based messaging, event listeners that monitor for shifts in reported outcomes in real time, and predictive models that combine multiple outcome signals to alert clinicians before negative health effects occur — enabling them to hold a dose or bring a participant in for consultation.",
+          "In Dr. Crane's words, this architecture enables thousands of studies to run in parallel, each with its own configuration of interventions, data collection instruments, and automation rules.",
         ],
       },
       {
@@ -948,9 +1000,42 @@ export const PROJECTS: Project[] = [
         ],
       },
       {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Randomized Controlled Trial Design — Intervention vs. Control",
+            src: "/images/miami/miami-average-treatment-effect.png",
+          },
+        ],
+      },
+      // ── 05: Published Outcomes ──────────────────────────────
+      {
+        type: "text",
+        sectionNumber: "05",
+        sectionLabel: "Published Outcomes",
+        heading:
+          "Peer-reviewed trials showed measurable recovery benefits",
+        body: [
+          "A randomized trial of 293 cancer surgery patients, published in npj Digital Medicine, found that patients monitored through the platform showed a 6% greater functional recovery rate by day 14 post-surgery and significantly fewer major complications compared to standard care.",
+          "A feasibility study published in JCO Oncology Practice documented the platform's use across a racially and ethnically diverse patient population, including the first large-scale deployment of validated Spanish-language patient-reported outcomes screening embedded in electronic health records.",
+          "The platform now supports multiple active clinical trials at Sylvester, including a $3.5 million NIH-funded collaboration with Yale University and NRG Oncology studying at-home symptom management for patients on oral anti-cancer medications. A pediatric sarcoma trial launched in 2026 uses the platform alongside 3D biomechanical software and wearable activity monitors.",
+        ],
+      },
+      {
         type: "stats",
         stats: [
           { number: 293, suffix: "", label: "Patients in randomized cancer surgery trial" },
+          {
+            number: 17,
+            suffix: "K",
+            label: "Hours of coaching calls analyzed via NLP",
+          },
+          {
+            number: 3.5,
+            suffix: "M",
+            label: "NIH grant funding for expanded trials",
+          },
           {
             number: 6,
             suffix: "%",
@@ -958,33 +1043,26 @@ export const PROJECTS: Project[] = [
           },
         ],
       },
-      {
-        type: "text",
-        sectionNumber: "06",
-        sectionLabel: "Credibility",
-        heading: "Results written up in peer-reviewed journals",
-        body: [
-          "Platform used in published trials in npj Digital Medicine and JCO Oncology Practice. Active across multiple trials at Sylvester Comprehensive Cancer Center. NCI-funded collaboration with Yale University.",
-        ],
-      },
     ],
     outcome: {
       heading: "Product design with measurable clinical impact",
       body: [
-        "Designed the patient, coach, and clinician experience for a platform that has directly contributed to published clinical evidence in cancer care.",
-        "The work sits at the intersection of product design and clinical research, where design decisions have measurable impact on patient recovery and quality of life.",
+        "Over 9 months as the sole product designer, I translated executive research vision into a multi-sided platform that now supports active clinical trials, published peer-reviewed research, and an expanding data ecosystem at one of the country's leading cancer centers.",
+        "The work sits at the intersection of product design and clinical research — where information architecture decisions directly affect what data researchers can collect, and interaction design decisions directly affect whether patients going through cancer treatment will actually use the tool.",
       ],
       contributions: [
-        "Lead Product Design",
+        "Sole Product Designer",
         "User Research",
-        "Prototyping",
         "Information Architecture",
+        "Prototyping",
         "Visual Design",
+        "Research Ops Design",
       ],
       collaborators: [
+        "Dr. Tracy Crane's Lab",
+        "Grey Freylersythe",
         "Sylvester Cancer Center",
-        "Yale University",
-        "Patients & Oncologists",
+        "Yale University / NCI",
         "Engineering Team",
       ],
       tools: ["Figma", "Sketch", "InVision", "Miro"],
