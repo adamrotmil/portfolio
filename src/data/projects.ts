@@ -488,15 +488,15 @@ export const PROJECTS: Project[] = [
     title: "Gator",
     subtitle: "AI Tech Support Chatbot",
     description:
-      "Shortened service time with a multimodal AI support app for HVAC technicians.",
+      "Worked directly with a founder to design a multimodal AI support app for HVAC technicians — concept to MVP in 6 weeks, shipped with zero changes.",
     tags: ["Mobile", "Conversational AI", "QR/Vision", "Field Service"],
     color: "#2d5a3d",
     thumbnail: "/images/gator/Gator cover.png",
     heroImage: "/images/gator/Gator First Image.png",
     meta: [
-      { label: "Client", value: "Gator Tech Support" },
-      { label: "Role", value: "UI Designer" },
-      { label: "Scope", value: "Full App Design" },
+      { label: "Client", value: "Gator (Startup)" },
+      { label: "Role", value: "Sole Product Designer" },
+      { label: "Duration", value: "6 Weeks" },
       { label: "Platform", value: "iOS Native" },
     ],
     sections: [
@@ -507,8 +507,8 @@ export const PROJECTS: Project[] = [
         heading:
           "A technician is standing in front of a broken air conditioner. They need an answer in 30 seconds, not 30 minutes.",
         body: [
-          "HVAC technicians work alone, often in unfamiliar buildings, diagnosing equipment they may have never seen before. When they get stuck, the current options are bad: call a senior tech (who might not answer), dig through a 400-page PDF manual on a phone screen, or guess and risk making it worse.",
-          "Gator reimagines field support as a conversation. Point your phone at the unit, scan the barcode, and start talking. The AI knows the specific model, its common failure modes, and the exact steps to fix them — delivered in plain language, one step at a time.",
+          "I worked directly with Gator's founder as the sole product designer, taking the product from concept to a complete MVP in six weeks. I ran 1:1 discovery sessions with him to understand the problem space, created a storyboard narrative of the happy path, and designed the full end-to-end flow for his first product vision.",
+          "HVAC technicians work alone, often in unfamiliar buildings, diagnosing equipment they may have never seen before. When they get stuck, the current options are bad: call a senior tech (who might not answer), dig through a 400-page PDF manual on a phone screen, or guess and risk making it worse. Gator reimagines field support as a conversation — point your phone at the unit, scan the barcode, and start talking.",
         ],
       },
       {
@@ -617,22 +617,21 @@ export const PROJECTS: Project[] = [
       },
     ],
     outcome: {
-      heading: "In development with beta launching in 2026",
+      heading: "From concept to MVP in six weeks — shipped with zero changes",
       body: [
-        "Gator moved from concept into active iOS development. I designed the full end-to-end product experience in Figma and worked directly with the developer during handoff, with a wired prototype covering the journey from sign-in through diagnosis and guided repair.",
+        "I delivered the complete product vision in six weeks: 30+ unique screens, a full click-through prototype, and all states documented. The founder made literally no changes — he took the designs directly into iOS development.",
         "What mattered most was making advanced AI feel useful in the real conditions of field work: fast context gathering, voice-first interaction when hands are busy, and structured guidance when a technician needs the next right step.",
       ],
       contributions: [
-        "UI Design",
+        "Sole Product Designer",
+        "Discovery & Storyboarding",
         "Interaction Design",
         "Prototyping",
-        "User Flow Mapping",
         "Design System",
       ],
       collaborators: [
-        "30+ unique screens",
-        "Full click-through prototype",
-        "All states documented",
+        "Founder (Direct)",
+        "iOS Developer",
       ],
       tools: ["Figma", "Figma Prototyping", "FigJam"],
     },
