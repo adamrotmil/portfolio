@@ -229,6 +229,28 @@ export const PROJECTS: Project[] = [
       },
       {
         type: "text",
+        heading: "Building agents behind the interface",
+        body: [
+          "The creative intelligence users see is the output of a crew of specialized AI agents working in coordination. I worked cross-functionally with two AI modeling engineers, an advertising creative, and a PM to build and iterate on the dynamic creatives agent that generates editable images and text layers.",
+          "My role extended beyond interface design into the agent system itself. The team architected the structure together. I wrote the initial YAML configurations, contributed the photographic aesthetics encoded in the markdown spec files, and pair-programmed with engineers on the copywriting standards and art director heuristics that shape the image generation agent. The result is a system that produces work for real brands, including Dunkin', purely elizabeth, and PCG, rather than generic AI outputs.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          {
+            label: "Clarvos Agents — Internal Admin for Shipping Agent Crews",
+            src: "/images/clarvos/agents-1.png",
+          },
+          {
+            label: "Dynamic Creatives Agent — Real Brand Output (Dunkin', purely elizabeth, PCG)",
+            src: "/images/clarvos/agents-2.png",
+          },
+        ],
+      },
+      {
+        type: "text",
         heading: "From blank slate to live campaign in minutes",
         body: [
           "The campaign builder surfaces an AI-generated plan with budget allocation, ROAS predictions, and audience targeting already filled in. Marketers can accept the defaults, adjust any parameter, or override the AI entirely. The system explains why it made each recommendation, building trust through transparency.",
