@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { assetPath } from "@/lib/basePath";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -20,6 +21,8 @@ export default function Nav() {
     { label: "About", href: "#about" },
     { label: "Contact", href: "#contact" },
   ];
+
+  const resumeHref = assetPath("/resume/Adam-Rotmil-Resume.pdf");
 
   return (
     <nav
@@ -54,6 +57,14 @@ export default function Nav() {
               {link.label}
             </a>
           ))}
+          <a
+            href={resumeHref}
+            target="_blank"
+            rel="noopener"
+            className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
+          >
+            Resume ↗
+          </a>
           <a
             href="https://www.linkedin.com/in/adam-rotmil/"
             target="_blank"
@@ -106,6 +117,15 @@ export default function Nav() {
               {link.label}
             </a>
           ))}
+          <a
+            href={resumeHref}
+            target="_blank"
+            rel="noopener"
+            onClick={() => setMenuOpen(false)}
+            className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Resume ↗
+          </a>
         </div>
       )}
     </nav>
