@@ -1,0 +1,16 @@
+name = "foothills-narrator"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# --- Origin allow-list ---
+# Requests that don't match one of these Origins are rejected (403).
+# Update this if you move the portfolio to a different host.
+[vars]
+ALLOWED_ORIGINS = "https://adamrotmil.github.io,http://localhost:3000"
+ANTHROPIC_MODEL = "claude-haiku-4-5"
+# Daily global call cap — belt-and-suspenders on top of Anthropic's own limits.
+# At ~360 tokens per call this keeps spend under ~$5/mo with room to spare.
+DAILY_CALL_CAP = "350"
+
+# Secrets (set with `wrangler secret put`):
+#   ANTHROPIC_API_KEY

@@ -4,6 +4,8 @@ import type { Player } from "./player";
 import type { Emit, Line, Segment } from "./types";
 import { DIR_SHORT, normalizeDir, seg, L } from "./types";
 import { levelForXp } from "./player";
+import { askNarrator, narratorEnabled, rememberNarrationLine, recentNarration } from "../narrator/client";
+import type { NarrateReason, NarrateRequest } from "../narrator/contract";
 
 export function describeRoom(world: World, player: Player): Line[] {
   const room = world.getRoom(player.room);
@@ -47,6 +49,9 @@ export class Commands {
   readonly player: Player;
   readonly bus: EventBus;
   readonly emit: Emit;
+  /** The full command string the player most recently typed, kept for the
+   *  narrator context. */
+  private lastCommand = "";
 
   constructor(ctx: CommandsCtx) {
     this.world = ctx.world;
@@ -80,6 +85,7 @@ export class Commands {
   async dispatch(line: string) {
     const text = line.trim();
     if (!text) return;
+    this.lastCommand = text;
     const parts = text.split(/\s+/);
     const verb = parts[0].toLowerCase();
     const args = parts.slice(1);
@@ -88,7 +94,11 @@ export class Commands {
     if (dir) return this.cmdMove([dir]);
     const fn = this.handlers[verb];
     if (!fn) {
-      this.emit([seg.muted("I don't understand that. Try 'help'.")]);
+      await this.narrativeFallback(
+        "unknown-verb",
+        null,
+        [seg.muted("I don't understand that. Try 'help'.")],
+      );
       return;
     }
     await fn(args);
@@ -102,11 +112,23 @@ export class Commands {
     this.cmdExamine(args);
   }
 
-  private cmdMove(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Go where?")]);
+  private async cmdMove(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback(
+        "unknown-direction",
+        null,
+        [seg.muted("Go where?")],
+      );
+    }
     const dir = normalizeDir(args[0]);
     const room = this.world.getRoom(this.player.room);
-    if (!dir || !(dir in room.exits)) return this.emit([seg.muted("You can't go that way.")]);
+    if (!dir || !(dir in room.exits)) {
+      return this.narrativeFallback(
+        "unknown-direction",
+        args[0] ?? null,
+        [seg.muted("You can't go that way.")],
+      );
+    }
     const old = this.player.room;
     const next = room.exits[dir];
     this.world.removeOccupant(old, this.player.id);
@@ -129,14 +151,22 @@ export class Commands {
     if (this.player.gold) this.emit([seg.muted(`  (${this.player.gold} gold coins)`)]);
   }
 
-  private cmdGet(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Get what?")]);
+  private async cmdGet(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback("unknown-object", null, [seg.muted("Get what?")]);
+    }
     const name = args.join(" ").toLowerCase();
     const room = this.world.getRoom(this.player.room);
     for (const iid of [...room.items]) {
       const it = this.world.items[iid];
       if (it && (it.name.toLowerCase().includes(name) || name === iid)) {
-        if (it.takeable === false) return this.emit([seg.muted(`The ${it.name} can't be taken.`)]);
+        if (it.takeable === false) {
+          return this.narrativeFallback(
+            "unknown-object",
+            it.name,
+            [seg.muted(`The ${it.name} can't be taken.`)],
+          );
+        }
         this.world.pickUpItem(room.id, iid);
         this.player.inventory.push(iid);
         this.emit(L("You pick up the ", seg.item(it.name), "."));
@@ -144,11 +174,13 @@ export class Commands {
         return;
       }
     }
-    this.emit([seg.muted("You don't see that here.")]);
+    await this.narrativeFallback("unknown-object", name, [seg.muted("You don't see that here.")]);
   }
 
-  private cmdDrop(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Drop what?")]);
+  private async cmdDrop(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback("unknown-object", null, [seg.muted("Drop what?")]);
+    }
     const name = args.join(" ").toLowerCase();
     for (const iid of [...this.player.inventory]) {
       const it = this.world.items[iid];
@@ -160,11 +192,13 @@ export class Commands {
         return;
       }
     }
-    this.emit([seg.muted("You don't have that.")]);
+    await this.narrativeFallback("unknown-object", name, [seg.muted("You don't have that.")]);
   }
 
-  private cmdExamine(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Examine what?")]);
+  private async cmdExamine(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback("unknown-object", null, [seg.muted("Examine what?")]);
+    }
     const name = args.join(" ").toLowerCase();
     const room = this.world.getRoom(this.player.room);
     for (const iid of [...room.items, ...this.player.inventory]) {
@@ -184,16 +218,24 @@ export class Commands {
         return;
       }
     }
-    this.emit([seg.muted("You don't see that here.")]);
+    await this.narrativeFallback("unknown-object", name, [seg.muted("You don't see that here.")]);
   }
 
-  private cmdAttack(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Attack what?")]);
+  private async cmdAttack(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback("unknown-object", null, [seg.muted("Attack what?")]);
+    }
     const name = args.join(" ").toLowerCase();
     for (const e of this.world.occupantsIn(this.player.room)) {
       if (e.id === this.player.id || e.dead) continue;
       if (e.name.toLowerCase().includes(name) || name === e.id) {
-        if (e.kind === "npc") return this.emit([seg.muted(`${e.name} is peaceful. You wouldn't.`)]);
+        if (e.kind === "npc") {
+          return this.narrativeFallback(
+            "generic",
+            e.name,
+            [seg.muted(`${e.name} is peaceful. You wouldn't.`)],
+          );
+        }
         this.player.combatTarget = e.id;
         e.combatTarget = this.player.id;
         this.emit([seg.damage(`You lunge at ${e.name}!`)]);
@@ -201,7 +243,7 @@ export class Commands {
         return;
       }
     }
-    this.emit([seg.muted("You don't see that here.")]);
+    await this.narrativeFallback("unknown-object", name, [seg.muted("You don't see that here.")]);
   }
 
   private cmdFlee() {
@@ -228,6 +270,61 @@ export class Commands {
       const reply = await e.brain.onSpeech(e, this.player, text, this.world, this.bus);
       this.emitNpcReply(e, reply, this.player.id);
     }
+  }
+
+  /** Narrator fallback for dead-ends.  If the LLM narrator is configured and
+   *  responds, emits its lines (remembering each for continuity).  Otherwise
+   *  emits the static fallback line, preserving the classic experience. */
+  private async narrativeFallback(
+    reason: NarrateReason,
+    target: string | null,
+    staticFallback: Line | string,
+  ): Promise<void> {
+    if (narratorEnabled()) {
+      const req = this.buildNarrateRequest(reason, target);
+      const lines = await askNarrator(req);
+      if (lines && lines.length) {
+        for (const line of lines) {
+          rememberNarrationLine(line);
+          this.emit(line);
+        }
+        return;
+      }
+    }
+    this.emit(staticFallback);
+  }
+
+  private buildNarrateRequest(reason: NarrateReason, target: string | null): NarrateRequest {
+    const room = this.world.getRoom(this.player.room);
+    const occ = this.world
+      .occupantsIn(this.player.room)
+      .filter((e) => e.id !== this.player.id && !e.dead)
+      .map((e) => ({ name: e.name, kind: e.kind as "player" | "npc" | "mob" }));
+    const items = (room?.items ?? []).map(
+      (iid) => this.world.items[iid]?.name ?? iid,
+    );
+    const inventory = this.player.inventory.map(
+      (iid) => this.world.items[iid]?.name ?? iid,
+    );
+    return {
+      command: this.lastCommand,
+      reason,
+      room: {
+        id: room?.id,
+        name: room?.name ?? "",
+        description: room?.desc ?? "",
+        exits: Object.keys(room?.exits ?? {}),
+        items,
+        occupants: occ,
+      },
+      player: {
+        hp: this.player.hp,
+        max_hp: this.player.maxHp,
+        inventory,
+      },
+      target: target ?? undefined,
+      recent: recentNarration(),
+    };
   }
 
   /** Turn an NPC dialogue reply (string | string[]) into a sequence of bus
@@ -266,7 +363,9 @@ export class Commands {
   }
 
   private async cmdTalk(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Talk to whom?")]);
+    if (!args.length) {
+      return this.narrativeFallback("generic", null, [seg.muted("Talk to whom?")]);
+    }
     const targetName = args[0].toLowerCase();
     let rest = args.slice(1);
     if (rest[0]?.toLowerCase() === "about") rest = rest.slice(1);
@@ -279,7 +378,13 @@ export class Commands {
         break;
       }
     }
-    if (!npc || !npc.brain?.onSpeech) return this.emit([seg.muted("They don't seem interested.")]);
+    if (!npc || !npc.brain?.onSpeech) {
+      return this.narrativeFallback(
+        "unscripted-topic",
+        targetName,
+        [seg.muted("They don't seem interested.")],
+      );
+    }
     const reply = await npc.brain.onSpeech(npc, this.player, text, this.world, this.bus);
     this.emitNpcReply(npc, reply, this.player.id);
   }
@@ -295,13 +400,21 @@ export class Commands {
     }
   }
 
-  private cmdWield(args: string[]) {
-    if (!args.length) return this.emit([seg.muted("Wield what?")]);
+  private async cmdWield(args: string[]) {
+    if (!args.length) {
+      return this.narrativeFallback("unknown-object", null, [seg.muted("Wield what?")]);
+    }
     const name = args.join(" ").toLowerCase();
     for (const iid of this.player.inventory) {
       const it = this.world.items[iid];
       if (it && (it.name.toLowerCase().includes(name) || name === iid)) {
-        if (!it.damage || it.damage <= 0) return this.emit([seg.muted(`The ${it.name} isn't a weapon.`)]);
+        if (!it.damage || it.damage <= 0) {
+          return this.narrativeFallback(
+            "generic",
+            it.name,
+            [seg.muted(`The ${it.name} isn't a weapon.`)],
+          );
+        }
         this.player.wielded = iid;
         const base = 2 + levelForXp(this.player.playerXp);
         this.player.attack = base + it.damage;
@@ -309,7 +422,7 @@ export class Commands {
         return;
       }
     }
-    this.emit([seg.muted("You don't have that.")]);
+    await this.narrativeFallback("unknown-object", name, [seg.muted("You don't have that.")]);
   }
 
   private cmdUnwield() {
