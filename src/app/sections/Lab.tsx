@@ -4,9 +4,11 @@ import { useState } from "react";
 import Reveal from "@/components/Reveal";
 import { LAB_ITEMS } from "@/data/about";
 import FoothillsModal from "@/components/foothills/FoothillsModal";
+import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 
 export default function Lab() {
   const [foothillsOpen, setFoothillsOpen] = useState(false);
+  const [watchrcOpen, setWatchrcOpen] = useState(false);
 
   return (
     <section
@@ -58,6 +60,8 @@ export default function Lab() {
                 onClick={() => {
                   if (item.action === "foothills") {
                     setFoothillsOpen(true);
+                  } else if (item.action === "watchrc") {
+                    setWatchrcOpen(true);
                   } else if (item.url) {
                     window.open(item.url, "_blank");
                   }
@@ -102,6 +106,10 @@ export default function Lab() {
       <FoothillsModal
         open={foothillsOpen}
         onClose={() => setFoothillsOpen(false)}
+      />
+      <RemoteFlightModal
+        open={watchrcOpen}
+        onClose={() => setWatchrcOpen(false)}
       />
     </section>
   );
