@@ -57,7 +57,22 @@ export const COMPANY_BADGES = [
   "MICA Faculty",
 ];
 
-export const LAB_ITEMS = [
+export type LabItem = {
+  title: string;
+  description: string;
+  tech: string;
+  url?: string;
+  action?: "foothills";
+};
+
+export const LAB_ITEMS: LabItem[] = [
+  {
+    title: "Foothills",
+    description:
+      "A classic ASCII MUD in the spirit of MUD1, Essex 1978. 30 rooms, NPCs, combat, and an agent-ready NPC brain seam.",
+    action: "foothills",
+    tech: "TypeScript · React · game engine",
+  },
   {
     title: "SwiftUI Interaction Lab",
     description:

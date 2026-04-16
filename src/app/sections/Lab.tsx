@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Reveal from "@/components/Reveal";
 import { LAB_ITEMS } from "@/data/about";
+import FoothillsModal from "@/components/foothills/FoothillsModal";
 
 export default function Lab() {
+  const [foothillsOpen, setFoothillsOpen] = useState(false);
+
   return (
     <section
       id="lab"
@@ -34,59 +38,71 @@ export default function Lab() {
       </Reveal>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {LAB_ITEMS.map((item, i) => (
-          <Reveal key={i} delay={i * 0.1}>
-            <div
-              className="p-6 rounded-[10px] min-h-[180px] flex flex-col justify-between transition-transform duration-300 cursor-default"
-              style={{
-                background: item.url ? "#f5f5f5" : "#141415",
-                cursor: item.url ? "pointer" : "default",
-              }}
-              onMouseEnter={(e) => {
-                if (item.url)
-                  e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-              onClick={() => {
-                if (item.url) window.open(item.url, "_blank");
-              }}
-            >
-              <div>
-                <h4
-                  className="font-serif text-[1.2rem] font-normal mb-1.5"
-                  style={{
-                    color: item.url ? "#1a1a1a" : "var(--color-text-muted)",
-                  }}
-                >
-                  {item.title}
-                </h4>
+        {LAB_ITEMS.map((item, i) => {
+          const clickable = Boolean(item.url || item.action);
+          return (
+            <Reveal key={i} delay={i * 0.1}>
+              <div
+                className="p-6 rounded-[10px] min-h-[180px] flex flex-col justify-between transition-transform duration-300 cursor-default"
+                style={{
+                  background: clickable ? "#f5f5f5" : "#141415",
+                  cursor: clickable ? "pointer" : "default",
+                }}
+                onMouseEnter={(e) => {
+                  if (clickable)
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+                onClick={() => {
+                  if (item.action === "foothills") {
+                    setFoothillsOpen(true);
+                  } else if (item.url) {
+                    window.open(item.url, "_blank");
+                  }
+                }}
+              >
+                <div>
+                  <h4
+                    className="font-serif text-[1.2rem] font-normal mb-1.5"
+                    style={{
+                      color: clickable ? "#1a1a1a" : "var(--color-text-muted)",
+                    }}
+                  >
+                    {item.title}
+                  </h4>
+                  <p
+                    className="font-sans text-[0.85rem] leading-[1.5]"
+                    style={{
+                      color: clickable
+                        ? "rgba(0,0,0,0.55)"
+                        : "var(--color-text-muted)",
+                    }}
+                  >
+                    {item.description}
+                  </p>
+                </div>
                 <p
-                  className="font-sans text-[0.85rem] leading-[1.5]"
+                  className="font-sans text-[0.72rem] mt-4"
                   style={{
-                    color: item.url
-                      ? "rgba(0,0,0,0.55)"
+                    color: clickable
+                      ? "rgba(0,0,0,0.35)"
                       : "var(--color-text-muted)",
                   }}
                 >
-                  {item.description}
+                  {item.tech}
                 </p>
               </div>
-              <p
-                className="font-sans text-[0.72rem] mt-4"
-                style={{
-                  color: item.url
-                    ? "rgba(0,0,0,0.35)"
-                    : "var(--color-text-muted)",
-                }}
-              >
-                {item.tech}
-              </p>
-            </div>
-          </Reveal>
-        ))}
+            </Reveal>
+          );
+        })}
       </div>
+
+      <FoothillsModal
+        open={foothillsOpen}
+        onClose={() => setFoothillsOpen(false)}
+      />
     </section>
   );
 }
