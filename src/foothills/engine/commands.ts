@@ -1,4 +1,4 @@
-import type { World } from "./world";
+import type { Entity, World } from "./world";
 import type { EventBus } from "./events";
 import type { Player } from "./player";
 import type { Emit, Line, Segment } from "./types";
@@ -226,8 +226,41 @@ export class Commands {
     for (const e of this.world.occupantsIn(this.player.room)) {
       if (e.kind !== "npc" || !e.brain?.onSpeech) continue;
       const reply = await e.brain.onSpeech(e, this.player, text, this.world, this.bus);
-      if (reply) {
-        this.bus.emit({ kind: "entity.spoke", room: e.room, actor: e.id, data: { text: reply, to: this.player.id } });
+      this.emitNpcReply(e, reply, this.player.id);
+    }
+  }
+
+  /** Turn an NPC dialogue reply (string | string[]) into a sequence of bus
+   *  events — `*emotes*` become `entity.emoted`, everything else is speech.
+   *  Embedded `\n` within a string splits that string into multiple lines. */
+  private emitNpcReply(
+    npc: Entity,
+    reply: string | string[] | null | undefined,
+    to: string | null,
+  ): void {
+    if (!reply) return;
+    const input = Array.isArray(reply) ? reply : [reply];
+    for (const piece of input) {
+      if (piece == null) continue;
+      for (const raw of String(piece).split("\n")) {
+        const line = raw.trim();
+        if (!line) continue;
+        const emote = line.match(/^\*(.+)\*$/);
+        if (emote) {
+          this.bus.emit({
+            kind: "entity.emoted",
+            room: npc.room,
+            actor: npc.id,
+            data: { text: emote[1].trim() },
+          });
+        } else {
+          this.bus.emit({
+            kind: "entity.spoke",
+            room: npc.room,
+            actor: npc.id,
+            data: { text: line, to: to ?? undefined },
+          });
+        }
       }
     }
   }
@@ -248,7 +281,7 @@ export class Commands {
     }
     if (!npc || !npc.brain?.onSpeech) return this.emit([seg.muted("They don't seem interested.")]);
     const reply = await npc.brain.onSpeech(npc, this.player, text, this.world, this.bus);
-    if (reply) this.bus.emit({ kind: "entity.spoke", room: npc.room, actor: npc.id, data: { text: reply, to: this.player.id } });
+    this.emitNpcReply(npc, reply, this.player.id);
   }
 
   private cmdWho() {

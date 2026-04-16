@@ -2,6 +2,11 @@ import type { Entity } from "../world";
 import type { EventBus, GameEvent } from "../events";
 import type { World } from "../world";
 
+/** A dialogue reply is either a single line, a sequence of lines (emitted
+ *  in order), or nothing. Lines wrapped in `*...*` are rendered as emotes
+ *  ("Branfin wipes a glass.") rather than speech. Embedded `\n` splits too. */
+export type DialogueReply = string | string[] | null | undefined;
+
 export interface Brain {
   onTick(npc: Entity, world: World, bus: EventBus, tick: number): Promise<void> | void;
   onEvent?(npc: Entity, event: GameEvent, world: World, bus: EventBus): Promise<void> | void;
@@ -11,7 +16,7 @@ export interface Brain {
     text: string,
     world: World,
     bus: EventBus,
-  ): Promise<string | null> | string | null;
+  ): Promise<DialogueReply> | DialogueReply;
 }
 
 export type BrainSpec = { type: string; params?: Record<string, unknown> };
