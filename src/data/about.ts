@@ -69,7 +69,7 @@ export const LAB_ITEMS: LabItem[] = [
   {
     title: "Remote Flight",
     description:
-      "A smartwatch remote control for an RC airplane. 8 screens with iOS-native springs, a working Digital Crown, and a hold-to-confirm land pattern.",
+      "A smartwatch remote control for an RC airplane. 8 screens with iOS-native springs.",
     action: "watchrc",
     tech: "React · Motion · iOS UX",
   },

@@ -67,7 +67,8 @@ ABSOLUTE RULES:
 - Return the narrative text only — no quotation marks, no framing, no prefix.
 - If the player's command is nonsense or empty, just describe a small ambient detail of the room.
 
-Output exactly one JSON object: {"lines": ["line 1", "line 2 (optional)"]}`;
+Output exactly one JSON object on a single line, with NO markdown code fences, NO backticks, NO surrounding prose. Just raw JSON:
+{"lines": ["line 1", "line 2 (optional)"]}`;
 
 // ---- Rate limiting ------------------------------------------------------
 // A single in-memory counter per colo. Not globally exact, but combined with
@@ -201,17 +202,24 @@ async function callClaude(p: NarrateRequest, env: Env): Promise<string[]> {
   const textBlock = data.content?.find((c) => c.type === "text");
   const raw = textBlock?.text?.trim() ?? "";
 
-  // Parse the model's response. It should be JSON {"lines": [...]}
-  // but we're forgiving: if it's plain text, wrap it.
+  // Parse the model's response. Strip markdown code fences first (Claude
+  // sometimes wraps structured output in ```json ... ```), then JSON.parse.
+  // Fall back to plain text if parsing fails — better than silence.
+  const cleaned = stripCodeFences(raw);
   try {
-    const parsed = JSON.parse(raw) as NarrateResponse;
+    const parsed = JSON.parse(cleaned) as NarrateResponse;
     if (Array.isArray(parsed.lines)) {
       return parsed.lines.filter((l) => typeof l === "string" && l.trim()).slice(0, 3);
     }
   } catch {
-    // fall through
+    // fall through to plain-text handling
   }
-  return raw ? [raw] : [];
+  return cleaned ? [cleaned] : [];
+}
+
+function stripCodeFences(s: string): string {
+  const m = s.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
+  return m ? m[1].trim() : s;
 }
 
 // ---- Helpers ------------------------------------------------------------

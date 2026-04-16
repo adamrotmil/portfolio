@@ -8,7 +8,7 @@
 //   "" (empty)    → narrator disabled (default)
 //   "mock:"       → in-browser canned response, for local testing without
 //                    a deployed worker.  See client.ts.
-export const NARRATOR_URL = "";
+export const NARRATOR_URL = "https://foothills-narrator.adam-rotmil.workers.dev/narrate";
 
 // Hard client-side timeout so a slow/down worker never leaves the terminal
 // hanging — after this, we fall through to the static dead-end.
