@@ -97,35 +97,31 @@ export default function RemoteFlightModal({ open, onClose }: Props) {
       aria-label="Remote Flight"
     >
       <div
-        className="relative flex flex-col overflow-hidden rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)]"
+        className="relative flex flex-col overflow-hidden sm:rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)] w-full h-[100dvh] sm:w-[min(96vw,1180px)] sm:h-[min(94vh,820px)]"
         style={{
-          width: "min(96vw, 1180px)",
-          height: "min(94vh, 820px)",
           background: "#0a0a0c",
         }}
       >
         {/* Title bar */}
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-[#161618] border-b border-[#222]">
+        <div className="relative flex items-center justify-center px-4 py-3 bg-[#161618] border-b border-[#222]">
+          <div className="text-[11px] text-[#8e8e93] font-mono tracking-wide">
+            remote flight — smartwatch RC aircraft
+          </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-[12px] h-[12px] rounded-full bg-[#ff5f57] hover:brightness-110 transition-[filter]"
-          />
-          <div className="w-[12px] h-[12px] rounded-full bg-[#febc2e]" />
-          <div className="w-[12px] h-[12px] rounded-full bg-[#28c840]" />
-          <div className="flex-1 flex justify-center">
-            <div className="text-[11px] text-[#8e8e93] font-mono tracking-wide">
-              remote flight — smartwatch RC aircraft
-            </div>
-          </div>
-          <div className="w-[54px]" />
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full text-[#8e8e93] hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
 
         {/* Stage: watch on dark background, scenario dock below */}
         <div
-          className="flex-1 min-h-0 flex flex-col items-center justify-center gap-8"
+          className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center gap-6 sm:gap-8 px-3 sm:px-8 py-5 sm:py-7"
           style={{
-            padding: "24px 32px 28px",
             background:
               "radial-gradient(120% 80% at 50% 0%, #1a1a1e 0%, #0a0a0c 55%, #050506 100%)",
           }}

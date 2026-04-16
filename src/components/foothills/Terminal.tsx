@@ -316,13 +316,13 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
 
   return (
     <div
-      className="flex flex-col h-full w-full font-mono text-[13px] leading-[1.5]"
+      className="flex flex-col h-full w-full font-mono text-[11px] sm:text-[13px] leading-[1.5] overflow-x-hidden"
       style={{ background: "#0b0b0d", color: COLOR_MAP.default }}
       onClick={() => inputRef.current?.focus()}
     >
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-3"
         style={{ scrollbarWidth: "thin", scrollbarColor: "#333 transparent" }}
       >
         {log.map((entry) => (
@@ -348,8 +348,13 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-[#222]">
-        <span style={{ color: COLOR_MAP.player, whiteSpace: "pre" }}>{prompt}</span>
+      <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-t border-[#222] min-w-0">
+        <span
+          className="truncate"
+          style={{ color: COLOR_MAP.player, whiteSpace: "pre" }}
+        >
+          {prompt}
+        </span>
         <input
           ref={inputRef}
           value={input}
@@ -358,7 +363,7 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
           autoFocus
           spellCheck={false}
           autoComplete="off"
-          className="flex-1 bg-transparent outline-none border-none font-mono text-[13px]"
+          className="flex-1 min-w-0 bg-transparent outline-none border-none font-mono text-[11px] sm:text-[13px]"
           style={{ color: COLOR_MAP.default }}
         />
       </div>

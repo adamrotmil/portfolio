@@ -41,28 +41,25 @@ export default function FoothillsModal({ open, onClose }: Props) {
       aria-label="Foothills MUD"
     >
       <div
-        className="relative flex flex-col overflow-hidden rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)]"
+        className="relative flex flex-col overflow-hidden sm:rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)] w-full h-[100dvh] sm:w-[min(96vw,1280px)] sm:h-[min(94vh,900px)]"
         style={{
-          width: "min(96vw, 1280px)",
-          height: "min(94vh, 900px)",
           background: "#0b0b0d",
         }}
       >
-        {/* Title bar (macOS-style, matches BrowserFrame vocabulary) */}
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-[#161618] border-b border-[#222]">
+        {/* Title bar */}
+        <div className="relative flex items-center justify-center px-4 py-3 bg-[#161618] border-b border-[#222]">
+          <div className="text-[11px] text-[#8e8e93] font-mono tracking-wide">
+            foothills — a classic ASCII MUD
+          </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-[12px] h-[12px] rounded-full bg-[#ff5f57] hover:brightness-110 transition-[filter]"
-          />
-          <div className="w-[12px] h-[12px] rounded-full bg-[#febc2e]" />
-          <div className="w-[12px] h-[12px] rounded-full bg-[#28c840]" />
-          <div className="flex-1 flex justify-center">
-            <div className="text-[11px] text-[#8e8e93] font-mono tracking-wide">
-              foothills — a classic ASCII MUD
-            </div>
-          </div>
-          <div className="w-[54px]" />
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full text-[#8e8e93] hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
         {/* Terminal */}
         <div className="flex-1 min-h-0">
