@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "motion/react";
-import type { TickerApi } from "@/ticker/useTicker";
+import type { DemoTickerApi } from "@/ticker/useDemoTicker";
 
 interface Props {
-  api: TickerApi;
+  demo?: DemoTickerApi;
+  isLive: boolean;
   degen: boolean;
   setDegen: (v: boolean) => void;
   theme: "light" | "dark";
@@ -17,20 +18,20 @@ interface Props {
   setShowFill: (v: boolean) => void;
   accent: string;
   setAccent: (v: string) => void;
+  resetAccent: () => void;
 }
 
-// CDS-inspired color tokens — not direct imports, but the same palette
-// vocabulary (bold green, bold red, bold blue...).
 const ACCENT_OPTIONS = [
   { hex: "#00D395", label: "Coinbase green" },
   { hex: "#1652F0", label: "Coinbase blue" },
-  { hex: "#FF9F0A", label: "Warning orange" },
-  { hex: "#FF453A", label: "Danger red" },
+  { hex: "#F7931A", label: "Bitcoin orange" },
+  { hex: "#627EEA", label: "Ethereum purple" },
   { hex: "#BF5AF2", label: "Degen purple" },
 ];
 
 export default function TickerControls({
-  api,
+  demo,
+  isLive,
   degen,
   setDegen,
   theme,
@@ -43,8 +44,8 @@ export default function TickerControls({
   setShowFill,
   accent,
   setAccent,
+  resetAccent,
 }: Props) {
-  const { controls, setControls, nudge, reset } = api;
   const surfaceBg = theme === "dark" ? "#17171a" : "#fafafa";
   const surfaceFg = theme === "dark" ? "#e5e5ea" : "#1a1a1c";
   const labelColor = theme === "dark" ? "#9a9aa0" : "#6b6b70";
@@ -59,79 +60,85 @@ export default function TickerControls({
         border: `1px solid ${border}`,
       }}
     >
-      {/* Market action */}
-      <div>
+      {/* Demo-only market action — hidden for real coins (Pump/Dump would lie) */}
+      {demo && (
+        <>
+          <div>
+            <div
+              className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-2"
+              style={{ color: labelColor }}
+            >
+              Market action
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <ActionButton label="Pump" onTap={() => demo.nudge(1)} bg={accent} fg="#000" />
+              <ActionButton label="Dump" onTap={() => demo.nudge(-1)} bg="#FF453A" fg="#fff" />
+            </div>
+            <button
+              onClick={() => demo.setControls({ paused: !demo.controls.paused })}
+              className="w-full mt-2 text-[11px] font-medium py-2 rounded-[10px] transition-colors"
+              style={{
+                background: demo.controls.paused ? "#FFD60A" : "transparent",
+                color: demo.controls.paused ? "#000" : surfaceFg,
+                border: `1px solid ${border}`,
+              }}
+            >
+              {demo.controls.paused ? "Resume" : "Pause"}
+            </button>
+          </div>
+          <Divider color={border} />
+
+          {/* Volatility — only meaningful on demo */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span
+                className="text-[10px] tracking-[0.14em] uppercase font-semibold"
+                style={{ color: labelColor }}
+              >
+                Volatility
+              </span>
+              <span
+                className="font-mono text-[11px]"
+                style={{ color: surfaceFg, fontFeatureSettings: '"tnum"' }}
+              >
+                {demo.controls.volatility.toFixed(2)}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.1"
+              max="3"
+              step="0.05"
+              value={demo.controls.volatility}
+              onChange={(e) => demo.setControls({ volatility: parseFloat(e.target.value) })}
+              className="w-full"
+              style={{ accentColor: accent }}
+            />
+            <div
+              className="flex justify-between text-[9px] mt-1"
+              style={{ color: labelColor }}
+            >
+              <span>calm</span>
+              <span>chaos</span>
+            </div>
+          </div>
+          <Divider color={border} />
+        </>
+      )}
+
+      {/* Live-mode banner */}
+      {isLive && (
         <div
-          className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-2"
-          style={{ color: labelColor }}
-        >
-          Market action
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <ActionButton
-            label="Pump"
-            onTap={() => nudge(1)}
-            bg={accent}
-            fg="#000"
-          />
-          <ActionButton
-            label="Dump"
-            onTap={() => nudge(-1)}
-            bg="#FF453A"
-            fg="#fff"
-          />
-        </div>
-        <button
-          onClick={() => setControls({ paused: !controls.paused })}
-          className="w-full mt-2 text-[11px] font-medium py-2 rounded-[10px] transition-colors"
+          className="text-[10.5px] font-mono leading-snug rounded-[10px] px-3 py-2"
           style={{
-            background: controls.paused ? "#FFD60A" : "transparent",
-            color: controls.paused ? "#000" : surfaceFg,
-            border: `1px solid ${border}`,
+            background: "rgba(48,209,88,0.10)",
+            color: theme === "dark" ? "#30D158" : "#00853D",
+            border: `1px solid rgba(48,209,88,0.3)`,
           }}
         >
-          {controls.paused ? "Resume" : "Pause"}
-        </button>
-      </div>
-
-      <Divider color={border} />
-
-      {/* Volatility */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span
-            className="text-[10px] tracking-[0.14em] uppercase font-semibold"
-            style={{ color: labelColor }}
-          >
-            Volatility
-          </span>
-          <span
-            className="font-mono text-[11px]"
-            style={{ color: surfaceFg, fontFeatureSettings: '"tnum"' }}
-          >
-            {controls.volatility.toFixed(2)}
-          </span>
+          Streaming a public spot feed. Pump/Dump and volatility are disabled on real markets — switch to <strong>Demo</strong> to drive the line yourself.
         </div>
-        <input
-          type="range"
-          min="0.1"
-          max="3"
-          step="0.05"
-          value={controls.volatility}
-          onChange={(e) => setControls({ volatility: parseFloat(e.target.value) })}
-          className="w-full"
-          style={{ accentColor: accent }}
-        />
-        <div
-          className="flex justify-between text-[9px] mt-1"
-          style={{ color: labelColor }}
-        >
-          <span>calm</span>
-          <span>chaos</span>
-        </div>
-      </div>
-
-      <Divider color={border} />
+      )}
 
       {/* Toggles */}
       <div className="flex flex-col gap-2">
@@ -143,7 +150,7 @@ export default function TickerControls({
 
       <Divider color={border} />
 
-      {/* Theme + Accent */}
+      {/* Theme */}
       <div>
         <div
           className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-2"
@@ -171,10 +178,21 @@ export default function TickerControls({
 
       <div>
         <div
-          className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-2"
-          style={{ color: labelColor }}
+          className="flex items-center justify-between mb-2"
         >
-          Accent
+          <span
+            className="text-[10px] tracking-[0.14em] uppercase font-semibold"
+            style={{ color: labelColor }}
+          >
+            Accent
+          </span>
+          <button
+            onClick={resetAccent}
+            className="text-[9px] font-mono"
+            style={{ color: labelColor, background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            reset
+          </button>
         </div>
         <div className="flex gap-2">
           {ACCENT_OPTIONS.map((o) => {
@@ -187,11 +205,12 @@ export default function TickerControls({
                 aria-label={o.label}
                 className="rounded-full transition-transform"
                 style={{
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   background: o.hex,
                   border: `2px solid ${active ? surfaceFg : "transparent"}`,
                   transform: active ? "scale(1.1)" : "scale(1)",
+                  cursor: "pointer",
                 }}
               />
             );
@@ -199,19 +218,22 @@ export default function TickerControls({
         </div>
       </div>
 
-      <Divider color={border} />
-
-      <button
-        onClick={reset}
-        className="text-[11px] font-medium py-2 rounded-[10px] transition-colors"
-        style={{
-          background: "transparent",
-          color: labelColor,
-          border: `1px solid ${border}`,
-        }}
-      >
-        Reset to defaults
-      </button>
+      {demo && (
+        <>
+          <Divider color={border} />
+          <button
+            onClick={demo.reset}
+            className="text-[11px] font-medium py-2 rounded-[10px] transition-colors"
+            style={{
+              background: "transparent",
+              color: labelColor,
+              border: `1px solid ${border}`,
+            }}
+          >
+            Reset demo ticker
+          </button>
+        </>
+      )}
     </div>
   );
 }

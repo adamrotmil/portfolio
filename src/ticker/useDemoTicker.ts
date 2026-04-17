@@ -32,7 +32,7 @@ const INITIAL_CONTROLS: TickerControls = {
 
 const INITIAL_PRICE = 128.42;
 
-export interface TickerApi {
+export interface DemoTickerApi {
   data: LivelinePoint[];
   value: number;
   controls: TickerControls;
@@ -43,7 +43,7 @@ export interface TickerApi {
   symbol: string;
 }
 
-export function useTicker(): TickerApi {
+export function useDemoTicker(): DemoTickerApi {
   const [data, setData] = useState<LivelinePoint[]>(() => seed());
   const [value, setValue] = useState<number>(INITIAL_PRICE);
   const [controls, setControlsRaw] = useState<TickerControls>(INITIAL_CONTROLS);
