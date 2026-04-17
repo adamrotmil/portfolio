@@ -36,7 +36,12 @@ const INITIAL_CONTROLS: TickerControls = {
   paused: false,
 };
 
-const INITIAL_PRICE = 128.42;
+// Sits the walk in a $420–$525 band at typical volatility — gives the
+// chart enough vertical range to breathe through buy walls, short-covering
+// rallies, and shock dips without either feeling cramped or flying away.
+// The value itself matters less than the gravity target + step sizes
+// that orbit around it.
+const INITIAL_PRICE = 472.5;
 
 export interface DemoTickerApi {
   data: LivelinePoint[];
@@ -93,27 +98,34 @@ export function useDemoTicker(): DemoTickerApi {
       if (c.paused) return;
 
       setValue((prev) => {
-        // "Wild swings" walk — dialed to match Benji's 100ms-tick demo.
+        // "Wild swings, fast updates" walk — tuned so the price orbits
+        // INITIAL_PRICE (~$472) inside roughly a $420–$525 band at
+        // default volatility.  Step sizes are scaled by ~INITIAL_PRICE/128
+        // from the previous tuning so the shape of the motion stays the
+        // same while the visible range grows.
         //
-        //   • Momentum-persistent drift: the previous tick's direction is
-        //     weighted heavily (0.93), so the line carves real waves
-        //     instead of looking like static.
-        //   • Large random kicks at the tail, tuned so the instantaneous
-        //     motion feels muscular but not spiky.
-        //   • A very gentle gravity toward INITIAL_PRICE keeps the chart
-        //     on screen over long runs without flattening the movement.
-        //   • Every ~60 ticks (≈ 6 seconds) there's a small chance of a
-        //     discontinuous jump, mimicking a market shock.
+        //   • Momentum-persistent drift (0.93 decay) → carves real waves
+        //     and pockets where "chasing" and "short covering" read
+        //     naturally (a run-up gains momentum; a turn takes several
+        //     ticks to reverse).
+        //   • Random kicks at the tail for texture without spikes.
+        //   • Very gentle gravity toward the initial price so long runs
+        //     don't march off-screen.  Weak enough that a multi-second
+        //     trend can still cover $20+.
+        //   • Rare 1.5% shock ticks that mimic buy/sell walls being
+        //     eaten through — big instantaneous jumps that the
+        //     order-book panel reacts to on the next poll.
         const vol = Math.max(0.05, c.volatility);
+        const scale = INITIAL_PRICE / 128;   // step-size scale factor
 
-        driftRef.current = driftRef.current * 0.93 + (Math.random() - 0.5) * vol * 0.35;
-        const kick = (Math.random() - 0.5) * vol * 0.45;
-        const gravity = (INITIAL_PRICE - prev) * 0.0025;
-        const shock = Math.random() < 0.015 ? (Math.random() - 0.5) * vol * 2.5 : 0;
+        driftRef.current = driftRef.current * 0.93 + (Math.random() - 0.5) * vol * 0.35 * scale;
+        const kick    = (Math.random() - 0.5) * vol * 0.45 * scale;
+        const gravity = (INITIAL_PRICE - prev) * 0.003;
+        const shock   = Math.random() < 0.015 ? (Math.random() - 0.5) * vol * 2.5 * scale : 0;
 
         let pushBias = 0;
         if (pushDecayRef.current > 0) {
-          pushBias = c.push * (pushDecayRef.current / 20) * vol * 0.7;
+          pushBias = c.push * (pushDecayRef.current / 20) * vol * 0.7 * scale;
           pushDecayRef.current--;
           if (pushDecayRef.current === 0) {
             setControlsRaw((prev) => ({ ...prev, push: 0 }));
@@ -161,16 +173,18 @@ export function useDemoTicker(): DemoTickerApi {
 
 function seed(): LivelinePoint[] {
   // Seed with ~150 points of recent wild-swings history (15s of 100ms
-  // ticks) so the chart opens with a lived-in shape instead of a
-  // straight line from the initial price.
+  // ticks) so the chart opens with a lived-in shape instead of a straight
+  // line.  Step sizes scaled to the initial price so the seeded shape
+  // lives in the same $420–$525 band the live walk will occupy.
   const out: LivelinePoint[] = [];
   const now = nowSecs();
   const stepSecs = TICK_MS / 1000;
+  const scale = INITIAL_PRICE / 128;
   let v = INITIAL_PRICE;
   let drift = 0;
   for (let i = 150; i >= 1; i--) {
-    drift = drift * 0.93 + (Math.random() - 0.5) * 0.55;
-    v += drift + (Math.random() - 0.5) * 0.7;
+    drift = drift * 0.93 + (Math.random() - 0.5) * 0.55 * scale;
+    v += drift + (Math.random() - 0.5) * 0.7 * scale;
     out.push({ time: now - i * stepSecs, value: Math.max(0.01, v) });
   }
   return out;

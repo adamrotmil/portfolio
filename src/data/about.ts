@@ -99,18 +99,23 @@ export const LAB_ITEMS: LabItem[] = [
       "Native iOS and macOS interaction experiments I'm building in public while learning SwiftUI.",
     url: "https://github.com/adamrotmil/swiftui-interaction-lab",
     tech: "SwiftUI · iOS · macOS",
+    thumbnail: "/images/lab/swiftui-interaction-lab.svg",
   },
   {
     title: "Client Headlines",
-    description: "Hybrid AI + mad-libs headline generator",
+    description:
+      "A hybrid AI + mad-libs headline generator for marketing copy. Claude drafts, a template engine fills the blanks.",
     url: "https://adamrotmil.github.io/client-headlines/clients-say.html",
     tech: "Claude API · Cloudflare Workers",
+    thumbnail: "/images/lab/client-headlines.svg",
   },
   {
     title: "Know Your Design Trivia",
-    description: "Know your design trivia!",
+    description:
+      "A trivia game about the history and craft of graphic design — typography, designers, movements, and the details that matter.",
     url: "https://github.com/adamrotmil/know-your-design-trivia",
     tech: "HTML · CSS · JavaScript",
+    thumbnail: "/images/lab/design-trivia.svg",
   },
 ];
 

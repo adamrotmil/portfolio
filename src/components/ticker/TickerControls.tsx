@@ -168,18 +168,36 @@ export default function TickerControls({
                 transition={MOTION.tap}
                 title={o.label}
                 aria-label={o.label}
+                aria-pressed={active}
                 style={{
-                  width: 16,
-                  height: 16,
+                  width: 18,
+                  height: 18,
                   borderRadius: RADIUS.pill,
-                  // Thin ring when unselected; inset fill when active.
-                  background: active ? o.hex : "transparent",
-                  border: `1.5px solid ${active ? o.hex : p.lineHeavy}`,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "transparent",
+                  // Ring gets colored + heavier when selected
+                  border: `${active ? 1.5 : 1}px solid ${active ? o.hex : p.lineHeavy}`,
                   padding: 0,
                   cursor: "pointer",
-                  transition: "background 160ms ease, border-color 160ms ease",
+                  transition: "border-color 160ms ease, border-width 160ms ease",
                 }}
-              />
+              >
+                {/* Subtle inner dot, always visible but grows on select */}
+                <span
+                  aria-hidden
+                  style={{
+                    display: "block",
+                    borderRadius: RADIUS.pill,
+                    background: o.hex,
+                    width: active ? 8 : 5,
+                    height: active ? 8 : 5,
+                    opacity: active ? 1 : 0.7,
+                    transition: "width 160ms ease, height 160ms ease, opacity 160ms ease",
+                  }}
+                />
+              </motion.button>
             );
           })}
           <span style={{ flex: 1 }} />

@@ -42,13 +42,13 @@ export default function Lab() {
         </p>
       </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
         {LAB_ITEMS.map((item, i) => {
           const clickable = Boolean(item.url || item.action);
           return (
-            <Reveal key={i} delay={i * 0.08}>
+            <Reveal key={i} delay={i * 0.08} className="h-full">
               <div
-                className="group overflow-hidden rounded-[12px] flex flex-col transition-transform duration-300 cursor-default"
+                className="group h-full overflow-hidden rounded-[12px] flex flex-col transition-transform duration-300 cursor-default"
                 style={{
                   background: clickable ? "#f5f5f5" : "#141415",
                   cursor: clickable ? "pointer" : "default",
@@ -73,11 +73,11 @@ export default function Lab() {
                   }
                 }}
               >
-                {/* Thumbnail — real captured screens rendered as SVG so they
-                    scale cleanly at any card width. Placeholder tile for
-                    items that don't have one yet. */}
+                {/* Thumbnail.  4:3 lockup on every card — real captured
+                    views for the sandboxes, gradient+glyph compositions
+                    for the link-out tiles.  All SVG so they stay crisp. */}
                 <div
-                  className="relative w-full overflow-hidden"
+                  className="relative w-full overflow-hidden shrink-0"
                   style={{
                     aspectRatio: "4 / 3",
                     background: item.thumbnail
@@ -110,7 +110,9 @@ export default function Lab() {
                   )}
                 </div>
 
-                {/* Text block */}
+                {/* Text block — min-height keeps every card the same tall,
+                    while line-clamp-3 caps the description so longer copy
+                    doesn't stretch any one tile. */}
                 <div className="p-5 flex flex-col flex-1 justify-between gap-3">
                   <div>
                     <h4
@@ -127,6 +129,10 @@ export default function Lab() {
                         color: clickable
                           ? "rgba(0,0,0,0.55)"
                           : "var(--color-text-muted)",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
                       }}
                     >
                       {item.description}

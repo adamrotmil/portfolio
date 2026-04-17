@@ -45,10 +45,12 @@ function ModalBody({ onClose }: { onClose: () => void }) {
   const [exaggerate, setExaggerate] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [showFill, setShowFill] = useState(true);
-  // When a live coin is selected, the accent defaults to its brand color;
-  // we also let the user override via the accent picker in controls.
+  // Accent starts at CDS green — the "tasteful default" that reads as the
+  // sandbox's own brand, independent of whichever coin is active.  User
+  // can override via the accent picker; Reset snaps back to this.
+  const DEFAULT_ACCENT = "#05B169";
   const [accentOverride, setAccentOverride] = useState<string | null>(null);
-  const accent = accentOverride ?? sandbox.coin.accent;
+  const accent = accentOverride ?? DEFAULT_ACCENT;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
