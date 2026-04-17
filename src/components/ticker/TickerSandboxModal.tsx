@@ -38,7 +38,9 @@ function ModalBody({ onClose }: { onClose: () => void }) {
 
   // Visual controls — purely presentational, independent of data source.
   const [degen, setDegen] = useState(true);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  // Default to light mode with the CDS green accent — reads as the
+  // sandbox's resting state before any user customization.
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   // Exaggerate tightly zooms the Y axis, which makes ordinary noise look
   // like jagged swings.  Default to OFF so the line reads as smooth price
   // action; users can flick the toggle to get the excitable view.

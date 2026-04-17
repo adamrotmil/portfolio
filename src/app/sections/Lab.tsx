@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import Reveal from "@/components/Reveal";
 import { LAB_ITEMS } from "@/data/about";
@@ -7,6 +8,27 @@ import { assetPath } from "@/lib/basePath";
 import FoothillsModal from "@/components/foothills/FoothillsModal";
 import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
+import {
+  RipplesGlyph,
+  QuoteGlyph,
+  QuestionGlyph,
+} from "@/components/lab/LabGlyphs";
+
+// Shader tile loads via dynamic import — the paper-shaders runtime is
+// WebGL, which needs the real DOM.  SSR fallback is a dark square so
+// there's no layout shift.
+const LabShaderTile = dynamic(() => import("@/components/lab/LabShaderTile"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0" style={{ background: "#0a0a0c" }} />
+  ),
+});
+
+const GLYPHS = {
+  ripples: <RipplesGlyph />,
+  quote: <QuoteGlyph />,
+  question: <QuestionGlyph />,
+} as const;
 
 export default function Lab() {
   const [foothillsOpen, setFoothillsOpen] = useState(false);
@@ -80,7 +102,7 @@ export default function Lab() {
                   className="relative w-full overflow-hidden shrink-0"
                   style={{
                     aspectRatio: "4 / 3",
-                    background: item.thumbnail
+                    background: item.thumbnail || item.shader
                       ? "#0A0B0D"
                       : clickable
                         ? "#e5e5e5"
@@ -90,7 +112,13 @@ export default function Lab() {
                       : "1px solid rgba(255,255,255,0.04)",
                   }}
                 >
-                  {item.thumbnail ? (
+                  {item.shader ? (
+                    <LabShaderTile
+                      variant={item.shader.variant}
+                      glyph={GLYPHS[item.shader.glyph]}
+                      label={item.shader.label}
+                    />
+                  ) : item.thumbnail ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={assetPath(item.thumbnail)}

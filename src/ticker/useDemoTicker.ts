@@ -11,12 +11,12 @@ import type { LivelinePoint } from "liveline";
 // plus a latest `value`.  Liveline handles the smooth 60fps interpolation
 // between ticks on its own.
 
-// "Wild swings, fast updates (100ms)" — matches Benji's demo at
-// benji.org/liveline.  Fast ticks + meaty step sizes give the line real
-// character, and Liveline's 60fps interpolation smooths the path between
-// updates.  Window buffer stays at ~2 minutes (now much larger in point
-// count since we tick 5× faster).
-const TICK_MS = 100;
+// 180ms ticks — "fast but breathing."  At 100ms the combined kick +
+// drift + shock terms were stacking into visible per-frame jumps even
+// with interpolation; slowing the cadence and softening the per-tick
+// magnitudes (see below) gets closer to the pacing on Benji's own
+// demos where the line flows rather than ticks.
+const TICK_MS = 180;
 const WINDOW_SECS = 60;
 const TRIM_AFTER_SECS = WINDOW_SECS * 2;
 const nowSecs = () => Date.now() / 1000;
@@ -118,10 +118,14 @@ export function useDemoTicker(): DemoTickerApi {
         const vol = Math.max(0.05, c.volatility);
         const scale = INITIAL_PRICE / 128;   // step-size scale factor
 
-        driftRef.current = driftRef.current * 0.93 + (Math.random() - 0.5) * vol * 0.35 * scale;
-        const kick    = (Math.random() - 0.5) * vol * 0.45 * scale;
+        // Softer per-tick motion so successive ticks compose into a
+        // flowing line rather than a jagged one.  Drift decay bumped to
+        // 0.95 (line holds direction for longer), random kick halved,
+        // shock events rarer.
+        driftRef.current = driftRef.current * 0.95 + (Math.random() - 0.5) * vol * 0.28 * scale;
+        const kick    = (Math.random() - 0.5) * vol * 0.20 * scale;
         const gravity = (INITIAL_PRICE - prev) * 0.003;
-        const shock   = Math.random() < 0.015 ? (Math.random() - 0.5) * vol * 2.5 * scale : 0;
+        const shock   = Math.random() < 0.008 ? (Math.random() - 0.5) * vol * 2.2 * scale : 0;
 
         let pushBias = 0;
         if (pushDecayRef.current > 0) {

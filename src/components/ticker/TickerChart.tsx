@@ -96,10 +96,11 @@ export default function TickerChart({
         paused={paused}
         windows={windows}
         formatValue={formatValue}
-        // Higher lerp (was 0.22) — snappier tracking of fast ticks, so
-        // the line *feels* like it's reacting in real time rather than
-        // lagging the value overlay.
-        lerpSpeed={0.35}
+        // 0.18 — closer to Liveline's 0.08 default but snappy enough to
+        // track the 180ms demo tick.  Higher values (0.3+) made the line
+        // feel mechanical at fast tick rates because each frame was
+        // chasing too much distance at once.
+        lerpSpeed={0.18}
         lineWidth={2}
       />
     </div>

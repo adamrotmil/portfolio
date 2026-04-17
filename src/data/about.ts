@@ -57,15 +57,24 @@ export const COMPANY_BADGES = [
   "MICA Faculty",
 ];
 
+export type LabShaderVariant = "iris" | "ember" | "ink";
+
 export type LabItem = {
   title: string;
   description: string;
   tech: string;
   url?: string;
   action?: "foothills" | "watchrc" | "ticker";
-  /** Optional preview image (path under /public).  Renders as a thumbnail
-   *  at the top of the card.  Prefer SVGs so they scale cleanly. */
+  /** Static thumbnail (path under /public).  Used for tiles that show a
+   *  real captured view of the demo (sandboxes). */
   thumbnail?: string;
+  /** Animated WebGL shader thumbnail — used for tiles that link out.
+   *  The Lab section mounts the shader via @paper-design/shaders-react. */
+  shader?: {
+    variant: LabShaderVariant;
+    glyph: "ripples" | "quote" | "question";
+    label?: string;
+  };
 };
 
 export const LAB_ITEMS: LabItem[] = [
@@ -99,7 +108,7 @@ export const LAB_ITEMS: LabItem[] = [
       "Native iOS and macOS interaction experiments I'm building in public while learning SwiftUI.",
     url: "https://github.com/adamrotmil/swiftui-interaction-lab",
     tech: "SwiftUI · iOS · macOS",
-    thumbnail: "/images/lab/swiftui-interaction-lab.svg",
+    shader: { variant: "iris", glyph: "ripples", label: "SwiftUI" },
   },
   {
     title: "Client Headlines",
@@ -107,7 +116,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A hybrid AI + mad-libs headline generator for marketing copy. Claude drafts, a template engine fills the blanks.",
     url: "https://adamrotmil.github.io/client-headlines/clients-say.html",
     tech: "Claude API · Cloudflare Workers",
-    thumbnail: "/images/lab/client-headlines.svg",
+    shader: { variant: "ember", glyph: "quote", label: "Headlines" },
   },
   {
     title: "Know Your Design Trivia",
@@ -115,7 +124,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A trivia game about the history and craft of graphic design — typography, designers, movements, and the details that matter.",
     url: "https://github.com/adamrotmil/know-your-design-trivia",
     tech: "HTML · CSS · JavaScript",
-    thumbnail: "/images/lab/design-trivia.svg",
+    shader: { variant: "ink", glyph: "question", label: "Trivia" },
   },
 ];
 
