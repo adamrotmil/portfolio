@@ -28,10 +28,10 @@ export type TickerControls = {
 };
 
 const INITIAL_CONTROLS: TickerControls = {
-  // Wild-swings default — with 100ms ticks, a lower coefficient produces
-  // the right balance of dramatic-but-legible motion.  Users can still
-  // dial it up to 3 for outright chaos.
-  volatility: 1.4,
+  // Calmer resting state — 0.65 gives a gently breathing chart that
+  // reads as "live market" without flailing.  Users can crank up to 3
+  // via the slider when they want to see the wild-swings character.
+  volatility: 0.65,
   push: 0,
   paused: false,
 };

@@ -94,6 +94,10 @@ export default function TickerChart({
         exaggerate={exaggerate}
         pulse
         paused={paused}
+        // Default to the 1-minute window — the shortest (15s) felt too
+        // reactive to the live tick stream; 60s lets the shape of a
+        // rally read more clearly without being slower to feel "live."
+        window={60}
         windows={windows}
         formatValue={formatValue}
         // 0.18 — closer to Liveline's 0.08 default but snappy enough to
