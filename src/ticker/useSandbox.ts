@@ -18,6 +18,8 @@ export interface SandboxApi {
   /** Best-bid/ask (real when live, synthesized from value when demo). */
   bestBid: number | null;
   bestAsk: number | null;
+  /** Rolling cumulative volume delta since this coin was selected. */
+  cvd: number;
   /** Connection status for live feeds ("idle" when in demo). */
   status: "idle" | "connecting" | "open" | "error" | "closed";
   orderbook: OrderbookState;
@@ -41,6 +43,7 @@ export function useSandbox(): SandboxApi {
         value: live.value ?? 0,
         bestBid: live.bestBid,
         bestAsk: live.bestAsk,
+        cvd: live.cvd,
         status: live.status,
       }
     : {
@@ -50,6 +53,7 @@ export function useSandbox(): SandboxApi {
         // so the order book has anchors.  ~0.02% spread, scaled by value.
         bestBid: demo.value * 0.9998,
         bestAsk: demo.value * 1.0002,
+        cvd: demo.cvd,
         status: "idle" as const,
       };
 
@@ -69,6 +73,7 @@ export function useSandbox(): SandboxApi {
     live: isLive(coinId),
     bestBid: active.bestBid,
     bestAsk: active.bestAsk,
+    cvd: active.cvd,
     status: active.status,
     orderbook,
     demo: isLive(coinId) ? undefined : demo,

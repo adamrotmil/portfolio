@@ -25,7 +25,9 @@ export type TickerControls = {
 };
 
 const INITIAL_CONTROLS: TickerControls = {
-  volatility: 1.2,
+  // Lower default — previous 1.2 read as jagged.  Users can still crank to 3
+  // via the slider when they want chaos.
+  volatility: 0.55,
   push: 0,
   paused: false,
 };
@@ -39,6 +41,9 @@ export interface DemoTickerApi {
   setControls: (patch: Partial<TickerControls>) => void;
   nudge: (direction: 1 | -1) => void;
   reset: () => void;
+  /** Synthetic rolling CVD so the order book header has something to show
+   *  in Demo mode.  Walks with the price direction + push bias. */
+  cvd: number;
   /** For the credits blurb in the UI. */
   symbol: string;
 }
@@ -47,9 +52,13 @@ export function useDemoTicker(): DemoTickerApi {
   const [data, setData] = useState<LivelinePoint[]>(() => seed());
   const [value, setValue] = useState<number>(INITIAL_PRICE);
   const [controls, setControlsRaw] = useState<TickerControls>(INITIAL_CONTROLS);
+  const [cvd, setCvd] = useState<number>(0);
 
   // `push` is time-boxed: a nudge fades to zero over ~5 seconds.
   const pushDecayRef = useRef(0);
+  // Low-frequency drift so the price doesn't get stuck near a boundary.
+  // Drift is an Ornstein–Uhlenbeck-ish pull back toward the initial price.
+  const driftRef = useRef(0);
   const controlsRef = useRef(controls);
   controlsRef.current = controls;
 
@@ -66,9 +75,11 @@ export function useDemoTicker(): DemoTickerApi {
 
   const reset = useCallback(() => {
     pushDecayRef.current = 0;
+    driftRef.current = 0;
     setControlsRaw(INITIAL_CONTROLS);
     setData(seed());
     setValue(INITIAL_PRICE);
+    setCvd(0);
   }, []);
 
   useEffect(() => {
@@ -77,23 +88,32 @@ export function useDemoTicker(): DemoTickerApi {
       if (c.paused) return;
 
       setValue((prev) => {
-        // Pure brownian step, scaled by volatility, plus the push bias.
+        // Smoother random walk.  Previously each tick was pure white noise,
+        // which Liveline's `exaggerate: true` mode amplified into the jaggy
+        // look.  Now we use:
+        //   • a smaller noise coefficient (0.35 instead of 0.8)
+        //   • a slow OU-style drift that nudges us toward INITIAL_PRICE so
+        //     the chart gently mean-reverts instead of galloping away
+        //   • random steps biased in the direction of existing drift, so
+        //     successive ticks tend to continue a move (more "trending")
         const vol = Math.max(0.05, c.volatility);
-        const randomStep = (Math.random() - 0.5) * vol * 0.8;
+
+        const meanReversion = (INITIAL_PRICE - prev) * 0.015;
+        driftRef.current = driftRef.current * 0.82 + (Math.random() - 0.5) * vol * 0.25;
+        const randomStep = driftRef.current + (Math.random() - 0.5) * vol * 0.18;
 
         // Push bias decays; if the user manually held up/down via controls,
         // we treat that as continuous (no decay).
         let pushBias = 0;
         if (pushDecayRef.current > 0) {
-          pushBias = c.push * (pushDecayRef.current / 10) * vol * 0.6;
+          pushBias = c.push * (pushDecayRef.current / 10) * vol * 0.55;
           pushDecayRef.current--;
           if (pushDecayRef.current === 0) {
-            // Clear the transient push once decay ends
             setControlsRaw((prev) => ({ ...prev, push: 0 }));
           }
         }
 
-        const next = Math.max(0.01, prev + randomStep + pushBias);
+        const next = Math.max(0.01, prev + randomStep + pushBias + meanReversion);
 
         const point: LivelinePoint = { time: nowSecs(), value: next };
         setData((arr) => {
@@ -102,6 +122,14 @@ export function useDemoTicker(): DemoTickerApi {
           trimmed.push(point);
           return trimmed;
         });
+
+        // Synthetic CVD: each price move implies a taker volume in that
+        // direction, scaled to look plausible next to real Coinbase CVD
+        // numbers (low whole digits of "BTC" equivalent).
+        const delta = next - prev;
+        const pseudoSize = Math.abs(delta) * 0.8 + Math.random() * 0.4;
+        setCvd((c0) => c0 + (delta > 0 ? pseudoSize : delta < 0 ? -pseudoSize : 0));
+
         return next;
       });
     }, TICK_MS);
@@ -119,6 +147,7 @@ export function useDemoTicker(): DemoTickerApi {
     setControls,
     nudge,
     reset,
+    cvd,
     symbol: "GMTRX",
   };
 }

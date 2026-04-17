@@ -8,13 +8,15 @@ interface Props {
   book: OrderbookState;
   theme: "light" | "dark";
   decimals: number;
+  cvd: number;
+  symbol: string;
 }
 
 // A classic trading ladder: asks stacked above the mid, bids below.  Each
 // row has a cumulative-size depth bar fading away from the spread — the
 // visual trick is that the bars make volume distribution readable at a
 // glance without a separate depth chart.
-export default function OrderbookLadder({ book, theme, decimals }: Props) {
+export default function OrderbookLadder({ book, theme, decimals, cvd, symbol }: Props) {
   const fg = theme === "dark" ? "#e5e5ea" : "#1a1a1c";
   const muted = theme === "dark" ? "#8e8e93" : "#6b6b70";
   const rowBg = theme === "dark" ? "#0e0e10" : "#ffffff";
@@ -24,6 +26,12 @@ export default function OrderbookLadder({ book, theme, decimals }: Props) {
   const redFill = "rgba(255,69,58,0.14)";     // for asks
   const greenFg = theme === "dark" ? "#30D158" : "#00853D";
   const redFg = theme === "dark" ? "#FF453A" : "#D70015";
+
+  // CVD is a signed running total.  Positive = aggressive buyers;
+  // negative = aggressive sellers.  We color accordingly.
+  const cvdColor = cvd > 0 ? greenFg : cvd < 0 ? redFg : muted;
+  const cvdBg =
+    cvd > 0 ? greenFill : cvd < 0 ? redFill : "rgba(127,127,127,0.10)";
 
   const maxCum = Math.max(
     book.bids[book.bids.length - 1]?.cumulative ?? 1,
@@ -40,23 +48,46 @@ export default function OrderbookLadder({ book, theme, decimals }: Props) {
       className="flex flex-col h-full rounded-[12px] overflow-hidden"
       style={{ background: rowBg, border: `1px solid ${dim}` }}
     >
-      {/* Header */}
+      {/* Header — "Order book" left, CVD readout right.
+          CVD (Cumulative Volume Delta) = Σ(taker buy volume − taker sell
+          volume) since this coin was selected.  Positive means buyer
+          pressure, negative means seller pressure.  Color-coded + arrow. */}
       <div
         className="flex items-center justify-between px-3 py-2 text-[10px] font-mono"
         style={{ color: muted, borderBottom: `1px solid ${dim}` }}
       >
         <span className="uppercase tracking-[0.12em] font-semibold">Order book</span>
-        <span
-          className="px-1.5 py-0.5 rounded-[4px] text-[9px]"
+        <motion.span
+          layout
+          initial={false}
+          className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-[4px] text-[9px]"
           style={{
-            background: book.source === "live" ? greenFill : "rgba(255,159,10,0.14)",
-            color: book.source === "live" ? greenFg : "#FF9F0A",
+            background: cvdBg,
+            color: cvdColor,
             fontWeight: 600,
             letterSpacing: 0.4,
+            fontFeatureSettings: '"tnum"',
           }}
+          title={`Cumulative Volume Delta (${symbol})`}
         >
-          {book.source === "live" ? "LIVE" : "ILLUSTRATIVE"}
-        </span>
+          <span style={{ opacity: 0.72, letterSpacing: 0.7 }}>CVD</span>
+          <motion.span
+            key={Math.sign(cvd)}
+            initial={{ scale: 0.7, opacity: 0.3 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+          >
+            {cvd > 0 ? "▲" : cvd < 0 ? "▼" : "◆"}
+          </motion.span>
+          <motion.span
+            key={Math.round(cvd * 10)}
+            initial={{ y: -4, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.25 }}
+          >
+            {formatCvd(cvd)}
+          </motion.span>
+        </motion.span>
       </div>
 
       {/* Column headers */}
@@ -211,4 +242,13 @@ function formatSize(n: number): string {
   if (n >= 1000) return n.toLocaleString("en-US", { maximumFractionDigits: 1 });
   if (n >= 1) return n.toFixed(3);
   return n.toFixed(4);
+}
+
+function formatCvd(n: number): string {
+  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1000) return `${sign}${abs.toLocaleString("en-US", { maximumFractionDigits: 1 })}`;
+  if (abs >= 10) return `${sign}${abs.toFixed(1)}`;
+  if (abs >= 1) return `${sign}${abs.toFixed(2)}`;
+  return `${sign}${abs.toFixed(3)}`;
 }

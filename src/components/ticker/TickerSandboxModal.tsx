@@ -38,7 +38,10 @@ function ModalBody({ onClose }: { onClose: () => void }) {
   // Visual controls — purely presentational, independent of data source.
   const [degen, setDegen] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [exaggerate, setExaggerate] = useState(true);
+  // Exaggerate tightly zooms the Y axis, which makes ordinary noise look
+  // like jagged swings.  Default to OFF so the line reads as smooth price
+  // action; users can flick the toggle to get the excitable view.
+  const [exaggerate, setExaggerate] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [showFill, setShowFill] = useState(true);
   // When a live coin is selected, the accent defaults to its brand color;
@@ -156,6 +159,8 @@ function ModalBody({ onClose }: { onClose: () => void }) {
                 book={sandbox.orderbook}
                 theme={theme}
                 decimals={sandbox.coin.decimals}
+                cvd={sandbox.cvd}
+                symbol={sandbox.coin.symbol}
               />
             </div>
           </div>
@@ -210,7 +215,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
           </a>
           <span>© Benji Taylor (MIT)</span>
           <span style={{ opacity: 0.5 }}>·</span>
-          <span>Styling cues:</span>
+          <span>Styling:</span>
           <a
             href="https://cds.coinbase.com/components/charts/LineChart/"
             target="_blank"
@@ -219,8 +224,6 @@ function ModalBody({ onClose }: { onClose: () => void }) {
           >
             Coinbase Design System
           </a>
-          <span style={{ opacity: 0.5 }}>·</span>
-          <span>Not financial advice.  For UI experimentation only.</span>
         </div>
       </div>
     </div>

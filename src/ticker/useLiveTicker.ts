@@ -29,6 +29,9 @@ export interface LiveTickerState {
   bestAsk: number | null;
   /** Milliseconds of the latest ticker message. */
   lastTickAt: number | null;
+  /** Rolling cumulative volume delta: Σ(buy - sell) since this coin was
+   *  selected.  Positive = buyer-initiated pressure. */
+  cvd: number;
   status: ConnectionStatus;
 }
 
@@ -86,6 +89,17 @@ export function useLiveTicker(productId: string | null): LiveTickerState {
         const bestAsk = Number(msg.best_ask);
         if (!Number.isFinite(price)) return;
 
+        // Trade delta: `side` is the taker side for the last match.
+        // "buy" = taker hit the ask (buyer-initiated) → +size
+        // "sell" = taker hit the bid (seller-initiated) → -size
+        const lastSize = Number(msg.last_size);
+        const sideDelta =
+          msg.side === "buy" && Number.isFinite(lastSize)
+            ? lastSize
+            : msg.side === "sell" && Number.isFinite(lastSize)
+              ? -lastSize
+              : 0;
+
         const now = Date.now() / 1000;
         setState((s) => {
           const nextData = [...s.data, { time: now, value: price }];
@@ -97,6 +111,7 @@ export function useLiveTicker(productId: string | null): LiveTickerState {
             bestBid: Number.isFinite(bestBid) ? bestBid : s.bestBid,
             bestAsk: Number.isFinite(bestAsk) ? bestAsk : s.bestAsk,
             lastTickAt: Date.now(),
+            cvd: s.cvd + sideDelta,
             status: "open",
           };
         });
@@ -152,6 +167,8 @@ interface RawTicker {
   price?: string;
   best_bid?: string;
   best_ask?: string;
+  last_size?: string;
+  side?: "buy" | "sell";
   time?: string;
 }
 
@@ -162,6 +179,7 @@ function initialState(status: ConnectionStatus = "idle"): LiveTickerState {
     bestBid: null,
     bestAsk: null,
     lastTickAt: null,
+    cvd: 0,
     status,
   };
 }
