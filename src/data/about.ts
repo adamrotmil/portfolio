@@ -82,9 +82,9 @@ export const LAB_ITEMS: LabItem[] = [
   {
     title: "Table",
     description:
-      "A curator's New York — 14 restaurants worth the map pin, pinned to an Esri satellite basemap. Airbnb-grammar cards, MapLibre markers, searchable by cuisine, neighborhood, and dish.",
+      "Live telemetry, tactical feed, and satellite map for NYC restaurants.",
     action: "table",
-    tech: "MapLibre GL · Esri · React",
+    tech: "MapLibre GL · NYC DOT · React",
     thumbnail: "/images/lab/table.svg",
   },
   {
