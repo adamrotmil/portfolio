@@ -1,43 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Know Your Design Trivia">
   <defs>
-    <!--
-      Ink + moss — deep teal into almost-black-green, with a subtle
-      upper glow.  Reads "studious" / "archive" / "design history."
-    -->
-    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0"   stop-color="#115E59"/>
-      <stop offset="0.55" stop-color="#0F3E3A"/>
-      <stop offset="1"   stop-color="#051817"/>
+    <linearGradient id="trivBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"   stop-color="#0F1625"/>
+      <stop offset="0.6" stop-color="#0A0F1A"/>
+      <stop offset="1"   stop-color="#050811"/>
     </linearGradient>
-    <radialGradient id="inkGlow" cx="30%" cy="20%" r="70%">
-      <stop offset="0" stop-color="#A7F3D0" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="#A7F3D0" stop-opacity="0"/>
+    <radialGradient id="trivGlow" cx="70%" cy="15%" r="80%">
+      <stop offset="0" stop-color="#5B72E0" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#5B72E0" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="correctFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(48,209,88,0.22)"/>
+      <stop offset="1" stop-color="rgba(48,209,88,0.08)"/>
+    </linearGradient>
   </defs>
 
-  <rect width="480" height="360" fill="url(#ink)"/>
-  <rect width="480" height="360" fill="url(#inkGlow)"/>
+  <rect width="480" height="360" fill="url(#trivBg)"/>
+  <rect width="480" height="360" fill="url(#trivGlow)"/>
 
-  <!--
-    Glyph: bold sans-serif "?" — the trivia mark, knocked out in white.
-    The serif terminals of a proper character read more handsome than
-    an outline icon, and the mark is unambiguously about questions.
-  -->
-  <g transform="translate(240 200)">
-    <text x="0" y="0" text-anchor="middle"
-          font-family="-apple-system, 'SF Pro Display', system-ui, sans-serif"
-          font-size="220" font-weight="700" fill="#FFFFFF"
-          letter-spacing="-6"
-          dominant-baseline="central">
-      ?
-    </text>
+  <!-- Card -->
+  <g transform="translate(40, 40)">
+    <rect width="400" height="280" rx="20" fill="rgba(255,255,255,0.035)"
+          stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+    <!-- Header row: question counter + timer dot -->
+    <g transform="translate(24, 30)">
+      <text x="0" y="0"
+            font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+            font-size="10.5" font-weight="700" fill="rgba(255,255,255,0.5)" letter-spacing="2">
+        QUESTION 07 / 15
+      </text>
+      <g transform="translate(336, -8)">
+        <circle cx="8" cy="8" r="8" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <!-- Partial progress (stroke-dasharray trick on a circle) -->
+        <circle cx="8" cy="8" r="8" fill="none" stroke="#5B72E0" stroke-width="1.5"
+                stroke-dasharray="34 52" stroke-dashoffset="0" transform="rotate(-90 8 8)"/>
+        <text x="8" y="11" text-anchor="middle"
+              font-family="ui-monospace, 'SF Mono', Menlo, monospace"
+              font-size="8" font-weight="600" fill="#FFFFFF">14</text>
+      </g>
+    </g>
+
+    <!-- Question: a real design history question, set in a bookish serif -->
+    <g transform="translate(24, 80)"
+       font-family="'Canela Text', 'Cormorant Garamond', 'EB Garamond', Georgia, serif"
+       fill="#FFFFFF">
+      <text x="0" y="0"  font-size="22" font-weight="500" letter-spacing="-0.2">Which typeface was designed by</text>
+      <text x="0" y="30" font-size="22" font-weight="500" font-style="italic" letter-spacing="-0.2">Paul Renner in 1927 at the request</text>
+      <text x="0" y="60" font-size="22" font-weight="500" letter-spacing="-0.2">of the Bauer Type Foundry?</text>
+    </g>
+
+    <!-- Four answer rows, one highlighted as the user-selected correct -->
+    <g transform="translate(24, 176)">
+      <!-- Option A — correct, highlighted -->
+      <g>
+        <rect x="0" y="0" width="170" height="36" rx="8"
+              fill="url(#correctFill)" stroke="rgba(48,209,88,0.45)" stroke-width="1"/>
+        <circle cx="18" cy="18" r="9" fill="none" stroke="#30D158" stroke-width="1.5"/>
+        <path d="M 13 18 l 4 4 l 8 -9" stroke="#30D158" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <text x="36" y="22"
+              font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+              font-size="13" font-weight="500" fill="#FFFFFF">Futura</text>
+      </g>
+      <!-- Option B -->
+      <g transform="translate(182, 0)">
+        <rect x="0" y="0" width="170" height="36" rx="8"
+              fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <circle cx="18" cy="18" r="9" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+        <text x="36" y="22"
+              font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+              font-size="13" font-weight="500" fill="rgba(255,255,255,0.72)">Helvetica</text>
+      </g>
+      <!-- Option C -->
+      <g transform="translate(0, 46)">
+        <rect x="0" y="0" width="170" height="36" rx="8"
+              fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <circle cx="18" cy="18" r="9" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+        <text x="36" y="22"
+              font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+              font-size="13" font-weight="500" fill="rgba(255,255,255,0.72)">Univers</text>
+      </g>
+      <!-- Option D -->
+      <g transform="translate(182, 46)">
+        <rect x="0" y="0" width="170" height="36" rx="8"
+              fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <circle cx="18" cy="18" r="9" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+        <text x="36" y="22"
+              font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+              font-size="13" font-weight="500" fill="rgba(255,255,255,0.72)">Avenir</text>
+      </g>
+    </g>
   </g>
 
   <!-- Corner label -->
-  <text x="444" y="338" text-anchor="end"
-        font-family="-apple-system, system-ui, sans-serif"
-        font-size="11" font-weight="600" fill="#FFFFFF" fill-opacity="0.62" letter-spacing="0.4">
-    Trivia
+  <text x="448" y="338" text-anchor="end"
+        font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+        font-size="11" font-weight="600" fill="rgba(255,255,255,0.5)" letter-spacing="0.4">
+    Design Trivia
   </text>
 </svg>

@@ -57,24 +57,17 @@ export const COMPANY_BADGES = [
   "MICA Faculty",
 ];
 
-export type LabShaderVariant = "iris" | "ember" | "ink";
-
 export type LabItem = {
   title: string;
   description: string;
   tech: string;
   url?: string;
   action?: "foothills" | "watchrc" | "ticker";
-  /** Static thumbnail (path under /public).  Used for tiles that show a
-   *  real captured view of the demo (sandboxes). */
+  /** Thumbnail image (path under /public).  Every Lab tile gets one —
+   *  either a real captured view of the demo (sandboxes) or a
+   *  hand-drawn illustrative SVG that communicates the thing the tile
+   *  links to (link-outs).  No generic shader placeholders. */
   thumbnail?: string;
-  /** Animated WebGL shader thumbnail — used for tiles that link out.
-   *  The Lab section mounts the shader via @paper-design/shaders-react. */
-  shader?: {
-    variant: LabShaderVariant;
-    glyph: "ripples" | "quote" | "question";
-    label?: string;
-  };
 };
 
 export const LAB_ITEMS: LabItem[] = [
@@ -108,7 +101,7 @@ export const LAB_ITEMS: LabItem[] = [
       "Native iOS and macOS interaction experiments I'm building in public while learning SwiftUI.",
     url: "https://github.com/adamrotmil/swiftui-interaction-lab",
     tech: "SwiftUI · iOS · macOS",
-    shader: { variant: "iris", glyph: "ripples", label: "SwiftUI" },
+    thumbnail: "/images/lab/swiftui-interaction-lab.svg",
   },
   {
     title: "Client Headlines",
@@ -116,7 +109,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A hybrid AI + mad-libs headline generator for marketing copy. Claude drafts, a template engine fills the blanks.",
     url: "https://adamrotmil.github.io/client-headlines/clients-say.html",
     tech: "Claude API · Cloudflare Workers",
-    shader: { variant: "ember", glyph: "quote", label: "Headlines" },
+    thumbnail: "/images/lab/client-headlines.svg",
   },
   {
     title: "Know Your Design Trivia",
@@ -124,7 +117,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A trivia game about the history and craft of graphic design — typography, designers, movements, and the details that matter.",
     url: "https://github.com/adamrotmil/know-your-design-trivia",
     tech: "HTML · CSS · JavaScript",
-    shader: { variant: "ink", glyph: "question", label: "Trivia" },
+    thumbnail: "/images/lab/design-trivia.svg",
   },
 ];
 

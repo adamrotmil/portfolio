@@ -28,7 +28,9 @@ export interface SandboxApi {
 }
 
 export function useSandbox(): SandboxApi {
-  const [coinId, setCoinId] = useState<CoinId>("BTC");
+  // Open on Demo — users can explore the wild-swings walk + market
+  // action controls before electing into live feeds.
+  const [coinId, setCoinId] = useState<CoinId>("DEMO");
   const coin = COINS[coinId];
 
   // Run both engines always, but only surface one — this keeps the hook
