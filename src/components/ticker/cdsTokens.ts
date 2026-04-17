@@ -92,8 +92,15 @@ export function palette(theme: "light" | "dark"): Palette {
 // are close-enough to CDS's public documentation — matched visually
 // from component screenshots in their docs.
 
+// Match Liveline's own canvas font stack exactly so labels in the control
+// panel sit in the same typographic world as the chart itself.  Liveline's
+// dist code draws with `system-ui, -apple-system, sans-serif` for text and
+// `"SF Mono", Menlo, monospace` for the price badge — we mirror both.
 export const FONT_STACK =
-  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Inter", "Helvetica Neue", Helvetica, system-ui, sans-serif';
+  'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+export const FONT_MONO_STACK =
+  '"SF Mono", ui-monospace, Menlo, Monaco, "Cascadia Mono", monospace';
 
 export interface TypeStyle {
   fontSize: number;
@@ -103,19 +110,24 @@ export interface TypeStyle {
   textTransform?: "uppercase";
 }
 
+// Tighter than before — Liveline's canvas text sits at 11–12px/500 with
+// no letter-spacing, so the UI surrounding it leans the same way.  The
+// prior values (13/14px + 600 weight) felt heavy next to the chart.
 export const TYPE: Record<
   "title3" | "headline" | "body" | "label1" | "label2" | "caption" | "legal" | "sectionLabel",
   TypeStyle
 > = {
-  title3:       { fontSize: 20, fontWeight: 600, lineHeight: 1.2, letterSpacing: -0.2 },
-  headline:     { fontSize: 16, fontWeight: 600, lineHeight: 1.3, letterSpacing: -0.1 },
-  body:         { fontSize: 14, fontWeight: 400, lineHeight: 1.4, letterSpacing: 0 },
-  label1:       { fontSize: 13, fontWeight: 600, lineHeight: 1.3, letterSpacing: 0 },
-  label2:       { fontSize: 12, fontWeight: 500, lineHeight: 1.3, letterSpacing: 0 },
-  caption:      { fontSize: 11, fontWeight: 400, lineHeight: 1.3, letterSpacing: 0 },
-  legal:        { fontSize: 10, fontWeight: 400, lineHeight: 1.35, letterSpacing: 0 },
-  // Custom: the ubiquitous uppercase-small-tracking section header
-  sectionLabel: { fontSize: 10, fontWeight: 700, lineHeight: 1.2, letterSpacing: 0.6, textTransform: "uppercase" },
+  title3:       { fontSize: 16, fontWeight: 600, lineHeight: 1.25, letterSpacing: -0.1 },
+  headline:     { fontSize: 13, fontWeight: 600, lineHeight: 1.3,  letterSpacing: -0.05 },
+  body:         { fontSize: 12, fontWeight: 400, lineHeight: 1.4,  letterSpacing: 0 },
+  label1:       { fontSize: 12, fontWeight: 500, lineHeight: 1.3,  letterSpacing: 0 },
+  label2:       { fontSize: 11, fontWeight: 500, lineHeight: 1.3,  letterSpacing: 0 },
+  caption:      { fontSize: 11, fontWeight: 400, lineHeight: 1.35, letterSpacing: 0 },
+  legal:        { fontSize: 10, fontWeight: 400, lineHeight: 1.4,  letterSpacing: 0 },
+  // The ubiquitous uppercase-small-tracking section header.  Slightly
+  // smaller + a touch more tracking than prior; reads as a label, not a
+  // heading.
+  sectionLabel: { fontSize: 9,  fontWeight: 600, lineHeight: 1.2,  letterSpacing: 0.7, textTransform: "uppercase" },
 };
 
 // Tabular numerals come up a lot (prices, sizes, CVD).  This is the

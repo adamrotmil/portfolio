@@ -83,18 +83,6 @@ export default function SegmentedControl({ value, onChange, accent, theme }: Pro
             }}
           >
             {meta.label}
-            {id === "DEMO" && (
-              <span
-                style={{
-                  ...TYPE.legal,
-                  marginLeft: 4,
-                  color: active ? "rgba(255,255,255,0.72)" : p.fgMuted,
-                  fontWeight: 400,
-                }}
-              >
-                · toy
-              </span>
-            )}
           </button>
         );
       })}

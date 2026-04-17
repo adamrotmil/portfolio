@@ -56,7 +56,7 @@ export const COINS: Record<CoinId, CoinMeta> = {
     productId: null,
     accent: "#00D395",
     decimals: 2,
-    caption: "Synthetic random walk — nudge it with Pump / Dump",
+    caption: "Mock data — wild swings, 100ms ticks. Nudge with Buy / Sell.",
   },
 };
 

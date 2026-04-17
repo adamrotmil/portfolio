@@ -63,15 +63,19 @@ export type LabItem = {
   tech: string;
   url?: string;
   action?: "foothills" | "watchrc" | "ticker";
+  /** Optional preview image (path under /public).  Renders as a thumbnail
+   *  at the top of the card.  Prefer SVGs so they scale cleanly. */
+  thumbnail?: string;
 };
 
 export const LAB_ITEMS: LabItem[] = [
   {
     title: "Ticker Sandbox",
     description:
-      "A real-time chart playground built on Benji Taylor's Liveline — with degen mode, momentum arrows, and a synthetic toy market.",
+      "A real-time crypto chart playground built on Benji Taylor's Liveline — live BTC/ETH/SOL feeds, order book, CVD, and a wild-swings mock market.",
     action: "ticker",
     tech: "Liveline · React · Motion",
+    thumbnail: "/images/lab/ticker-sandbox.svg",
   },
   {
     title: "Remote Flight",
@@ -79,6 +83,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A smartwatch remote control for an RC airplane. 8 screens with iOS-native springs.",
     action: "watchrc",
     tech: "React · Motion · iOS UX",
+    thumbnail: "/images/lab/remote-flight.svg",
   },
   {
     title: "Foothills",
@@ -86,6 +91,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A classic ASCII MUD in the spirit of MUD1, Essex 1978. 30 rooms, NPCs, combat, and an agent-ready NPC brain seam.",
     action: "foothills",
     tech: "TypeScript · React · game engine",
+    thumbnail: "/images/lab/foothills.svg",
   },
   {
     title: "SwiftUI Interaction Lab",

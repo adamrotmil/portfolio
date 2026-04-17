@@ -74,7 +74,7 @@ export default function TickerChart({
           className="font-mono text-[9px]"
           style={{ color: theme === "dark" ? "#4a4a50" : "#b5b5ba" }}
         >
-          · toy market
+          · mock data
         </span>
       </div>
       <Liveline
@@ -96,7 +96,10 @@ export default function TickerChart({
         paused={paused}
         windows={windows}
         formatValue={formatValue}
-        lerpSpeed={0.22}
+        // Higher lerp (was 0.22) — snappier tracking of fast ticks, so
+        // the line *feels* like it's reacting in real time rather than
+        // lagging the value overlay.
+        lerpSpeed={0.35}
         lineWidth={2}
       />
     </div>

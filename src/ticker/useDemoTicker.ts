@@ -11,10 +11,13 @@ import type { LivelinePoint } from "liveline";
 // plus a latest `value`.  Liveline handles the smooth 60fps interpolation
 // between ticks on its own.
 
-// Liveline expects `time` in Unix seconds (see its README).  We tick in
-// milliseconds internally for smoothness, convert on emit.
-const TICK_MS = 500;
-const WINDOW_SECS = 60;          // keep ~2 minutes of history in the buffer
+// "Wild swings, fast updates (100ms)" — matches Benji's demo at
+// benji.org/liveline.  Fast ticks + meaty step sizes give the line real
+// character, and Liveline's 60fps interpolation smooths the path between
+// updates.  Window buffer stays at ~2 minutes (now much larger in point
+// count since we tick 5× faster).
+const TICK_MS = 100;
+const WINDOW_SECS = 60;
 const TRIM_AFTER_SECS = WINDOW_SECS * 2;
 const nowSecs = () => Date.now() / 1000;
 
@@ -25,9 +28,10 @@ export type TickerControls = {
 };
 
 const INITIAL_CONTROLS: TickerControls = {
-  // Lower default — previous 1.2 read as jagged.  Users can still crank to 3
-  // via the slider when they want chaos.
-  volatility: 0.55,
+  // Wild-swings default — with 100ms ticks, a lower coefficient produces
+  // the right balance of dramatic-but-legible motion.  Users can still
+  // dial it up to 3 for outright chaos.
+  volatility: 1.4,
   push: 0,
   paused: false,
 };
@@ -67,9 +71,10 @@ export function useDemoTicker(): DemoTickerApi {
   }, []);
 
   // A "nudge" lights up the push briefly, then decays. This is what drives
-  // degen mode's particles + shake (momentum swing detection).
+  // degen mode's particles + shake (momentum swing detection).  At 100ms
+  // ticks we want the effect to last roughly 2 seconds, so 20 ticks.
   const nudge = useCallback((direction: 1 | -1) => {
-    pushDecayRef.current = 10; // ~5 seconds at 500ms ticks
+    pushDecayRef.current = 20;
     setControlsRaw((prev) => ({ ...prev, push: direction }));
   }, []);
 
@@ -88,32 +93,34 @@ export function useDemoTicker(): DemoTickerApi {
       if (c.paused) return;
 
       setValue((prev) => {
-        // Smoother random walk.  Previously each tick was pure white noise,
-        // which Liveline's `exaggerate: true` mode amplified into the jaggy
-        // look.  Now we use:
-        //   • a smaller noise coefficient (0.35 instead of 0.8)
-        //   • a slow OU-style drift that nudges us toward INITIAL_PRICE so
-        //     the chart gently mean-reverts instead of galloping away
-        //   • random steps biased in the direction of existing drift, so
-        //     successive ticks tend to continue a move (more "trending")
+        // "Wild swings" walk — dialed to match Benji's 100ms-tick demo.
+        //
+        //   • Momentum-persistent drift: the previous tick's direction is
+        //     weighted heavily (0.93), so the line carves real waves
+        //     instead of looking like static.
+        //   • Large random kicks at the tail, tuned so the instantaneous
+        //     motion feels muscular but not spiky.
+        //   • A very gentle gravity toward INITIAL_PRICE keeps the chart
+        //     on screen over long runs without flattening the movement.
+        //   • Every ~60 ticks (≈ 6 seconds) there's a small chance of a
+        //     discontinuous jump, mimicking a market shock.
         const vol = Math.max(0.05, c.volatility);
 
-        const meanReversion = (INITIAL_PRICE - prev) * 0.015;
-        driftRef.current = driftRef.current * 0.82 + (Math.random() - 0.5) * vol * 0.25;
-        const randomStep = driftRef.current + (Math.random() - 0.5) * vol * 0.18;
+        driftRef.current = driftRef.current * 0.93 + (Math.random() - 0.5) * vol * 0.35;
+        const kick = (Math.random() - 0.5) * vol * 0.45;
+        const gravity = (INITIAL_PRICE - prev) * 0.0025;
+        const shock = Math.random() < 0.015 ? (Math.random() - 0.5) * vol * 2.5 : 0;
 
-        // Push bias decays; if the user manually held up/down via controls,
-        // we treat that as continuous (no decay).
         let pushBias = 0;
         if (pushDecayRef.current > 0) {
-          pushBias = c.push * (pushDecayRef.current / 10) * vol * 0.55;
+          pushBias = c.push * (pushDecayRef.current / 20) * vol * 0.7;
           pushDecayRef.current--;
           if (pushDecayRef.current === 0) {
             setControlsRaw((prev) => ({ ...prev, push: 0 }));
           }
         }
 
-        const next = Math.max(0.01, prev + randomStep + pushBias + meanReversion);
+        const next = Math.max(0.01, prev + driftRef.current + kick + gravity + pushBias + shock);
 
         const point: LivelinePoint = { time: nowSecs(), value: next };
         setData((arr) => {
@@ -123,11 +130,11 @@ export function useDemoTicker(): DemoTickerApi {
           return trimmed;
         });
 
-        // Synthetic CVD: each price move implies a taker volume in that
-        // direction, scaled to look plausible next to real Coinbase CVD
-        // numbers (low whole digits of "BTC" equivalent).
+        // Synthetic CVD that tracks direction + size of the move.  Scaled
+        // so it feels roughly in the same order of magnitude as real
+        // coins' first-minute CVD numbers.
         const delta = next - prev;
-        const pseudoSize = Math.abs(delta) * 0.8 + Math.random() * 0.4;
+        const pseudoSize = Math.abs(delta) * 0.25 + Math.random() * 0.08;
         setCvd((c0) => c0 + (delta > 0 ? pseudoSize : delta < 0 ? -pseudoSize : 0));
 
         return next;
@@ -153,13 +160,17 @@ export function useDemoTicker(): DemoTickerApi {
 }
 
 function seed(): LivelinePoint[] {
-  // Seed with 40 points of gentle drift so the chart doesn't start empty.
+  // Seed with ~150 points of recent wild-swings history (15s of 100ms
+  // ticks) so the chart opens with a lived-in shape instead of a
+  // straight line from the initial price.
   const out: LivelinePoint[] = [];
   const now = nowSecs();
   const stepSecs = TICK_MS / 1000;
   let v = INITIAL_PRICE;
-  for (let i = 40; i >= 1; i--) {
-    v += (Math.random() - 0.5) * 0.4;
+  let drift = 0;
+  for (let i = 150; i >= 1; i--) {
+    drift = drift * 0.93 + (Math.random() - 0.5) * 0.55;
+    v += drift + (Math.random() - 0.5) * 0.7;
     out.push({ time: now - i * stepSecs, value: Math.max(0.01, v) });
   }
   return out;

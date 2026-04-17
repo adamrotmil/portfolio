@@ -22,11 +22,11 @@ interface Props {
   resetAccent: () => void;
 }
 
-// Accent swatches — mapped to CDS-named tokens so the palette reads as
-// "brand blues and greens" rather than a hand-picked rainbow.
+// Accent palette — neutral-adjacent brand colors, presented as thin rings
+// so they read as a choice indicator rather than a candy shop.
 const ACCENT_OPTIONS = [
-  { hex: "#05B169", label: "Positive green" },      // CDS green60-ish
-  { hex: "#0052FF", label: "Coinbase blue" },       // CDS blue70
+  { hex: "#0052FF", label: "Coinbase blue" },
+  { hex: "#05B169", label: "Positive green" },
   { hex: "#F7931A", label: "Bitcoin orange" },
   { hex: "#627EEA", label: "Ethereum violet" },
   { hex: "#14F195", label: "Solana mint" },
@@ -65,45 +65,28 @@ export default function TickerControls({
       {demo && (
         <>
           <Section theme={theme} label="Market">
-            <div className="grid grid-cols-2 gap-2">
-              <PrimaryButton
-                theme={theme}
-                tone="positive"
-                onClick={() => demo.nudge(1)}
-              >
-                Buy
-              </PrimaryButton>
-              <PrimaryButton
-                theme={theme}
-                tone="negative"
-                onClick={() => demo.nudge(-1)}
-              >
-                Sell
-              </PrimaryButton>
+            <div className="grid grid-cols-2" style={{ gap: 6 }}>
+              <GhostButton theme={theme} onClick={() => demo.nudge(1)}>Buy</GhostButton>
+              <GhostButton theme={theme} onClick={() => demo.nudge(-1)}>Sell</GhostButton>
             </div>
-            <SecondaryButton
+            <GhostButton
               theme={theme}
+              fullWidth
+              muted
               active={demo.controls.paused}
               onClick={() => demo.setControls({ paused: !demo.controls.paused })}
-              fullWidth
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 6 }}
             >
               {demo.controls.paused ? "Resume stream" : "Pause stream"}
-            </SecondaryButton>
+            </GhostButton>
           </Section>
 
           <Divider color={p.line} />
 
           <Section theme={theme} label="Volatility">
-            <div className="flex items-baseline justify-between" style={{ marginBottom: 6 }}>
+            <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
               <span style={{ ...TYPE.body, color: p.fgMuted }}>Intensity</span>
-              <span
-                style={{
-                  ...TYPE.label1,
-                  ...TNUM,
-                  color: p.fgPrimary,
-                }}
-              >
+              <span style={{ ...TYPE.label1, ...TNUM, color: p.fgPrimary }}>
                 {demo.controls.volatility.toFixed(2)}
               </span>
             </div>
@@ -115,9 +98,12 @@ export default function TickerControls({
               value={demo.controls.volatility}
               onChange={(e) => demo.setControls({ volatility: parseFloat(e.target.value) })}
               className="w-full"
-              style={{ accentColor: p.blue70 }}
+              style={{ accentColor: p.fgPrimary }}
             />
-            <div className="flex justify-between" style={{ ...TYPE.legal, color: p.fgSubtle, marginTop: 4 }}>
+            <div
+              className="flex justify-between"
+              style={{ ...TYPE.legal, color: p.fgSubtle, marginTop: 6 }}
+            >
               <span>Calm</span>
               <span>Chaos</span>
             </div>
@@ -132,22 +118,20 @@ export default function TickerControls({
           <div
             style={{
               ...TYPE.caption,
-              background: p.positiveWash,
-              color: p.green60,
-              border: `1px solid ${p.green60}33`,
-              borderRadius: RADIUS.sm,
-              padding: "10px 12px",
-              lineHeight: 1.5,
+              color: p.fgMuted,
+              lineHeight: 1.45,
             }}
           >
-            Streaming a public spot feed. Market actions and volatility are disabled on live markets — switch to{" "}
-            <span style={{ fontWeight: 600 }}>Demo</span> to drive the line yourself.
+            Streaming a public spot feed.  Market actions and volatility are
+            disabled on live markets — switch to{" "}
+            <span style={{ color: p.fgPrimary, fontWeight: 500 }}>Demo</span>{" "}
+            to drive the line yourself.
           </div>
         </Section>
       )}
 
       <Section theme={theme} label="Display">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col" style={{ gap: 6 }}>
           <ToggleRow theme={theme} label="Degen mode" value={degen} onToggle={setDegen} />
           <ToggleRow theme={theme} label="Exaggerate" value={exaggerate} onToggle={setExaggerate} />
           <ToggleRow theme={theme} label="Grid" value={showGrid} onToggle={setShowGrid} />
@@ -157,39 +141,23 @@ export default function TickerControls({
 
       <Divider color={p.line} />
 
-      <Section theme={theme} label="Appearance">
-        <div className="grid grid-cols-2 gap-2" style={{ marginBottom: 10 }}>
+      <Section theme={theme} label="Theme">
+        <div className="grid grid-cols-2" style={{ gap: 6 }}>
           {(["dark", "light"] as const).map((t) => (
-            <SecondaryButton
+            <GhostButton
               key={t}
               theme={theme}
               active={theme === t}
               onClick={() => setTheme(t)}
             >
               {t === "dark" ? "Dark" : "Light"}
-            </SecondaryButton>
+            </GhostButton>
           ))}
         </div>
-        <div
-          className="flex items-center justify-between"
-          style={{ marginBottom: 6 }}
-        >
-          <span style={{ ...TYPE.label2, color: p.fgMuted }}>Accent</span>
-          <button
-            onClick={resetAccent}
-            style={{
-              ...TYPE.legal,
-              background: "transparent",
-              border: "none",
-              color: p.fgMuted,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            Reset
-          </button>
-        </div>
-        <div className="flex gap-2">
+      </Section>
+
+      <Section theme={theme} label="Accent">
+        <div className="flex items-center" style={{ gap: 10 }}>
           {ACCENT_OPTIONS.map((o) => {
             const active = accent === o.hex;
             return (
@@ -201,17 +169,33 @@ export default function TickerControls({
                 title={o.label}
                 aria-label={o.label}
                 style={{
-                  width: 26,
-                  height: 26,
+                  width: 16,
+                  height: 16,
                   borderRadius: RADIUS.pill,
-                  background: o.hex,
-                  border: `2px solid ${active ? p.fgPrimary : "transparent"}`,
-                  cursor: "pointer",
+                  // Thin ring when unselected; inset fill when active.
+                  background: active ? o.hex : "transparent",
+                  border: `1.5px solid ${active ? o.hex : p.lineHeavy}`,
                   padding: 0,
+                  cursor: "pointer",
+                  transition: "background 160ms ease, border-color 160ms ease",
                 }}
               />
             );
           })}
+          <span style={{ flex: 1 }} />
+          <button
+            onClick={resetAccent}
+            style={{
+              ...TYPE.legal,
+              background: "transparent",
+              border: "none",
+              color: p.fgSubtle,
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Reset
+          </button>
         </div>
       </Section>
 
@@ -219,14 +203,9 @@ export default function TickerControls({
         <>
           <Divider color={p.line} />
           <Section theme={theme}>
-            <SecondaryButton
-              theme={theme}
-              onClick={demo.reset}
-              fullWidth
-              muted
-            >
-              Reset demo ticker
-            </SecondaryButton>
+            <GhostButton theme={theme} fullWidth muted onClick={demo.reset}>
+              Reset demo
+            </GhostButton>
           </Section>
         </>
       )}
@@ -247,14 +226,14 @@ function Section({
 }) {
   const p = palette(theme);
   return (
-    <div style={{ padding: "14px 16px" }}>
+    <div style={{ padding: "16px 16px 18px" }}>
       {label && (
         <div
           style={{
             ...TYPE.sectionLabel,
             textTransform: "uppercase",
-            color: p.fgMuted,
-            marginBottom: 10,
+            color: p.fgSubtle,
+            marginBottom: 12,
           }}
         >
           {label}
@@ -269,42 +248,14 @@ function Divider({ color }: { color: string }) {
   return <div aria-hidden style={{ height: 1, background: color }} />;
 }
 
-function PrimaryButton({
-  theme,
-  tone = "brand",
-  children,
-  onClick,
-}: {
-  theme: "light" | "dark";
-  tone?: "brand" | "positive" | "negative";
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  const p = palette(theme);
-  const bg = tone === "positive" ? p.green60 : tone === "negative" ? p.red60 : p.blue70;
-  const fg = "#FFFFFF";
-  return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.97 }}
-      transition={MOTION.tap}
-      style={{
-        ...TYPE.label1,
-        padding: "10px 14px",
-        borderRadius: RADIUS.sm,
-        background: bg,
-        color: fg,
-        border: "none",
-        cursor: "pointer",
-        width: "100%",
-      }}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-function SecondaryButton({
+/**
+ * Neutral button — the workhorse for this panel.  Two states:
+ *   default → hairline border, transparent fill, fg text
+ *   active  → slightly raised on bgTertiary, bordered with fgPrimary
+ * No color accents, no bold blocks of fill.  The one piece of colored
+ * expression in the sandbox is the chart line itself.
+ */
+function GhostButton({
   theme,
   active = false,
   muted = false,
@@ -325,17 +276,18 @@ function SecondaryButton({
   return (
     <motion.button
       onClick={onClick}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.98 }}
       transition={MOTION.tap}
       style={{
-        ...TYPE.label1,
-        padding: "9px 14px",
+        ...TYPE.label2,
+        padding: "7px 12px",
         borderRadius: RADIUS.sm,
-        background: active ? p.blueWash : p.bgTertiary,
-        color: active ? p.blue70 : muted ? p.fgMuted : p.fgPrimary,
-        border: `1px solid ${active ? `${p.blue70}55` : p.line}`,
+        background: active ? p.bgTertiary : "transparent",
+        color: active ? p.fgPrimary : muted ? p.fgMuted : p.fgPrimary,
+        border: `1px solid ${active ? p.fgMuted : p.line}`,
         cursor: "pointer",
         width: fullWidth ? "100%" : undefined,
+        transition: "background 140ms ease, border-color 140ms ease, color 140ms ease",
         ...style,
       }}
     >
@@ -359,41 +311,46 @@ function ToggleRow({
   return (
     <button
       onClick={() => onToggle(!value)}
-      className="flex items-center justify-between py-1.5"
+      className="flex items-center justify-between"
       style={{
         background: "transparent",
         border: "none",
         cursor: "pointer",
-        padding: 0,
+        padding: "4px 0",
+        width: "100%",
       }}
     >
-      <span style={{ ...TYPE.body, color: value ? p.fgPrimary : p.fgMuted, fontWeight: value ? 500 : 400 }}>
+      <span
+        style={{
+          ...TYPE.body,
+          color: value ? p.fgPrimary : p.fgMuted,
+        }}
+      >
         {label}
       </span>
       <motion.span
         aria-hidden
-        animate={{ background: value ? p.blue70 : p.bgAlternate }}
+        animate={{ background: value ? p.fgPrimary : p.bgAlternate }}
         transition={{ duration: 0.2 }}
         style={{
           position: "relative",
           display: "inline-block",
-          width: 34,
-          height: 20,
+          width: 28,
+          height: 16,
           borderRadius: RADIUS.pill,
         }}
       >
         <motion.span
-          animate={{ x: value ? 14 : 0 }}
+          animate={{ x: value ? 12 : 0 }}
           transition={{ type: "spring", stiffness: 600, damping: 32 }}
           style={{
             position: "absolute",
             top: 2,
             left: 2,
-            width: 16,
-            height: 16,
+            width: 12,
+            height: 12,
             borderRadius: RADIUS.pill,
-            background: "#FFFFFF",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+            background: value ? p.bgSecondary : p.fgMuted,
           }}
         />
       </motion.span>
