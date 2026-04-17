@@ -43,3 +43,174 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Tone the MapLibre default attribution to the Table color palette */
+.maplibregl-ctrl-attrib {
+  background: rgba(10, 12, 15, 0.78) !important;
+  color: rgba(230, 232, 234, 0.55) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.02em;
+}
+.maplibregl-ctrl-attrib a {
+  color: rgba(134, 217, 255, 0.75) !important;
+}
+.maplibregl-ctrl-group {
+  background: rgba(15, 18, 22, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+  border-radius: 2px !important;
+}
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  color: #e6e8ea !important;
+}
+.maplibregl-ctrl-group button:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.maplibregl-ctrl-group button span {
+  filter: invert(0.9);
+}
+
+/* ---- Table lab: tactical target pins ---- */
+.tgt-pin {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  width: 0;
+  height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+.tgt-pin__ring {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(134, 217, 255, 0.35);
+  background: transparent;
+  transition: width 160ms ease, height 160ms ease, border-color 160ms ease;
+}
+.tgt-pin__body {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px 3px 5px;
+  background: rgba(10, 12, 15, 0.9);
+  color: #e6e8ea;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 2px 6px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  transform: translateY(-22px);
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+.tgt-pin__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4ad68a;
+  box-shadow: 0 0 5px rgba(74, 214, 138, 0.75);
+}
+.tgt-pin[data-load="warn"] .tgt-pin__dot {
+  background: #f2b24a;
+  box-shadow: 0 0 5px rgba(242, 178, 74, 0.75);
+}
+.tgt-pin[data-load="hot"] .tgt-pin__dot {
+  background: #ef5a5a;
+  box-shadow: 0 0 5px rgba(239, 90, 90, 0.85);
+}
+.tgt-pin[data-open="false"] .tgt-pin__dot {
+  background: #565b63;
+  box-shadow: none;
+}
+.tgt-pin__wait {
+  color: #e6e8ea;
+}
+.tgt-pin__unit {
+  color: #8a8f96;
+  font-weight: 500;
+}
+.tgt-pin__code {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: rgba(134, 217, 255, 0.6);
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.tgt-pin[data-hovered="true"] .tgt-pin__body,
+.tgt-pin[data-selected="true"] .tgt-pin__body {
+  transform: translateY(-26px) scale(1.08);
+  border-color: rgba(134, 217, 255, 0.7);
+  background: rgba(18, 24, 32, 0.95);
+}
+.tgt-pin[data-selected="true"] .tgt-pin__ring {
+  width: 28px;
+  height: 28px;
+  border-color: rgba(134, 217, 255, 0.9);
+}
+.tgt-pin[data-hovered="true"] .tgt-pin__code {
+  opacity: 0.9;
+}
+
+/* Selected-target range ring — concentric pulses */
+.tgt-ring {
+  position: relative;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.tgt-ring span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  margin-top: -32px;
+  border-radius: 50%;
+  border: 1px solid rgba(134, 217, 255, 0.5);
+  animation: tgt-ring-pulse 2.4s ease-out infinite;
+}
+.tgt-ring span:nth-child(2) {
+  animation-delay: 1.2s;
+  width: 96px;
+  height: 96px;
+  margin-left: -48px;
+  margin-top: -48px;
+  border-color: rgba(134, 217, 255, 0.35);
+}
+@keyframes tgt-ring-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes cctv-rec {
+  0%, 45% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.35;
+  }
+}

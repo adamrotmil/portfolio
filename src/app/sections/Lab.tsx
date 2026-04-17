@@ -7,11 +7,13 @@ import { assetPath } from "@/lib/basePath";
 import FoothillsModal from "@/components/foothills/FoothillsModal";
 import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
+import TableModal from "@/components/table/TableModal";
 
 export default function Lab() {
   const [foothillsOpen, setFoothillsOpen] = useState(false);
   const [watchrcOpen, setWatchrcOpen] = useState(false);
   const [tickerOpen, setTickerOpen] = useState(false);
+  const [tableOpen, setTableOpen] = useState(false);
 
   return (
     <section
@@ -68,6 +70,8 @@ export default function Lab() {
                     setWatchrcOpen(true);
                   } else if (item.action === "ticker") {
                     setTickerOpen(true);
+                  } else if (item.action === "table") {
+                    setTableOpen(true);
                   } else if (item.url) {
                     window.open(item.url, "_blank");
                   }
@@ -168,6 +172,7 @@ export default function Lab() {
         open={tickerOpen}
         onClose={() => setTickerOpen(false)}
       />
+      <TableModal open={tableOpen} onClose={() => setTableOpen(false)} />
     </section>
   );
 }

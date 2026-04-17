@@ -62,7 +62,7 @@ export type LabItem = {
   description: string;
   tech: string;
   url?: string;
-  action?: "foothills" | "watchrc" | "ticker";
+  action?: "foothills" | "watchrc" | "ticker" | "table";
   /** Thumbnail image (path under /public).  Every Lab tile gets one —
    *  either a real captured view of the demo (sandboxes) or a
    *  hand-drawn illustrative SVG that communicates the thing the tile
@@ -78,6 +78,14 @@ export const LAB_ITEMS: LabItem[] = [
     action: "ticker",
     tech: "Liveline · React · Motion",
     thumbnail: "/images/lab/ticker-sandbox.svg",
+  },
+  {
+    title: "Table",
+    description:
+      "A curator's New York — 14 restaurants worth the map pin, pinned to an Esri satellite basemap. Airbnb-grammar cards, MapLibre markers, searchable by cuisine, neighborhood, and dish.",
+    action: "table",
+    tech: "MapLibre GL · Esri · React",
+    thumbnail: "/images/lab/table.svg",
   },
   {
     title: "Remote Flight",
