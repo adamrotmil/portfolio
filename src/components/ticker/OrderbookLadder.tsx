@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import type { OrderbookLevel, OrderbookState } from "@/ticker/useOrderbook";
 import { formatPrice } from "@/ticker/coins";
+import { palette, TYPE, TNUM, RADIUS } from "./cdsTokens";
 
 interface Props {
   book: OrderbookState;
@@ -17,21 +18,20 @@ interface Props {
 // visual trick is that the bars make volume distribution readable at a
 // glance without a separate depth chart.
 export default function OrderbookLadder({ book, theme, decimals, cvd, symbol }: Props) {
-  const fg = theme === "dark" ? "#e5e5ea" : "#1a1a1c";
-  const muted = theme === "dark" ? "#8e8e93" : "#6b6b70";
-  const rowBg = theme === "dark" ? "#0e0e10" : "#ffffff";
-  const dim = theme === "dark" ? "#2a2a2e" : "#e5e5ea";
+  const p = palette(theme);
+  const fg = p.fgPrimary;
+  const muted = p.fgMuted;
+  const rowBg = p.bgPrimary;
+  const dim = p.line;
 
-  const greenFill = "rgba(48,209,88,0.14)";   // for bids
-  const redFill = "rgba(255,69,58,0.14)";     // for asks
-  const greenFg = theme === "dark" ? "#30D158" : "#00853D";
-  const redFg = theme === "dark" ? "#FF453A" : "#D70015";
+  const greenFill = p.positiveWash;
+  const redFill = p.negativeWash;
+  const greenFg = p.green60;
+  const redFg = p.red60;
 
-  // CVD is a signed running total.  Positive = aggressive buyers;
-  // negative = aggressive sellers.  We color accordingly.
   const cvdColor = cvd > 0 ? greenFg : cvd < 0 ? redFg : muted;
   const cvdBg =
-    cvd > 0 ? greenFill : cvd < 0 ? redFill : "rgba(127,127,127,0.10)";
+    cvd > 0 ? greenFill : cvd < 0 ? redFill : p.bgTertiary;
 
   const maxCum = Math.max(
     book.bids[book.bids.length - 1]?.cumulative ?? 1,
@@ -45,58 +45,66 @@ export default function OrderbookLadder({ book, theme, decimals, cvd, symbol }: 
 
   return (
     <div
-      className="flex flex-col h-full rounded-[12px] overflow-hidden"
-      style={{ background: rowBg, border: `1px solid ${dim}` }}
+      className="flex flex-col h-full overflow-hidden"
+      style={{
+        background: rowBg,
+        border: `1px solid ${dim}`,
+        borderRadius: RADIUS.md,
+      }}
     >
       {/* Header — "Order book" left, CVD readout right.
           CVD (Cumulative Volume Delta) = Σ(taker buy volume − taker sell
           volume) since this coin was selected.  Positive means buyer
           pressure, negative means seller pressure.  Color-coded + arrow. */}
       <div
-        className="flex items-center justify-between px-3 py-2 text-[10px] font-mono"
-        style={{ color: muted, borderBottom: `1px solid ${dim}` }}
+        className="flex items-center justify-between"
+        style={{
+          color: muted,
+          borderBottom: `1px solid ${dim}`,
+          padding: "10px 12px",
+        }}
       >
-        <span className="uppercase tracking-[0.12em] font-semibold">Order book</span>
+        <span style={{ ...TYPE.sectionLabel, color: fg }}>Order book</span>
         <motion.span
           layout
           initial={false}
-          className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-[4px] text-[9px]"
+          className="inline-flex items-center gap-1.5"
           style={{
+            ...TYPE.label2,
+            ...TNUM,
             background: cvdBg,
             color: cvdColor,
-            fontWeight: 600,
-            letterSpacing: 0.4,
-            fontFeatureSettings: '"tnum"',
+            padding: "2px 8px",
+            borderRadius: RADIUS.sm,
           }}
           title={`Cumulative Volume Delta (${symbol})`}
         >
-          <span style={{ opacity: 0.72, letterSpacing: 0.7 }}>CVD</span>
+          <span style={{ opacity: 0.7, letterSpacing: 0.4 }}>CVD</span>
+          {/* Direction glyph: only re-mounts when the sign flips, so we
+              don't spam React with duplicate-key warnings on every tick. */}
           <motion.span
-            key={Math.sign(cvd)}
+            key={`cvd-${Math.sign(cvd)}`}
             initial={{ scale: 0.7, opacity: 0.3 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            style={{ fontSize: 10 }}
           >
             {cvd > 0 ? "▲" : cvd < 0 ? "▼" : "◆"}
           </motion.span>
-          <motion.span
-            key={Math.round(cvd * 10)}
-            initial={{ y: -4, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.25 }}
-          >
-            {formatCvd(cvd)}
-          </motion.span>
+          {/* Value just updates in place — no key re-mount. */}
+          <span>{formatCvd(cvd)}</span>
         </motion.span>
       </div>
 
       {/* Column headers */}
       <div
-        className="grid px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em]"
+        className="grid"
         style={{
+          ...TYPE.sectionLabel,
           gridTemplateColumns: "1fr 1fr 1fr",
           color: muted,
           borderBottom: `1px solid ${dim}`,
+          padding: "8px 12px",
         }}
       >
         <span>Price</span>
@@ -106,10 +114,10 @@ export default function OrderbookLadder({ book, theme, decimals, cvd, symbol }: 
 
       {empty ? (
         <div
-          className="flex-1 flex items-center justify-center text-[11px] font-mono"
-          style={{ color: muted }}
+          className="flex-1 flex items-center justify-center"
+          style={{ ...TYPE.body, color: muted }}
         >
-          waiting for depth…
+          Waiting for depth…
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
@@ -131,31 +139,30 @@ export default function OrderbookLadder({ book, theme, decimals, cvd, symbol }: 
 
           {/* Spread / mid bar */}
           <div
-            className="flex items-center justify-between px-3 py-2 text-[11px] font-mono"
+            className="flex items-center justify-between"
             style={{
-              background: theme === "dark" ? "#18181b" : "#f5f5f5",
+              background: p.bgTertiary,
               borderTop: `1px solid ${dim}`,
               borderBottom: `1px solid ${dim}`,
-              fontFeatureSettings: '"tnum"',
+              padding: "8px 12px",
+              ...TNUM,
             }}
           >
-            <span style={{ color: muted, textTransform: "uppercase", letterSpacing: 0.8, fontSize: 9, fontWeight: 600 }}>
-              Spread
-            </span>
+            <span style={{ ...TYPE.sectionLabel, color: muted }}>Spread</span>
             <motion.span
               key={book.spread ?? 0}
               initial={{ opacity: 0.4 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.35 }}
-              style={{ color: fg, fontWeight: 600 }}
+              style={{ ...TYPE.label1, color: fg }}
             >
               {book.spread != null ? formatPrice(book.spread, decimals) : "—"}
-              <span style={{ color: muted, marginLeft: 6, fontSize: 9 }}>
+              <span style={{ ...TYPE.caption, color: muted, marginLeft: 6 }}>
                 {book.spreadPct != null ? `${book.spreadPct.toFixed(3)}%` : ""}
               </span>
             </motion.span>
-            <span style={{ color: muted, fontSize: 10 }}>
-              mid {book.mid != null ? formatPrice(book.mid, decimals) : "—"}
+            <span style={{ ...TYPE.caption, color: muted }}>
+              Mid {book.mid != null ? formatPrice(book.mid, decimals) : "—"}
             </span>
           </div>
 
@@ -200,16 +207,18 @@ function LadderRow({
   const pct = Math.min(100, (level.cumulative / maxCum) * 100);
   return (
     <div
-      className="relative grid px-3 text-[11px] font-mono"
+      className="relative grid"
       style={{
+        ...TYPE.label2,
+        ...TNUM,
         gridTemplateColumns: "1fr 1fr 1fr",
         height: 22,
+        padding: "0 12px",
         alignItems: "center",
-        fontFeatureSettings: '"tnum"',
       }}
     >
-      {/* Depth bar — bids fill from the right, asks fill from the right too;
-          the closest-to-spread side visually leans inward. */}
+      {/* Depth bar — fills from the right; the closer-to-spread side visually
+          leans inward. */}
       <motion.div
         aria-hidden
         className="absolute top-0 bottom-0 right-0 pointer-events-none"
@@ -218,13 +227,16 @@ function LadderRow({
         animate={{ width: `${pct}%` }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       />
-      <span style={{ color: sideFg, fontWeight: 600, zIndex: 1 }}>
+      <span style={{ color: sideFg, fontWeight: 600, zIndex: 1, position: "relative" }}>
         {formatNum(level.price, decimals)}
       </span>
-      <span className="text-right" style={{ color: fg, zIndex: 1 }}>
+      <span className="text-right" style={{ color: fg, zIndex: 1, position: "relative" }}>
         {formatSize(level.size)}
       </span>
-      <span className="text-right" style={{ color: fg, opacity: 0.65, zIndex: 1 }}>
+      <span
+        className="text-right"
+        style={{ color: fg, opacity: 0.55, zIndex: 1, position: "relative" }}
+      >
         {formatSize(level.cumulative)}
       </span>
     </div>

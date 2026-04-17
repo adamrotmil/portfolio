@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { COIN_ORDER, COINS, type CoinId } from "@/ticker/coins";
+import { palette, TYPE, RADIUS, MOTION } from "./cdsTokens";
 
 interface Props {
   value: CoinId;
@@ -11,13 +12,14 @@ interface Props {
   theme: "light" | "dark";
 }
 
-// Animated pill segmented control.  The active background slides between
-// segments using Motion's layoutId, which is what makes it feel iOS-y.
+// Animated pill segmented control in CDS vocabulary.  The active background
+// slides between segments, and the inactive state uses `bgTertiary` — the
+// same surface CDS uses for secondary buttons.
 export default function SegmentedControl({ value, onChange, accent, theme }: Props) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
+  const p = palette(theme);
 
-  // Compute the active segment's geometry so we can place the sliding pill.
   useEffect(() => {
     const el = wrapRef.current?.querySelector<HTMLButtonElement>(
       `button[data-coin="${value}"]`,
@@ -28,28 +30,32 @@ export default function SegmentedControl({ value, onChange, accent, theme }: Pro
     setIndicator({ x: r.left - parent.left, w: r.width });
   }, [value]);
 
-  const track = theme === "dark" ? "#1c1c1e" : "#ededed";
-  const muted = theme === "dark" ? "#8e8e93" : "#6b6b70";
-  const on = "#ffffff";
-  const off = theme === "dark" ? "#e5e5ea" : "#1a1a1c";
-
   return (
     <div
       ref={wrapRef}
       role="tablist"
       aria-label="Select ticker"
-      className="relative inline-flex items-center p-1 rounded-full"
-      style={{ background: track }}
+      className="relative inline-flex items-center"
+      style={{
+        background: p.bgTertiary,
+        borderRadius: RADIUS.pill,
+        padding: 3,
+      }}
     >
       {indicator && (
         <motion.div
           aria-hidden
-          layout
           initial={false}
           animate={{ x: indicator.x, width: indicator.w }}
-          transition={{ type: "spring", stiffness: 420, damping: 32 }}
-          className="absolute top-1 bottom-1 rounded-full"
-          style={{ background: accent, zIndex: 0 }}
+          transition={MOTION.spring}
+          className="absolute"
+          style={{
+            top: 3,
+            bottom: 3,
+            background: accent,
+            borderRadius: RADIUS.pill,
+            zIndex: 0,
+          }}
         />
       )}
       {COIN_ORDER.map((id) => {
@@ -62,20 +68,29 @@ export default function SegmentedControl({ value, onChange, accent, theme }: Pro
             role="tab"
             aria-selected={active}
             onClick={() => onChange(id)}
-            className="relative z-10 px-3 py-1 text-[11px] font-semibold rounded-full transition-colors"
             style={{
-              color: active ? on : off,
+              ...TYPE.label1,
+              position: "relative",
+              zIndex: 1,
+              padding: "5px 14px",
+              borderRadius: RADIUS.pill,
+              color: active ? "#FFFFFF" : p.fgPrimary,
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              minWidth: 52,
+              minWidth: 56,
+              transition: "color 160ms ease",
             }}
           >
             {meta.label}
             {id === "DEMO" && (
               <span
-                className="ml-1 text-[9px] font-mono"
-                style={{ color: active ? "rgba(255,255,255,0.7)" : muted }}
+                style={{
+                  ...TYPE.legal,
+                  marginLeft: 4,
+                  color: active ? "rgba(255,255,255,0.72)" : p.fgMuted,
+                  fontWeight: 400,
+                }}
               >
                 · toy
               </span>

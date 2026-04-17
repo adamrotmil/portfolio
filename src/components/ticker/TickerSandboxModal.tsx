@@ -6,6 +6,7 @@ import TickerControls from "./TickerControls";
 import SegmentedControl from "./SegmentedControl";
 import OrderbookLadder from "./OrderbookLadder";
 import { useSandbox } from "@/ticker/useSandbox";
+import { palette, TYPE, FONT_STACK, RADIUS } from "./cdsTokens";
 
 // Liveline renders a canvas — not SSR-safe. Dynamic import defers it to the
 // client so Next.js's static export doesn't try to pre-render it.
@@ -63,13 +64,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   const statusColor = useStatusColor(sandbox.status, sandbox.live, theme);
-
-  const bg = theme === "dark" ? "#0b0b0d" : "#f7f7f7";
-  const fg = theme === "dark" ? "#e5e5ea" : "#1a1a1c";
-  const chromeBg = theme === "dark" ? "#161618" : "#ededed";
-  const chromeBorder = theme === "dark" ? "#222" : "#d4d4d4";
-  const mutedFg = theme === "dark" ? "#8e8e93" : "#6b6b70";
-  const linkColor = theme === "dark" ? "#9EC4FF" : "#1652F0";
+  const p = palette(theme);
 
   return (
     <div
@@ -78,6 +73,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
       style={{
         background: "rgba(0,0,0,0.72)",
         backdropFilter: "blur(4px)",
+        fontFamily: FONT_STACK,
       }}
       onMouseDown={(e) => {
         if (e.target === backdropRef.current) onClose();
@@ -87,24 +83,34 @@ function ModalBody({ onClose }: { onClose: () => void }) {
       aria-label="Ticker Sandbox"
     >
       <div
-        className="relative flex flex-col overflow-hidden sm:rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)] w-full h-[100dvh] sm:w-[min(96vw,1240px)] sm:h-[min(94vh,880px)]"
-        style={{ background: bg, color: fg }}
+        className="relative flex flex-col overflow-hidden shadow-[0_24px_72px_rgba(0,0,0,0.5)] w-full h-[100dvh] sm:w-[min(96vw,1240px)] sm:h-[min(94vh,880px)]"
+        style={{
+          background: p.bgPrimary,
+          color: p.fgPrimary,
+          borderRadius: 0,
+        }}
       >
         {/* Chrome */}
         <div
-          className="relative flex items-center justify-center px-4 py-3 border-b"
-          style={{ background: chromeBg, borderBottomColor: chromeBorder }}
+          className="relative flex items-center justify-center px-4"
+          style={{
+            background: p.bgSecondary,
+            borderBottom: `1px solid ${p.line}`,
+            padding: "12px 16px",
+          }}
         >
-          <div className="text-[11px] font-mono tracking-wide" style={{ color: mutedFg }}>
-            ticker sandbox — fintech chart playground
+          <div style={{ ...TYPE.label2, color: p.fgMuted, letterSpacing: 0.2 }}>
+            Ticker Sandbox · <span style={{ color: p.fgSubtle }}>fintech chart playground</span>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 active:bg-white/10 transition-colors"
-            style={{ color: mutedFg }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+            style={{ color: p.fgMuted, background: "transparent", border: "none", cursor: "pointer" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = p.bgTertiary)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </button>
@@ -112,8 +118,12 @@ function ModalBody({ onClose }: { onClose: () => void }) {
 
         {/* Segmented control + live status */}
         <div
-          className="flex items-center justify-between gap-3 flex-wrap px-4 py-3 border-b"
-          style={{ background: chromeBg, borderBottomColor: chromeBorder }}
+          className="flex items-center justify-between gap-3 flex-wrap"
+          style={{
+            background: p.bgSecondary,
+            borderBottom: `1px solid ${p.line}`,
+            padding: "12px 16px",
+          }}
         >
           <SegmentedControl
             value={sandbox.coin.id}
@@ -121,13 +131,14 @@ function ModalBody({ onClose }: { onClose: () => void }) {
             accent={accent}
             theme={theme}
           />
-          <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: mutedFg }}>
+          <div className="flex items-center gap-3">
             <StatusPill
               live={sandbox.live}
               status={sandbox.status}
               color={statusColor}
+              theme={theme}
             />
-            <span style={{ fontSize: 10 }}>{sandbox.coin.caption}</span>
+            <span style={{ ...TYPE.caption, color: p.fgMuted }}>{sandbox.coin.caption}</span>
           </div>
         </div>
 
@@ -135,10 +146,11 @@ function ModalBody({ onClose }: { onClose: () => void }) {
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 overflow-y-auto lg:overflow-hidden">
           <div className="flex-1 min-h-0 flex flex-col gap-3 lg:flex-row">
             <div
-              className="flex-1 min-h-[340px] relative rounded-[12px] overflow-hidden"
+              className="flex-1 min-h-[340px] relative overflow-hidden"
               style={{
-                background: theme === "dark" ? "#0a0a0c" : "#ffffff",
-                border: `1px solid ${chromeBorder}`,
+                background: p.bgPrimary,
+                border: `1px solid ${p.line}`,
+                borderRadius: RADIUS.md,
               }}
             >
               <TickerChart
@@ -187,11 +199,13 @@ function ModalBody({ onClose }: { onClose: () => void }) {
 
         {/* Attribution footer */}
         <div
-          className="px-4 py-2 border-t text-[10px] font-mono flex flex-wrap items-center justify-center gap-x-3 gap-y-1"
+          className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1"
           style={{
-            background: chromeBg,
-            borderTopColor: chromeBorder,
-            color: mutedFg,
+            ...TYPE.legal,
+            background: p.bgSecondary,
+            borderTop: `1px solid ${p.line}`,
+            color: p.fgMuted,
+            padding: "10px 16px",
           }}
         >
           <span>Data:</span>
@@ -199,28 +213,28 @@ function ModalBody({ onClose }: { onClose: () => void }) {
             href="https://docs.cdp.coinbase.com/exchange/websocket-feed/overview"
             target="_blank"
             rel="noreferrer noopener"
-            style={{ color: linkColor, textDecoration: "none" }}
+            style={{ color: p.blue70, textDecoration: "none", fontWeight: 500 }}
           >
             Coinbase Exchange public feed
           </a>
-          <span style={{ opacity: 0.5 }}>·</span>
+          <span style={{ color: p.fgSubtle }}>·</span>
           <span>Charting:</span>
           <a
             href="https://benji.org/liveline"
             target="_blank"
             rel="noreferrer noopener"
-            style={{ color: linkColor, textDecoration: "none" }}
+            style={{ color: p.blue70, textDecoration: "none", fontWeight: 500 }}
           >
             Liveline
           </a>
-          <span>© Benji Taylor (MIT)</span>
-          <span style={{ opacity: 0.5 }}>·</span>
+          <span style={{ color: p.fgSubtle }}>© Benji Taylor (MIT)</span>
+          <span style={{ color: p.fgSubtle }}>·</span>
           <span>Styling:</span>
           <a
             href="https://cds.coinbase.com/components/charts/LineChart/"
             target="_blank"
             rel="noreferrer noopener"
-            style={{ color: linkColor, textDecoration: "none" }}
+            style={{ color: p.blue70, textDecoration: "none", fontWeight: 500 }}
           >
             Coinbase Design System
           </a>
@@ -234,32 +248,40 @@ function StatusPill({
   live,
   status,
   color,
+  theme,
 }: {
   live: boolean;
   status: string;
   color: string;
+  theme: "light" | "dark";
 }) {
   const label = !live
-    ? "DEMO"
+    ? "Demo"
     : status === "open"
-      ? "LIVE"
+      ? "Live"
       : status === "connecting"
-        ? "CONNECTING…"
+        ? "Connecting"
         : status === "error"
-          ? "CONN ERROR"
+          ? "Error"
           : status === "closed"
-            ? "RECONNECTING…"
-            : "IDLE";
+            ? "Reconnecting"
+            : "Idle";
+  const p = palette(theme);
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-[0.08em]"
-      style={{ color, background: "rgba(127,127,127,0.08)" }}
+      className="inline-flex items-center gap-1.5 rounded-full"
+      style={{
+        ...TYPE.label2,
+        color,
+        background: p.bgTertiary,
+        padding: "3px 10px 3px 8px",
+      }}
     >
       <span
         className="inline-block rounded-full"
         style={{
-          width: 7,
-          height: 7,
+          width: 6,
+          height: 6,
           background: color,
           boxShadow: status === "open" ? `0 0 6px ${color}` : "none",
         }}
@@ -269,14 +291,15 @@ function StatusPill({
   );
 }
 
-// Color-coded status indicator.
+// Color-coded status indicator.  Uses CDS status tokens.
 function useStatusColor(status: string, live: boolean, theme: "light" | "dark"): string {
+  const p = palette(theme);
   return useMemo(() => {
-    if (!live) return "#FF9F0A"; // amber for demo
-    if (status === "open") return "#30D158";
-    if (status === "connecting") return "#FFD60A";
-    if (status === "closed") return "#FFD60A";
-    if (status === "error") return "#FF453A";
-    return theme === "dark" ? "#8e8e93" : "#6b6b70";
-  }, [status, live, theme]);
+    if (!live) return p.orange70;
+    if (status === "open") return p.green60;
+    if (status === "connecting") return p.orange70;
+    if (status === "closed") return p.orange70;
+    if (status === "error") return p.red60;
+    return p.fgMuted;
+  }, [status, live, theme, p]);
 }
