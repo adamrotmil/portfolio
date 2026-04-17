@@ -62,10 +62,17 @@ export type LabItem = {
   description: string;
   tech: string;
   url?: string;
-  action?: "foothills" | "watchrc";
+  action?: "foothills" | "watchrc" | "ticker";
 };
 
 export const LAB_ITEMS: LabItem[] = [
+  {
+    title: "Ticker Sandbox",
+    description:
+      "A real-time chart playground built on Benji Taylor's Liveline — with degen mode, momentum arrows, and a synthetic toy market.",
+    action: "ticker",
+    tech: "Liveline · React · Motion",
+  },
   {
     title: "Remote Flight",
     description:

@@ -5,10 +5,12 @@ import Reveal from "@/components/Reveal";
 import { LAB_ITEMS } from "@/data/about";
 import FoothillsModal from "@/components/foothills/FoothillsModal";
 import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
+import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
 
 export default function Lab() {
   const [foothillsOpen, setFoothillsOpen] = useState(false);
   const [watchrcOpen, setWatchrcOpen] = useState(false);
+  const [tickerOpen, setTickerOpen] = useState(false);
 
   return (
     <section
@@ -62,6 +64,8 @@ export default function Lab() {
                     setFoothillsOpen(true);
                   } else if (item.action === "watchrc") {
                     setWatchrcOpen(true);
+                  } else if (item.action === "ticker") {
+                    setTickerOpen(true);
                   } else if (item.url) {
                     window.open(item.url, "_blank");
                   }
@@ -110,6 +114,10 @@ export default function Lab() {
       <RemoteFlightModal
         open={watchrcOpen}
         onClose={() => setWatchrcOpen(false)}
+      />
+      <TickerSandboxModal
+        open={tickerOpen}
+        onClose={() => setTickerOpen(false)}
       />
     </section>
   );
