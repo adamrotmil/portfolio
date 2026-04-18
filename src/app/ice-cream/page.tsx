@@ -166,18 +166,22 @@ const ZORP_DIALOGUES: DialogueNode[][] = [
   ],
 ];
 
-// The special alien VIP offer dialogue (after being served at earth)
+// The special alien VIP offer dialogue (after being served at earth).
+// Flow: alien is surprised that scoops aren't her cosmic flavors, tastes them, loves them,
+// then invites the player to her planet.
 // choiceA.next === 100 => ACCEPT (trigger cutscene)
 // choiceB.next === 200 => DECLINE (alien walks out)
 const ALIEN_OFFER_DIALOGUE: DialogueNode[] = [
-  { speaker: "them", text: "Earth-being... you scoop with COSMIC precision. Incredible!", choiceA: { label: "Aw thanks!", next: 1 }, choiceB: { label: "I try my best~", next: 1 } },
-  { speaker: "them", text: "My planet NEEDS you. Come. Work at our shop. See the stars!", choiceA: { label: "Tell me more...", next: 2 }, choiceB: { label: "A journey?!", next: 2 } },
-  { speaker: "them", text: "My saucer is parked outside. One beam. Two galaxies. Infinite scoops!", choiceA: { label: "LET'S GO! \u{1F680}", next: 100 }, choiceB: { label: "Not today, thanks!", next: 200 } },
+  { speaker: "them", text: "Hmm! These are not my usual COSMIC flavors... What ARE these??", choiceA: { label: "Earth classics!", next: 1 }, choiceB: { label: "Try them, trust me!", next: 1 } },
+  { speaker: "them", text: "*nibbles cautiously with all tentacles* ...oh. OH. \u2728", choiceA: { label: "Good, right?", next: 2 }, choiceB: { label: "\uD83D\uDE0B", next: 2 } },
+  { speaker: "them", text: "EARTH-BEING! This is the most DIVINE dessert in 12 galaxies!", choiceA: { label: "Glad you like it!", next: 3 }, choiceB: { label: "Told you!", next: 3 } },
+  { speaker: "them", text: "My people MUST taste these! Come to my planet — scoop for the stars!", choiceA: { label: "Tell me more!", next: 4 }, choiceB: { label: "A journey?!", next: 4 } },
+  { speaker: "them", text: "My saucer is parked outside. One beam. Two galaxies. Infinite scoops!", choiceA: { label: "LET'S GO! \u{1F680}", next: 100 }, choiceB: { label: "Stay on Earth", next: 200 } },
 ];
 
-// After declining or after alien walks out on earth, a short bye message
+// Shown after the player declines the alien's invitation
 const ALIEN_BYE_DIALOGUE: DialogueNode[] = [
-  { speaker: "them", text: "Understood. Another day perhaps. Safe scooping, Earth-being! \u{1F44B}" },
+  { speaker: "them", text: "Understood. Earth is your home. I will visit again someday! \u{1F44B}" },
 ];
 
 // ── Dialogue Trees ───────────────────────────────────────────────────────────
@@ -328,10 +332,11 @@ function createAlienCustomer(id: number, level: number): Customer {
   };
 }
 
-// Alien VIP — harder order (4 flavors + 2 toppings), drawn from alien flavors
+// Alien VIP — visits Earth shop, so orders EARTH flavors (but a harder/longer order).
+// After being served, she reveals she actually meant cosmic flavors — but earth scoops are amazing!
 function createAlienVIP(id: number): Customer {
-  const flavors = Array.from({ length: 4 }, () => pick(ALIEN_FLAVORS));
-  const toppings = [pick(ALIEN_TOPPINGS), pick(ALIEN_TOPPINGS)];
+  const flavors = Array.from({ length: 4 }, () => pick(FLAVORS));
+  const toppings = [pick(TOPPINGS), pick(TOPPINGS)];
   return {
     id,
     name: "ZARIXA",
@@ -2265,16 +2270,17 @@ export default function IceCreamGame() {
         </div>
       )}
 
-      {/* Flavor / Topping buttons - pixel-style */}
+      {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
-            {FLAVORS.map((f) => {
+            {(location === "alien-planet" ? ALIEN_FLAVORS : FLAVORS).map((f) => {
               const isNext =
                 customer?.state === "waiting" &&
                 !toppingsPhase &&
                 scoopsDone < (customer?.order.length || 0) &&
                 customer?.order[scoopsDone]?.name === f.name;
+              const darkLabel = f.name === "Chocolate" || f.name === "Blueberry" || f.name === "Void" || f.name === "Cosmic Swirl";
               return (
                 <button key={f.name} onClick={() => tapFlavor(f)}
                   className={`py-3 px-2 rounded-xl font-bold transition-all active:scale-90 border-b-4 ${isNext ? "scale-105" : ""}`}
@@ -2283,7 +2289,7 @@ export default function IceCreamGame() {
                     fontSize: "14px",
                     background: `linear-gradient(180deg, ${f.colors[0]}, ${f.colors[1]})`,
                     borderBottomColor: f.colors[2],
-                    color: f.name === "Chocolate" || f.name === "Blueberry" ? "#FFF" : "#444",
+                    color: darkLabel ? "#FFF" : "#444",
                     boxShadow: isNext
                       ? `0 0 0 3px #FF69B4, 0 4px 0 ${f.colors[2]}`
                       : `0 3px 0 ${f.colors[2]}`,
@@ -2296,7 +2302,7 @@ export default function IceCreamGame() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {TOPPINGS.map((t) => {
+            {(location === "alien-planet" ? ALIEN_TOPPINGS : TOPPINGS).map((t) => {
               const isNext =
                 customer?.state === "waiting" &&
                 toppingsPhase &&
@@ -2308,12 +2314,14 @@ export default function IceCreamGame() {
                   style={{
                     fontFamily: "monospace",
                     fontSize: "14px",
-                    background: "linear-gradient(180deg, #FFF, #FFD6E8)",
-                    borderBottomColor: "#FF9EBA",
+                    background: location === "alien-planet"
+                      ? "linear-gradient(180deg, #C0FFE0, #80E0B0)"
+                      : "linear-gradient(180deg, #FFF, #FFD6E8)",
+                    borderBottomColor: location === "alien-planet" ? "#40A080" : "#FF9EBA",
                     color: "#444",
                     boxShadow: isNext
-                      ? "0 0 0 3px #FF69B4, 0 4px 0 #FF9EBA"
-                      : "0 3px 0 #FF9EBA",
+                      ? `0 0 0 3px #FF69B4, 0 4px 0 ${location === "alien-planet" ? "#40A080" : "#FF9EBA"}`
+                      : `0 3px 0 ${location === "alien-planet" ? "#40A080" : "#FF9EBA"}`,
                   }}>
                   <span className="text-lg block">{t.emoji}</span>
                   {t.name}
