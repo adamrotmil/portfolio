@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Terminal from "./Terminal";
 
 interface Props {
@@ -8,8 +8,34 @@ interface Props {
   onClose: () => void;
 }
 
+// iOS Safari handling of `100dvh` is inconsistent when the virtual
+// keyboard slides up — on some versions dvh doesn't shrink with the
+// keyboard, leaving the bottom of the modal (and the input!) hidden
+// behind it.  The `visualViewport` API is authoritative here: it
+// reports the height that's actually visible to the user.  We read
+// it, set the modal height explicitly, and listen for changes so the
+// modal ducks down with the keyboard.
+function useVisualViewportHeight(open: boolean): number | null {
+  const [h, setH] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setH(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [open]);
+  return h;
+}
+
 export default function FoothillsModal({ open, onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement | null>(null);
+  const vvh = useVisualViewportHeight(open);
 
   // Esc to close + body scroll lock
   useEffect(() => {
@@ -28,10 +54,15 @@ export default function FoothillsModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  // Use the visualViewport height on mobile (keyboard-aware).  Desktop
+  // paths use the sm: breakpoint styles and never read this var.
+  const mobileHeightStyle =
+    vvh !== null ? ({ height: `${vvh}px` } as const) : ({} as const);
+
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-stretch sm:items-center justify-center"
       style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(4px)" }}
       onMouseDown={(e) => {
         if (e.target === backdropRef.current) onClose();
@@ -44,10 +75,11 @@ export default function FoothillsModal({ open, onClose }: Props) {
         className="relative flex flex-col overflow-hidden sm:rounded-[12px] shadow-[0_24px_72px_rgba(0,0,0,0.5)] w-full h-[100dvh] sm:w-[min(96vw,1280px)] sm:h-[min(94vh,900px)]"
         style={{
           background: "#0b0b0d",
+          ...mobileHeightStyle,
         }}
       >
         {/* Title bar */}
-        <div className="relative flex items-center justify-center px-4 py-3 bg-[#161618] border-b border-[#222]">
+        <div className="relative flex items-center justify-center px-4 py-3 bg-[#161618] border-b border-[#222] shrink-0">
           <div className="text-[11px] text-[#8e8e93] font-mono tracking-wide">
             foothills — a classic ASCII MUD
           </div>

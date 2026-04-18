@@ -146,11 +146,16 @@ function ModalBody({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {/* Stage: chart + orderbook on left, controls on right */}
+        {/* Stage: on desktop, chart + orderbook on left, controls on right.
+            On mobile, everything stacks and the stage scrolls — we remove
+            `flex-1` from the inner wrappers so children take their intrinsic
+            heights instead of fighting over a too-small flex basis (the old
+            layout over-constrained the chart/orderbook pair into the same
+            vertical band as the controls, causing the infamous overlap). */}
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 overflow-y-auto lg:overflow-hidden">
-          <div className="flex-1 min-h-0 flex flex-col gap-3 lg:flex-row">
+          <div className="flex flex-col gap-3 lg:flex-1 lg:min-h-0 lg:flex-row">
             <div
-              className="flex-1 min-h-[340px] relative overflow-hidden"
+              className="h-[320px] lg:h-auto lg:flex-1 lg:min-h-[340px] relative overflow-hidden shrink-0"
               style={{
                 background: p.bgPrimary,
                 border: `1px solid ${p.line}`,
@@ -170,7 +175,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
                 symbol={sandbox.coin.symbol}
               />
             </div>
-            <div className="lg:w-[300px] lg:shrink-0 min-h-[320px]">
+            <div className="h-[360px] lg:h-auto lg:w-[300px] lg:shrink-0 lg:min-h-[320px] shrink-0">
               <OrderbookLadder
                 book={sandbox.orderbook}
                 theme={theme}
@@ -180,7 +185,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
               />
             </div>
           </div>
-          <div className="lg:w-[240px] lg:shrink-0">
+          <div className="lg:w-[240px] lg:shrink-0 shrink-0">
             <TickerControls
               demo={sandbox.demo}
               degen={degen}

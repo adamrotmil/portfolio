@@ -232,7 +232,15 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
       schedulePump();
     }
 
-    setTimeout(() => inputRef.current?.focus(), 50);
+    // Autofocus on pointer-only devices (desktop).  On touch primary,
+    // we don't want the keyboard to slam up the moment the modal opens —
+    // user should get a chance to read the banner + first room first.
+    const isTouchPrimary =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    if (!isTouchPrimary) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
 
     return () => {
       handle.stop();
@@ -314,16 +322,18 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
 
   // ---------- Render ----------
 
+  const canSend = input.trim().length > 0;
+
   return (
     <div
-      className="flex flex-col h-full w-full font-mono text-[11px] sm:text-[13px] leading-[1.5] overflow-x-hidden"
+      className="flex flex-col h-full w-full font-mono text-[13px] sm:text-[13px] leading-[1.5] overflow-x-hidden"
       style={{ background: "#0b0b0d", color: COLOR_MAP.default }}
-      onClick={() => inputRef.current?.focus()}
     >
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-3"
         style={{ scrollbarWidth: "thin", scrollbarColor: "#333 transparent" }}
+        onClick={() => inputRef.current?.focus()}
       >
         {log.map((entry) => (
           <div key={entry.id} className="whitespace-pre-wrap break-words">
@@ -348,24 +358,66 @@ export default function Terminal({ name = "Wanderer" }: { name?: string }) {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-t border-[#222] min-w-0">
-        <span
-          className="truncate"
-          style={{ color: COLOR_MAP.player, whiteSpace: "pre" }}
-        >
+      {/* Input bar.  On mobile we force a 16px font size on the input
+          because anything smaller triggers iOS's "zoom on focus" — which
+          throws the viewport into a weird scaled state and pushes the
+          prompt off-screen.  The prompt label shrinks into its own line
+          above the input on narrow widths so we have room for the send
+          button without clipping. */}
+      <div
+        className="shrink-0 border-t border-[#222]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="sm:hidden px-3 pt-2 pb-1 text-[12px] truncate" style={{ color: COLOR_MAP.player }}>
           {prompt}
-        </span>
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKey}
-          autoFocus
-          spellCheck={false}
-          autoComplete="off"
-          className="flex-1 min-w-0 bg-transparent outline-none border-none font-mono text-[11px] sm:text-[13px]"
-          style={{ color: COLOR_MAP.default }}
-        />
+        </div>
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 min-w-0">
+          <span
+            className="hidden sm:inline truncate"
+            style={{ color: COLOR_MAP.player, whiteSpace: "pre" }}
+          >
+            {prompt}
+          </span>
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKey}
+            spellCheck={false}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            inputMode="text"
+            enterKeyHint="send"
+            placeholder="type a command…"
+            // 16px on mobile is the iOS zoom-prevention threshold; desktop
+            // keeps the compact 13px terminal look.
+            className="flex-1 min-w-0 bg-transparent outline-none border-none font-mono text-[16px] sm:text-[13px] placeholder:text-[#555]"
+            style={{ color: COLOR_MAP.default }}
+          />
+          <button
+            onClick={submit}
+            aria-label="Send command"
+            disabled={!canSend}
+            className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+            style={{
+              background: canSend ? "rgba(125,211,252,0.22)" : "rgba(255,255,255,0.04)",
+              color: canSend ? "#7dd3fc" : "#4a4a4e",
+              border: `1px solid ${canSend ? "rgba(125,211,252,0.55)" : "rgba(255,255,255,0.06)"}`,
+              cursor: canSend ? "pointer" : "default",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M8 13V3M8 3L3.5 7.5M8 3L12.5 7.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
       <style jsx>{`
         @keyframes foothillsCursor {
