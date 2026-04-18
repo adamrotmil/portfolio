@@ -115,15 +115,15 @@ export default function TickerChart({
         // chasing too much distance at once.
         lerpSpeed={0.18}
         lineWidth={2}
-        // Pad the canvas top/bottom so the line has visual breathing room
-        // during transient Y-axis transitions.  Liveline's displayed min/max
-        // eases toward the target via an internal lerp (base 0.08), so a
-        // sharp shock can put the line briefly outside the rendered band
-        // for a few frames.  Extra top/bottom padding gives those frames
-        // somewhere to live inside the chart bounding box.
-        //
-        // Left default: grid labels sit on the right side.
-        padding={{ top: 22, bottom: 40 }}
+        // A small top/bottom cushion on the canvas gives the line visual
+        // breathing room during transient Y-axis transitions (Liveline's
+        // displayed min/max ease toward the target via an internal lerp,
+        // so a sharp shock can briefly put the line outside the rendered
+        // band for a few frames).  Top stays near the Liveline default
+        // since most shocks in the demo walk travel down, not up — more
+        // bottom cushion is useful, more top cushion is just dead space
+        // between the window-tabs row and the first grid line.
+        padding={{ top: 10, bottom: 34 }}
       />
     </div>
   );
