@@ -22,7 +22,18 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "result";
+
+type Location = "earth" | "alien-planet";
+
+type CutsceneType =
+  | "alien-arrival"      // saucer flies in, beam drops alien at earth shop
+  | "beam-up"            // shopkeeper beamed up into saucer (earth -> space)
+  | "journey-out"        // flying through space toward alien planet
+  | "landing-alien"      // saucer lands on alien planet, deposits shopkeeper
+  | "earth-departure"    // shopkeeper beamed up from alien planet
+  | "journey-back"       // flying back through space toward earth
+  | "landing-earth";     // saucer lands on earth, deposits shopkeeper
 
 type Customer = {
   id: number;
@@ -35,6 +46,8 @@ type Customer = {
   state: "walking-in" | "waiting" | "served" | "walking-out";
   reaction: string;
   waitTicks: number;
+  isAlienVIP?: boolean;  // the special alien that arrives via saucer
+  isAlien?: boolean;     // regular alien customer on alien planet
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -62,6 +75,110 @@ const CUSTOMER_NAMES = [
 
 const NUDGES = ["...", "~", "hmm", "\u266A", "\u2764\uFE0F", "!", "yay~"];
 const HAPPY_REACTIONS = ["YAY!", "\u2764\uFE0F", "TYSM!", "WOW!", "\u2728"];
+
+// ── Alien Content ────────────────────────────────────────────────────────────
+const ALIEN_FLAVORS: Flavor[] = [
+  { name: "Cosmic Swirl", colors: ["#D4B0FF", "#A070E0", "#6B40B0"], emoji: "\u{1F300}" },
+  { name: "Void",         colors: ["#606090", "#303060", "#101030"], emoji: "\u{1F311}" },
+  { name: "Stardust",     colors: ["#FFF8B0", "#FFD060", "#C09030"], emoji: "\u2B50" },
+  { name: "Plasma",       colors: ["#FFB0E8", "#FF50C0", "#B02080"], emoji: "\u{1F525}" },
+  { name: "Nebula",       colors: ["#B0F0FF", "#50C0FF", "#2070B0"], emoji: "\u{1F30C}" },
+  { name: "Slime",        colors: ["#C0FFB0", "#60E060", "#208020"], emoji: "\u{1F9EA}" },
+];
+
+const ALIEN_TOPPINGS: Topping[] = [
+  { name: "Star Chips",   emoji: "\u2B50" },
+  { name: "Glow Worms",   emoji: "\u{1FAB1}" },
+  { name: "Moon Beans",   emoji: "\u{1FAD8}" },
+  { name: "Cosmic Dust",  emoji: "\u2728" },
+  { name: "Space Jelly",  emoji: "\u{1F47D}" },
+];
+
+const ALIEN_NAMES = [
+  "Zog", "Blorp", "Xarnix", "Tuvok", "Vex",
+  "Quark", "Zylax", "Ploop", "Mog", "Nebula",
+];
+
+// Alien sprite palettes — greens, purples, teals, pinks (otherworldly)
+const ALIEN_PALETTES = [
+  { body: "#88EE88", accent: "#4CBF4C", eyes: "#1A1A2E", tentacle: "#4CBF4C", eyeCount: 3 }, // classic green
+  { body: "#C080FF", accent: "#8040C0", eyes: "#FFF", tentacle: "#8040C0", eyeCount: 2 },    // purple
+  { body: "#60E0D0", accent: "#30A090", eyes: "#1A1A2E", tentacle: "#30A090", eyeCount: 4 }, // teal
+  { body: "#FF90C0", accent: "#C04080", eyes: "#1A1A2E", tentacle: "#C04080", eyeCount: 3 }, // pink
+  { body: "#FFB040", accent: "#C07010", eyes: "#1A1A2E", tentacle: "#C07010", eyeCount: 2 }, // orange
+  { body: "#90B0FF", accent: "#5070D0", eyes: "#1A1A2E", tentacle: "#5070D0", eyeCount: 3 }, // blue
+];
+
+// Alien customer dialogues (4 trees)
+const ALIEN_CUSTOMER_DIALOGUES: DialogueNode[][] = [
+  // Conversation 0 — homesick
+  [
+    { speaker: "them", text: "BLORP! Hello Earth-being!", choiceA: { label: "Hi! Welcome!", next: 1 }, choiceB: { label: "Blorp to you too!", next: 2 } },
+    { speaker: "them", text: "Your scoops are legendary on six galaxies! I traveled far!", choiceA: { label: "Six?! Whoa!", next: 3 }, choiceB: { label: "Aw thanks~", next: 3 } },
+    { speaker: "them", text: "You SPEAK the old tongue! My ancestors weep with joy!", choiceA: { label: "They... do?", next: 3 }, choiceB: { label: "I learn fast!", next: 3 } },
+    { speaker: "them", text: "Now scoop me a Cosmic Swirl! My antennae tingle with anticipation! \u2728" },
+  ],
+  // Conversation 1 — Earth food
+  [
+    { speaker: "them", text: "On my planet, dessert is BREATHED, not eaten. Fascinating!", choiceA: { label: "Breathed?!", next: 1 }, choiceB: { label: "How does that work?", next: 2 } },
+    { speaker: "them", text: "Yes! You inhale joy-mist! But your SOLID dessert... *revolutionary*", choiceA: { label: "Glad you like it!", next: 3 }, choiceB: { label: "Solids rule!", next: 3 } },
+    { speaker: "them", text: "Through the nose-gill! You Earth folks lack nose-gills. A shame.", choiceA: { label: "We have noses!", next: 3 }, choiceB: { label: "Very tragic~", next: 3 } },
+    { speaker: "them", text: "One scoop, PLEASE. I must document this for my species!" },
+  ],
+  // Conversation 2 — gossip
+  [
+    { speaker: "them", text: "Did you hear? Zog's cousin opened a black hole cafe last cycle!", choiceA: { label: "No way!", next: 1 }, choiceB: { label: "Black hole cafe?!", next: 2 } },
+    { speaker: "them", text: "BIG drama. The espresso never comes out. Light cannot escape.", choiceA: { label: "That's unfortunate", next: 3 }, choiceB: { label: "Bad business model~", next: 3 } },
+    { speaker: "them", text: "You order a coffee, it never arrives. Or does it? We may never know.", choiceA: { label: "Existential!", next: 3 }, choiceB: { label: "Physics joke!", next: 3 } },
+    { speaker: "them", text: "Anyway. I'll take TWO scoops. Life is short. Event horizons are forever." },
+  ],
+  // Conversation 3 — tentacle trouble
+  [
+    { speaker: "them", text: "I cannot hold a cone. I have too many tentacles. Help!", choiceA: { label: "I'll hold it for you!", next: 1 }, choiceB: { label: "Maybe a bowl?", next: 2 } },
+    { speaker: "them", text: "You are a KIND Earth-being. I will write a song about you.", choiceA: { label: "\u{1F97A} Thanks!", next: 3 }, choiceB: { label: "Play it for me sometime!", next: 3 } },
+    { speaker: "them", text: "A BOWL! Genius! Earth technology never ceases to amaze me!", choiceA: { label: "We try!", next: 3 }, choiceB: { label: "Glad to help!", next: 3 } },
+    { speaker: "them", text: "Now scoop generously! I can hold seven scoops! Seven! \u{1F300}" },
+  ],
+];
+
+// Zorp (alien shopkeeper) dialogues
+const ZORP_DIALOGUES: DialogueNode[][] = [
+  // Conversation 0 — welcome
+  [
+    { speaker: "them", text: "Welcome to GALAXY SCOOPS, partner! You are doing splendidly!", choiceA: { label: "Thanks Zorp!", next: 1 }, choiceB: { label: "This place is wild!", next: 2 } },
+    { speaker: "them", text: "You have the gift! Our customers FLOAT away in joy every time!", choiceA: { label: "Literally float?", next: 3 }, choiceB: { label: "That's the dream!", next: 3 } },
+    { speaker: "them", text: "WILD! Yes! Three suns, two moons, infinite flavors. My favorite place.", choiceA: { label: "Three suns?!", next: 3 }, choiceB: { label: "Infinite is a lot", next: 3 } },
+    { speaker: "them", text: "Now! The cosmos awaits its scoops! To work, partner! \u2728" },
+  ],
+  // Conversation 1 — Scoopy's cousin
+  [
+    { speaker: "them", text: "Did Scoopy send you? He is my second-cousin! We were cones together!", choiceA: { label: "You know Scoopy?!", next: 1 }, choiceB: { label: "Cones together?", next: 2 } },
+    { speaker: "them", text: "Of course! We all descend from the Original Magic Cone. Long story.", choiceA: { label: "Please tell!", next: 3 }, choiceB: { label: "Cosmic lineage!", next: 3 } },
+    { speaker: "them", text: "Before we were blobs we were CONES. Nobody talks about it but... yes.", choiceA: { label: "Mind blown", next: 3 }, choiceB: { label: "That's beautiful", next: 3 } },
+    { speaker: "them", text: "Scoopy chose Earth. I chose the stars. Both paths are good paths! \u{1F30C}" },
+  ],
+  // Conversation 2 — the door home
+  [
+    { speaker: "them", text: "Tired of green already? The door behind you always goes home!", choiceA: { label: "Just click it?", next: 1 }, choiceB: { label: "I'm staying!", next: 2 } },
+    { speaker: "them", text: "One tap and the saucer takes you straight back to Earth! No fee!", choiceA: { label: "Cool to know!", next: 3 }, choiceB: { label: "Great return policy", next: 3 } },
+    { speaker: "them", text: "THAT'S the spirit! The galaxy needs good scoopers like you!", choiceA: { label: "Happy to help!", next: 3 }, choiceB: { label: "\u2728 galaxy scooper \u2728", next: 3 } },
+    { speaker: "them", text: "Your coins work on BOTH planets. Universal currency! Handy!" },
+  ],
+];
+
+// The special alien VIP offer dialogue (after being served at earth)
+// choiceA.next === 100 => ACCEPT (trigger cutscene)
+// choiceB.next === 200 => DECLINE (alien walks out)
+const ALIEN_OFFER_DIALOGUE: DialogueNode[] = [
+  { speaker: "them", text: "Earth-being... you scoop with COSMIC precision. Incredible!", choiceA: { label: "Aw thanks!", next: 1 }, choiceB: { label: "I try my best~", next: 1 } },
+  { speaker: "them", text: "My planet NEEDS you. Come. Work at our shop. See the stars!", choiceA: { label: "Tell me more...", next: 2 }, choiceB: { label: "A journey?!", next: 2 } },
+  { speaker: "them", text: "My saucer is parked outside. One beam. Two galaxies. Infinite scoops!", choiceA: { label: "LET'S GO! \u{1F680}", next: 100 }, choiceB: { label: "Not today, thanks!", next: 200 } },
+];
+
+// After declining or after alien walks out on earth, a short bye message
+const ALIEN_BYE_DIALOGUE: DialogueNode[] = [
+  { speaker: "them", text: "Understood. Another day perhaps. Safe scooping, Earth-being! \u{1F44B}" },
+];
 
 // ── Dialogue Trees ───────────────────────────────────────────────────────────
 const CUSTOMER_DIALOGUES: DialogueNode[][] = [
@@ -186,6 +303,47 @@ function createCustomer(id: number, level: number): Customer {
     state: "walking-in",
     reaction: "",
     waitTicks: 0,
+  };
+}
+
+function createAlienCustomer(id: number, level: number): Customer {
+  const count = Math.min(2 + Math.floor(level / 2), 4);
+  return {
+    id,
+    name: pick(ALIEN_NAMES),
+    spriteIdx: Math.floor(Math.random() * ALIEN_PALETTES.length),
+    order: Array.from({ length: count }, () => pick(ALIEN_FLAVORS)),
+    toppings: Math.random() > 0.4
+      ? Array.from(
+          { length: Math.min(2, 1 + Math.floor(level / 3)) },
+          () => pick(ALIEN_TOPPINGS)
+        )
+      : [],
+    x: W + 10,
+    targetX: 20 + Math.random() * 20,
+    state: "walking-in",
+    reaction: "",
+    waitTicks: 0,
+    isAlien: true,
+  };
+}
+
+// Alien VIP — harder order (4 flavors + 2 toppings), drawn from alien flavors
+function createAlienVIP(id: number): Customer {
+  const flavors = Array.from({ length: 4 }, () => pick(ALIEN_FLAVORS));
+  const toppings = [pick(ALIEN_TOPPINGS), pick(ALIEN_TOPPINGS)];
+  return {
+    id,
+    name: "ZARIXA",
+    spriteIdx: 1, // purple alien — special
+    order: flavors,
+    toppings,
+    x: 30, // materialized at counter spot
+    targetX: 30,
+    state: "waiting",
+    reaction: "",
+    waitTicks: 0,
+    isAlienVIP: true,
   };
 }
 
@@ -744,6 +902,382 @@ function drawSpeechBubble(ctx: CanvasRenderingContext2D, cx: number, cy: number,
   }
 }
 
+// ── Alien Scene Drawing ──────────────────────────────────────────────────────
+
+function drawAlienPlanetBackground(ctx: CanvasRenderingContext2D, tick: number) {
+  // Teal/green gradient sky with stars
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (y < 70) {
+        // Sky: deep teal at top fading to lighter green
+        const t = y / 70;
+        if (t < 0.35) {
+          px(ctx, x, y, 1, 1, "#0E2A3A");
+        } else if (t < 0.65) {
+          px(ctx, x, y, 1, 1, "#1E4A5A");
+        } else {
+          px(ctx, x, y, 1, 1, "#2E6A5A");
+        }
+      } else if (y < 74) {
+        // Counter top - purple/green metallic
+        px(ctx, x, y, 1, 1, y === 70 ? "#60C090" : y === 71 ? "#40A080" : y === 72 ? "#308070" : "#205060");
+      } else {
+        // Alien floor - green/purple checker
+        const check = (Math.floor(x / 6) + Math.floor(y / 4)) % 2;
+        px(ctx, x, y, 1, 1, check ? "#70C080" : "#506050");
+      }
+    }
+  }
+
+  // Twinkling stars
+  for (let i = 0; i < 22; i++) {
+    const sx = (i * 13) % W;
+    const sy = (i * 7) % 55;
+    const twinkle = (Math.floor(tick / 20) + i) % 3 === 0;
+    if (twinkle) px(ctx, sx, sy, 1, 1, "#FFFFFF");
+  }
+
+  // Two alien moons
+  // Big moon (left)
+  for (let dy = -7; dy <= 7; dy++) {
+    for (let dx = -7; dx <= 7; dx++) {
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= 7) {
+        const edge = d > 6;
+        px(ctx, 22 + dx, 18 + dy, 1, 1, edge ? "#8040A0" : "#B070C0");
+      }
+    }
+  }
+  // moon crater
+  px(ctx, 20, 16, 2, 2, "#8040A0");
+  px(ctx, 25, 20, 2, 1, "#8040A0");
+
+  // Small moon (upper-right)
+  for (let dy = -4; dy <= 4; dy++) {
+    for (let dx = -4; dx <= 4; dx++) {
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= 4) {
+        const edge = d > 3;
+        px(ctx, 98 + dx, 14 + dy, 1, 1, edge ? "#C08040" : "#FFB060");
+      }
+    }
+  }
+
+  // Alien plants on floor
+  const plantXs = [6, 40, 62, 120];
+  plantXs.forEach((px0, pi) => {
+    const bobF = Math.floor(Math.sin((tick + pi * 30) / 25) * 1);
+    // stem
+    px(ctx, px0, 74 + bobF, 1, 4, "#4CBF4C");
+    // bulb
+    px(ctx, px0 - 1, 73 + bobF, 3, 2, pi % 2 ? "#FF70C0" : "#70D0FF");
+    px(ctx, px0, 72 + bobF, 1, 1, pi % 2 ? "#FFB0E0" : "#B0E8FF");
+  });
+
+  // Striped alien awning at top (green/purple)
+  for (let x = 0; x < W; x++) {
+    const stripe = Math.floor(x / 6) % 2;
+    for (let y = 0; y < 8; y++) {
+      px(ctx, x, y, 1, 1, stripe ? "#6BC56B" : "#9040C0");
+    }
+    if (Math.floor(x / 3) % 2 === 0) {
+      px(ctx, x, 8, 1, 1, "#6BC56B");
+    }
+  }
+
+  // Alien ice cream tubs on counter
+  const tubY = 63;
+  ALIEN_FLAVORS.forEach((f, i) => {
+    const tx = 8 + i * 20;
+    // Tub container (darker for alien tech look)
+    for (let dy = 0; dy < 6; dy++) {
+      for (let dx = 0; dx < 14; dx++) {
+        px(ctx, tx + dx, tubY + dy, 1, 1, "#D0D8E0");
+      }
+    }
+    // Ice cream in tub
+    for (let dx = 1; dx < 13; dx++) {
+      px(ctx, tx + dx, tubY, 1, 1, f.colors[0]);
+      px(ctx, tx + dx, tubY + 1, 1, 1, f.colors[1]);
+      px(ctx, tx + dx, tubY + 2, 1, 1, f.colors[1]);
+    }
+    for (let dx = 0; dx < 14; dx++) {
+      px(ctx, tx + dx, tubY - 1, 1, 1, "#90A0B0");
+      px(ctx, tx + dx, tubY + 6, 1, 1, "#90A0B0");
+    }
+  });
+
+  // Door on right side (alien tech door — glowing)
+  const dx0 = W - 18;
+  for (let dy = 20; dy < 70; dy++) {
+    for (let ddx = 0; ddx < 14; ddx++) {
+      const isBorder = ddx === 0 || ddx === 13 || dy === 20;
+      px(ctx, dx0 + ddx, dy, 1, 1, isBorder ? "#40E0A0" : "#206050");
+    }
+  }
+  // Door window — swirling portal
+  const portalPhase = Math.floor(tick / 6) % 3;
+  for (let dy = 24; dy < 38; dy++) {
+    for (let ddx = 3; ddx < 11; ddx++) {
+      const d = Math.abs(dy - 31) + Math.abs(ddx - 7);
+      const color = (d + portalPhase) % 3 === 0 ? "#80FFD0" : "#40B090";
+      px(ctx, dx0 + ddx, dy, 1, 1, color);
+    }
+  }
+  // Handle
+  px(ctx, dx0 + 3, 50, 2, 2, "#C0FFE0");
+  // "EXIT" sign
+  drawText(ctx, "EXIT", dx0 + 7, 42, "#FFFF80", 0.6);
+  // Blinking bell
+  const blinkOn = Math.floor(tick / 8) % 2 === 0;
+  px(ctx, dx0 + 7, 17, 2, 2, blinkOn ? "#FFFF80" : "#C0C040");
+  px(ctx, dx0 + 7, 19, 1, 1, "#C0C040");
+}
+
+function drawAlienShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number) {
+  const pal = { body: "#C080FF", accent: "#8040C0", eyes: "#FFF" };
+  const wobble = Math.floor(Math.sin(tick / 30) * 1);
+
+  // Body
+  for (let dy = -14; dy <= 0; dy++) {
+    const progress = (dy + 14) / 14;
+    const halfW = Math.round(6 * Math.sin(progress * Math.PI * 0.7 + 0.3));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const isOuterEdge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + wobble, 1, 1, isOuterEdge ? pal.accent : pal.body);
+    }
+  }
+
+  // Highlight
+  for (let dy = -12; dy <= -9; dy++) {
+    px(ctx, x - 3, y + dy + wobble, 2, 1, lightenColor(pal.body, 40));
+  }
+
+  // 3 eyes
+  px(ctx, x - 4, y - 9 + wobble, 2, 2, pal.eyes);
+  px(ctx, x - 4, y - 9 + wobble, 1, 1, "#1A1A2E");
+  px(ctx, x + 3, y - 9 + wobble, 2, 2, pal.eyes);
+  px(ctx, x + 3, y - 9 + wobble, 1, 1, "#1A1A2E");
+  px(ctx, x, y - 11 + wobble, 2, 2, pal.eyes);
+  px(ctx, x, y - 11 + wobble, 1, 1, "#1A1A2E");
+
+  // Mouth
+  px(ctx, x - 1, y - 4 + wobble, 3, 1, "#6010A0");
+  px(ctx, x - 2, y - 5 + wobble, 1, 1, "#6010A0");
+  px(ctx, x + 3, y - 5 + wobble, 1, 1, "#6010A0");
+
+  // Antennae
+  px(ctx, x - 4, y - 17 + wobble, 1, 3, pal.accent);
+  px(ctx, x + 4, y - 17 + wobble, 1, 3, pal.accent);
+  px(ctx, x - 5, y - 18 + wobble, 2, 2, "#FF80E0");
+  px(ctx, x + 4, y - 18 + wobble, 2, 2, "#80E0FF");
+
+  // Chef hat
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 15 + wobble, 1, 1, "#E0D0FF");
+  }
+  for (let dx = -3; dx <= 3; dx++) {
+    px(ctx, x + dx, y - 16 + wobble, 1, 1, "#FFFFFF");
+  }
+  // Hat band
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 15 + wobble, 1, 1, "#40C080");
+  }
+
+  // Name tag
+  const tagW = 22;
+  const tagX = x - Math.floor(tagW / 2);
+  const tagY = y + 1;
+  for (let dx = 0; dx < tagW; dx++) {
+    for (let dy = 0; dy < 6; dy++) {
+      const isBorder = dy === 0 || dy === 5 || dx === 0 || dx === tagW - 1;
+      px(ctx, tagX + dx, tagY + dy, 1, 1, isBorder ? "#333" : "#FFF");
+    }
+  }
+  drawText(ctx, "ZORP", x, tagY + 3, "#8040C0", 0.4);
+}
+
+function drawAlienSprite(ctx: CanvasRenderingContext2D, x: number, y: number, paletteIdx: number, walking: boolean) {
+  const pal = ALIEN_PALETTES[paletteIdx % ALIEN_PALETTES.length];
+  const bobY = walking ? Math.floor(Math.sin(Date.now() / 200) * 1.5) : 0;
+  const tentacleAnim = Math.floor(Math.sin(Date.now() / 180) * 2);
+
+  // Shadow
+  px(ctx, x - 5, y + 12, 11, 2, "rgba(0,0,0,0.12)");
+
+  // Tentacle legs (3 wiggly ones)
+  for (let t = -1; t <= 1; t++) {
+    const tx = x + t * 3;
+    const ty = y + 9 + bobY;
+    px(ctx, tx, ty, 2, 2, pal.tentacle);
+    px(ctx, tx + (t === 0 ? 0 : t) + tentacleAnim, ty + 2, 2, 2, pal.tentacle);
+  }
+
+  // Round blob body
+  for (let dy = -10; dy <= 9; dy++) {
+    const progress = (dy + 10) / 19;
+    const halfW = Math.round(7 * Math.sin(progress * Math.PI));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const isOuterEdge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + bobY, 1, 1, isOuterEdge ? pal.accent : pal.body);
+    }
+  }
+
+  // Body highlight
+  for (let dy = -7; dy <= -3; dy++) {
+    px(ctx, x - 3, y + dy + bobY, 2, 1, lightenColor(pal.body, 40));
+  }
+
+  // Tentacle arms (wavy)
+  px(ctx, x - 7, y + 1 + bobY + tentacleAnim, 2, 2, pal.tentacle);
+  px(ctx, x - 8, y + 3 + bobY + tentacleAnim, 2, 2, pal.tentacle);
+  px(ctx, x + 6, y + 1 + bobY - tentacleAnim, 2, 2, pal.tentacle);
+  px(ctx, x + 7, y + 3 + bobY - tentacleAnim, 2, 2, pal.tentacle);
+
+  // Eyes — varies by eyeCount
+  const eyeShine = "#FFF";
+  if (pal.eyeCount === 2) {
+    px(ctx, x - 3, y - 3 + bobY, 3, 3, pal.eyes);
+    px(ctx, x - 3, y - 3 + bobY, 1, 1, eyeShine);
+    px(ctx, x + 2, y - 3 + bobY, 3, 3, pal.eyes);
+    px(ctx, x + 2, y - 3 + bobY, 1, 1, eyeShine);
+  } else if (pal.eyeCount === 3) {
+    px(ctx, x - 4, y - 2 + bobY, 2, 2, pal.eyes);
+    px(ctx, x - 4, y - 2 + bobY, 1, 1, eyeShine);
+    px(ctx, x + 3, y - 2 + bobY, 2, 2, pal.eyes);
+    px(ctx, x + 3, y - 2 + bobY, 1, 1, eyeShine);
+    px(ctx, x, y - 4 + bobY, 2, 2, pal.eyes);
+    px(ctx, x, y - 4 + bobY, 1, 1, eyeShine);
+  } else { // 4 eyes
+    px(ctx, x - 5, y - 3 + bobY, 2, 2, pal.eyes);
+    px(ctx, x - 5, y - 3 + bobY, 1, 1, eyeShine);
+    px(ctx, x - 2, y - 3 + bobY, 2, 2, pal.eyes);
+    px(ctx, x - 2, y - 3 + bobY, 1, 1, eyeShine);
+    px(ctx, x + 1, y - 3 + bobY, 2, 2, pal.eyes);
+    px(ctx, x + 1, y - 3 + bobY, 1, 1, eyeShine);
+    px(ctx, x + 4, y - 3 + bobY, 2, 2, pal.eyes);
+    px(ctx, x + 4, y - 3 + bobY, 1, 1, eyeShine);
+  }
+
+  // Mouth (wavy)
+  px(ctx, x - 1, y + 2 + bobY, 3, 1, "#50A050");
+  px(ctx, x - 2, y + 3 + bobY, 1, 1, "#50A050");
+  px(ctx, x + 3, y + 3 + bobY, 1, 1, "#50A050");
+
+  // Antennae
+  px(ctx, x - 3, y - 9 + bobY, 1, 3, pal.accent);
+  px(ctx, x + 3, y - 9 + bobY, 1, 3, pal.accent);
+  px(ctx, x - 4, y - 10 + bobY, 2, 2, "#FFE080");
+  px(ctx, x + 3, y - 10 + bobY, 2, 2, "#FFE080");
+
+  // Cheek spots
+  px(ctx, x - 6, y + bobY, 2, 2, lightenColor(pal.body, -15));
+  px(ctx, x + 5, y + bobY, 2, 2, lightenColor(pal.body, -15));
+}
+
+function drawFlyingSaucer(ctx: CanvasRenderingContext2D, cx: number, cy: number, tick: number) {
+  // Dome (top)
+  for (let dy = -6; dy <= 0; dy++) {
+    const halfW = Math.round(6 * Math.sin(((dy + 6) / 6) * Math.PI * 0.5));
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const isEdge = Math.abs(dx) === halfW;
+      px(ctx, cx + dx, cy + dy, 1, 1, isEdge ? "#5070A0" : "#80B0E0");
+    }
+  }
+  // Dome shine
+  px(ctx, cx - 3, cy - 4, 2, 1, "#D0E8FF");
+  px(ctx, cx - 2, cy - 5, 1, 1, "#FFFFFF");
+
+  // Disc (mid, wider)
+  for (let dx = -12; dx <= 12; dx++) {
+    const absX = Math.abs(dx);
+    const topY = cy + (absX > 8 ? 1 : 0);
+    px(ctx, cx + dx, topY, 1, 1, "#B0B0C0");
+    px(ctx, cx + dx, topY + 1, 1, 1, "#808090");
+    px(ctx, cx + dx, topY + 2, 1, 1, "#606070");
+  }
+  // Disc edges
+  px(ctx, cx - 13, cy + 1, 1, 2, "#808090");
+  px(ctx, cx + 13, cy + 1, 1, 2, "#808090");
+
+  // Blinking lights under disc
+  const lightPhase = Math.floor(tick / 4) % 4;
+  const lightColors = ["#FF0000", "#FFFF00", "#00FF00", "#00FFFF"];
+  for (let i = 0; i < 5; i++) {
+    const lx = cx - 8 + i * 4;
+    const on = (lightPhase + i) % 4 === 0;
+    px(ctx, lx, cy + 3, 2, 1, on ? lightColors[i % 4] : "#404040");
+  }
+}
+
+function drawBeam(ctx: CanvasRenderingContext2D, cx: number, yTop: number, yBot: number, tick: number) {
+  const halfW = 5;
+  for (let y = yTop; y <= yBot; y++) {
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const shimmer = ((y + tick) % 3) === (Math.abs(dx) % 3);
+      const edge = Math.abs(dx) >= halfW - 1;
+      if (edge) {
+        px(ctx, cx + dx, y, 1, 1, shimmer ? "#E0FFE0" : "#80FFA0");
+      } else {
+        px(ctx, cx + dx, y, 1, 1, shimmer ? "#FFFFFF" : "#C0FFC0");
+      }
+    }
+  }
+  // Sparkles inside
+  for (let i = 0; i < 4; i++) {
+    const sx = cx - 3 + ((tick + i * 5) % 7);
+    const sy = yTop + ((tick * 2 + i * 11) % (yBot - yTop));
+    px(ctx, sx, sy, 1, 1, "#FFFFFF");
+  }
+}
+
+function drawSpaceScene(ctx: CanvasRenderingContext2D, tick: number, direction: "out" | "back") {
+  // Black space
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      px(ctx, x, y, 1, 1, "#080018");
+    }
+  }
+  // Scrolling star field (parallax, 3 layers)
+  for (let i = 0; i < 60; i++) {
+    const layer = i % 3;
+    const speed = (layer + 1) * 0.8;
+    const baseX = (i * 17) % W;
+    const offset = direction === "out" ? tick * speed : -tick * speed;
+    const sx = ((baseX - offset) % W + W) % W;
+    const sy = (i * 7) % H;
+    const color = layer === 0 ? "#FFFFFF" : layer === 1 ? "#AAAACC" : "#6666AA";
+    px(ctx, Math.floor(sx), sy, 1, 1, color);
+  }
+  // Passing planets (every ~80 ticks)
+  const planets = [
+    { offset: 0, color: "#FF8040", size: 8 },
+    { offset: 100, color: "#40FFA0", size: 6 },
+    { offset: 200, color: "#A060FF", size: 10 },
+  ];
+  planets.forEach((pl) => {
+    const progress = ((tick + pl.offset) % 300) / 300; // 0 -> 1
+    const px0 = direction === "out"
+      ? Math.floor(W + pl.size - progress * (W + pl.size * 2))
+      : Math.floor(-pl.size + progress * (W + pl.size * 2));
+    const py0 = 30 + Math.floor(Math.sin(progress * Math.PI) * 8);
+    for (let dy = -pl.size; dy <= pl.size; dy++) {
+      for (let dx = -pl.size; dx <= pl.size; dx++) {
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= pl.size) {
+          const edge = d > pl.size - 1.5;
+          const shade = edge ? "#000000" : pl.color;
+          if (px0 + dx >= 0 && px0 + dx < W && py0 + dy >= 0 && py0 + dy < H) {
+            px(ctx, px0 + dx, py0 + dy, 1, 1, shade);
+          }
+        }
+      }
+    }
+  });
+}
+
 // Gold coin drawing helper
 function drawGoldCoin(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
   // Outer ring
@@ -787,7 +1321,6 @@ export default function IceCreamGame() {
   const musicRef = useRef<{ stop: () => void } | null>(null);
   const animFrameRef = useRef<number>(0);
   const [goldCoins, setGoldCoins] = useState<{ x: number; y: number; age: number }[]>([]);
-  const [totalGold, setTotalGold] = useState(0);
 
   // Chat/dialogue state
   const [chatActive, setChatActive] = useState(false);
@@ -795,11 +1328,37 @@ export default function IceCreamGame() {
   const [chatDialogue, setChatDialogue] = useState<DialogueNode[]>([]);
   const [chatNodeIdx, setChatNodeIdx] = useState(0);
   const chatHistoryRef = useRef<{ customer: number[]; scoopy: number[] }>({ customer: [], scoopy: [] });
+
+  // Alien/Location state
+  const [location, setLocation] = useState<Location>("earth");
+  const [cutsceneType, setCutsceneType] = useState<CutsceneType | null>(null);
+  const [cutsceneTick, setCutsceneTick] = useState(0);
+  const [pendingAlien, setPendingAlien] = useState(false);
+  const [alienEncountered, setAlienEncountered] = useState(false);
+  const [alienVisited, setAlienVisited] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("scoopstack-alien-visited") === "1";
+  });
+  const earthCustomersServedRef = useRef(0);
+  const [alienCoins, setAlienCoins] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = window.localStorage.getItem("scoopstack-alien-coins");
+    const n = saved ? Number.parseInt(saved, 10) : 0;
+    return Number.isNaN(n) ? 0 : n;
+  });
+  const [earthCoins, setEarthCoins] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = window.localStorage.getItem("scoopstack-earth-coins");
+    const n = saved ? Number.parseInt(saved, 10) : 0;
+    return Number.isNaN(n) ? 0 : n;
+  });
+
   const level = Math.floor(customersServed / 3) + 1;
+  const totalGold = earthCoins + alienCoins;
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" && phase !== "cutscene") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -807,27 +1366,54 @@ export default function IceCreamGame() {
 
     ctx.imageSmoothingEnabled = false;
 
-    function draw() {
-      if (!ctx || !canvas) return;
-      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    const themePrimary = location === "alien-planet" ? "#40E0A0" : "#FF69B4";
+    const themeCoin = "#FFD700";
 
-      drawBackground(ctx);
+    function drawHud() {
+      if (!ctx) return;
+      drawText(ctx, `LV.${level}`, 16, 13, themePrimary, 0.65);
+      drawGoldCoin(ctx, 52, 12, 2);
+      drawText(ctx, `${totalGold}`, 62, 13, themeCoin, 0.65);
 
-      // Draw shopkeeper behind counter
-      drawShopkeeper(ctx, 64, 70);
+      const heartX = 105;
+      for (let i = 0; i < 3; i++) {
+        px(ctx, heartX + i * 6, 10, 2, 2, "#FF4444");
+        px(ctx, heartX + i * 6 + 2, 10, 2, 2, "#FF4444");
+        px(ctx, heartX + i * 6 + 1, 12, 2, 2, "#FF4444");
+      }
+    }
 
-      // Draw customer
+    function drawShopScene() {
+      if (!ctx) return;
+      const t = cutsceneTick;
+      if (location === "alien-planet") {
+        drawAlienPlanetBackground(ctx, t);
+        drawAlienShopkeeper(ctx, 64, 70, t);
+      } else {
+        drawBackground(ctx);
+        drawShopkeeper(ctx, 64, 70);
+      }
+
       const cust = customer;
       if (cust) {
-        drawCustomerSprite(
-          ctx,
-          Math.round(cust.x),
-          76,
-          cust.spriteIdx,
-          cust.state === "walking-in" || cust.state === "walking-out"
-        );
+        if (cust.isAlien || cust.isAlienVIP) {
+          drawAlienSprite(
+            ctx,
+            Math.round(cust.x),
+            76,
+            cust.spriteIdx,
+            cust.state === "walking-in" || cust.state === "walking-out"
+          );
+        } else {
+          drawCustomerSprite(
+            ctx,
+            Math.round(cust.x),
+            76,
+            cust.spriteIdx,
+            cust.state === "walking-in" || cust.state === "walking-out"
+          );
+        }
 
-        // Speech bubble
         if (cust.state === "waiting" || cust.state === "served") {
           drawSpeechBubble(
             ctx,
@@ -840,8 +1426,6 @@ export default function IceCreamGame() {
             toppingsPhase,
             cust.reaction,
           );
-
-          // Name tag below the character
           const nameW = cust.name.length * 3 + 6;
           const nx = Math.round(cust.x) - Math.floor(nameW / 2);
           const ny = 90;
@@ -851,16 +1435,14 @@ export default function IceCreamGame() {
               px(ctx, nx + dx, ny + dy, 1, 1, isBorder ? "#333" : "#FFFDE8");
             }
           }
-          drawText(ctx, cust.name, Math.round(cust.x) + 1, ny + 3, "#FF69B4", 0.4);
+          drawText(ctx, cust.name, Math.round(cust.x) + 1, ny + 3, themePrimary, 0.4);
         }
       }
 
-      // Draw cone on counter
       if (cust && (cust.state === "waiting" || cust.state === "served")) {
         drawCone(ctx, 100, 52, coneScoops, cust.toppings, toppingsDone);
       }
 
-      // Draw floating gold coins
       goldCoins.forEach((coin) => {
         const floatY = coin.y - coin.age * 0.3;
         const alpha = Math.max(0, 1 - coin.age / 60);
@@ -870,30 +1452,114 @@ export default function IceCreamGame() {
           ctx.globalAlpha = 1;
         }
       });
+    }
 
-      // HUD on canvas
-      drawText(ctx, `LV.${level}`, 16, 13, "#FF69B4", 0.65);
-      // Gold coin counter instead of pts
-      drawGoldCoin(ctx, 52, 12, 2);
-      drawText(ctx, `${totalGold}`, 62, 13, "#FFD700", 0.65);
-
-      // Hearts
-      const heartX = 105;
-      for (let i = 0; i < 3; i++) {
-        const served = customersServed >= 0; // always show hearts full (no miss mechanic)
-        if (served) {
-          px(ctx, heartX + i * 6, 10, 2, 2, "#FF4444");
-          px(ctx, heartX + i * 6 + 2, 10, 2, 2, "#FF4444");
-          px(ctx, heartX + i * 6 + 1, 12, 2, 2, "#FF4444");
+    function drawCutscene() {
+      if (!ctx) return;
+      const t = cutsceneTick;
+      if (cutsceneType === "alien-arrival") {
+        // Earth shop, saucer descends from top, drops alien via beam near x=30
+        drawBackground(ctx);
+        drawShopkeeper(ctx, 64, 70);
+        const beamX = 30;
+        // Saucer fly-in: from right edge, decelerates over beam spot
+        const saucerX = Math.max(beamX, Math.floor(W + 20 - t * 1.4));
+        const saucerY = 22;
+        drawFlyingSaucer(ctx, saucerX, saucerY, t);
+        // Once saucer reaches beam spot, beam drops
+        if (t > 40 && t < 90) {
+          drawBeam(ctx, beamX, saucerY + 4, Math.min(80, saucerY + 4 + (t - 40) * 2), t);
+        }
+        // Alien materializes around t=60
+        if (t > 60) {
+          const appear = Math.min(1, (t - 60) / 20);
+          ctx.globalAlpha = appear;
+          drawAlienSprite(ctx, beamX, 76, 1, false);
+          ctx.globalAlpha = 1;
+        }
+        if (t < 100) {
+          const txtY = 50 + Math.floor(Math.sin(t / 8) * 2);
+          drawText(ctx, "ALIEN!!!", 64, txtY, "#FF69B4", 0.9);
+        }
+      } else if (cutsceneType === "beam-up" || cutsceneType === "earth-departure") {
+        // Beam up from earth or alien planet
+        if (cutsceneType === "beam-up") {
+          drawBackground(ctx);
+          drawShopkeeper(ctx, 64, 70);
+        } else {
+          drawAlienPlanetBackground(ctx, t);
+          drawAlienShopkeeper(ctx, 64, 70, t);
+        }
+        // Saucer descends to hover
+        const saucerY = Math.min(22, 0 + t * 0.4);
+        drawFlyingSaucer(ctx, 64, Math.floor(saucerY), t);
+        // Beam active
+        if (t > 10) {
+          drawBeam(ctx, 64, Math.floor(saucerY) + 4, 80, t);
+        }
+        // Shopkeeper rises into beam
+        if (t > 30) {
+          const rise = Math.min(50, (t - 30) * 1.2);
+          const sy = 70 - rise;
+          ctx.globalAlpha = Math.max(0, 1 - (t - 30) / 60);
+          if (cutsceneType === "beam-up") {
+            drawShopkeeper(ctx, 64, Math.floor(sy));
+          } else {
+            drawAlienShopkeeper(ctx, 64, Math.floor(sy), t);
+          }
+          ctx.globalAlpha = 1;
+        }
+      } else if (cutsceneType === "journey-out" || cutsceneType === "journey-back") {
+        const dir = cutsceneType === "journey-out" ? "out" : "back";
+        drawSpaceScene(ctx, t, dir);
+        // Saucer in center, subtle bob
+        const sx = 64 + Math.floor(Math.sin(t / 10) * 3);
+        const sy = 50 + Math.floor(Math.sin(t / 15) * 3);
+        drawFlyingSaucer(ctx, sx, sy, t);
+        // Journey banner
+        drawText(ctx, dir === "out" ? "TO THE STARS!" : "HEADING HOME!", 64, 14, "#FFFFFF", 0.85);
+      } else if (cutsceneType === "landing-alien" || cutsceneType === "landing-earth") {
+        if (cutsceneType === "landing-alien") {
+          drawAlienPlanetBackground(ctx, t);
+        } else {
+          drawBackground(ctx);
+        }
+        // Saucer descends from top
+        const saucerY = Math.min(22, -10 + t * 0.5);
+        drawFlyingSaucer(ctx, 64, Math.floor(saucerY), t);
+        // Beam down
+        if (t > 30) {
+          drawBeam(ctx, 64, Math.floor(saucerY) + 4, Math.min(70, Math.floor(saucerY) + 4 + (t - 30) * 1.5), t);
+        }
+        // Shopkeeper materializes at counter
+        if (t > 55) {
+          const appear = Math.min(1, (t - 55) / 25);
+          ctx.globalAlpha = appear;
+          if (cutsceneType === "landing-alien") {
+            drawShopkeeper(ctx, 64, 70);
+          } else {
+            drawShopkeeper(ctx, 64, 70);
+          }
+          ctx.globalAlpha = 1;
         }
       }
+    }
 
+    function draw() {
+      if (!ctx || !canvas) return;
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+      if (phase === "cutscene") {
+        drawCutscene();
+      } else {
+        drawShopScene();
+      }
+      drawHud();
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, score, customersServed, goldCoins, totalGold]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -949,22 +1615,36 @@ export default function IceCreamGame() {
     if (customer?.state === "walking-out") walkCustomerOut();
   }, [customer?.state, walkCustomerOut]);
 
-  // Send next customer
+  // Send next customer (or trigger alien arrival when pending)
   useEffect(() => {
     if (phase !== "playing") return;
-    if (customer === null) {
+    if (customer !== null) return;
+    if (location === "earth" && pendingAlien) {
       const timer = setTimeout(() => {
-        customerIdRef.current += 1;
-        const c = createCustomer(customerIdRef.current, level);
+        setPendingAlien(false);
         setScoopsDone(0);
         setConeScoops([]);
         setToppingsDone(0);
         setToppingsPhase(false);
-        walkCustomerIn(c);
-      }, 800);
+        setCutsceneType("alien-arrival");
+        setCutsceneTick(0);
+        setPhase("cutscene");
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [customer, phase, level, walkCustomerIn]);
+    const timer = setTimeout(() => {
+      customerIdRef.current += 1;
+      const c = location === "alien-planet"
+        ? createAlienCustomer(customerIdRef.current, level)
+        : createCustomer(customerIdRef.current, level);
+      setScoopsDone(0);
+      setConeScoops([]);
+      setToppingsDone(0);
+      setToppingsPhase(false);
+      walkCustomerIn(c);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [customer, phase, level, walkCustomerIn, location, pendingAlien]);
 
   // Level up every 3 customers
   // Gold coin animation aging
@@ -982,22 +1662,42 @@ export default function IceCreamGame() {
   // Complete order
   const completeOrder = useCallback(() => {
     if (!customer) return;
-    const coinCount = 1 + customer.order.length + customer.toppings.length;
-    const pointsEarned = 100 + customer.toppings.length * 25;
+    const isVIP = !!customer.isAlienVIP;
+    const coinCount = (1 + customer.order.length + customer.toppings.length) * (isVIP ? 3 : 1);
+    const pointsEarned = (100 + customer.toppings.length * 25) * (isVIP ? 3 : 1);
     const nextScore = score + pointsEarned;
     setScore(nextScore);
     if (nextScore > highScore) {
       setHighScore(nextScore);
       window.localStorage.setItem("scoopstack-highscore", nextScore.toString());
     }
-    setTotalGold((g) => g + coinCount);
+    if (location === "alien-planet") {
+      setAlienCoins((g) => {
+        const n = g + coinCount;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+    } else {
+      setEarthCoins((g) => {
+        const n = g + coinCount;
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+    }
     setCustomersServed((c) => c + 1);
+    if (location === "earth" && !isVIP) {
+      earthCustomersServedRef.current += 1;
+      if (earthCustomersServedRef.current >= 5 && !alienEncountered) {
+        setPendingAlien(true);
+        setAlienEncountered(true);
+      }
+    }
     playCoinSound();
 
     // Spawn floating gold coins around the customer
     const newCoins = Array.from({ length: coinCount }, (_, i) => ({
-      x: Math.round(customer.x) - 5 + i * 6,
-      y: 70,
+      x: Math.round(customer.x) - 5 + (i % 8) * 6,
+      y: 70 - Math.floor(i / 8) * 6,
       age: 0,
     }));
     setGoldCoins((prev) => [...prev, ...newCoins]);
@@ -1006,10 +1706,20 @@ export default function IceCreamGame() {
     setTimeout(() => {
       setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS) } : prev);
     }, 600);
-    setTimeout(() => {
-      setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
-    }, 1400);
-  }, [customer, highScore, score]);
+    // VIP alien: trigger offer dialogue instead of walking out
+    if (isVIP) {
+      setTimeout(() => {
+        setChatTarget("customer");
+        setChatDialogue(ALIEN_OFFER_DIALOGUE);
+        setChatNodeIdx(0);
+        setChatActive(true);
+      }, 1400);
+    } else {
+      setTimeout(() => {
+        setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
+      }, 1400);
+    }
+  }, [customer, highScore, score, location, alienEncountered]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -1067,9 +1777,13 @@ export default function IceCreamGame() {
   const startGame = useCallback(async () => {
     // Initialize shared audio context on user gesture (critical for mobile)
     await initAudio();
-    setScore(0); setCustomersServed(0); setCustomer(null);
+    setScore(0); setCustomersServed(0); earthCustomersServedRef.current = 0; setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
-    setGoldCoins([]); setTotalGold(0);
+    setGoldCoins([]);
+    setLocation("earth");
+    setCutsceneType(null); setCutsceneTick(0);
+    setPendingAlien(false);
+    setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
     chatHistoryRef.current = { customer: [], scoopy: [] };
     customerIdRef.current = 0; setPhase("playing");
@@ -1085,14 +1799,32 @@ export default function IceCreamGame() {
 
   // Pick a dialogue that hasn't been seen recently
   const pickDialogue = useCallback((target: "customer" | "scoopy") => {
-    const pool = target === "scoopy" ? SCOOPY_DIALOGUES : CUSTOMER_DIALOGUES;
+    const pool = target === "scoopy"
+      ? (location === "alien-planet" ? ZORP_DIALOGUES : SCOOPY_DIALOGUES)
+      : (location === "alien-planet" ? ALIEN_CUSTOMER_DIALOGUES : CUSTOMER_DIALOGUES);
     const seen = chatHistoryRef.current[target];
     const unseen = pool.map((_, i) => i).filter((i) => !seen.includes(i));
     const idx = unseen.length > 0 ? pick(unseen) : Math.floor(Math.random() * pool.length);
-    // Track last 3 seen
     chatHistoryRef.current[target] = [...seen, idx].slice(-3);
     return pool[idx];
-  }, []);
+  }, [location]);
+
+  // Door tap → travel between shops (bidirectional)
+  const handleDoorTap = useCallback(() => {
+    if (!alienVisited) return; // only enabled after first alien trip
+    if (chatActive) return;
+    playDing();
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    if (location === "earth") {
+      setCutsceneType("beam-up");
+    } else {
+      setCutsceneType("earth-departure");
+    }
+    setCutsceneTick(0);
+    setPhase("cutscene");
+  }, [alienVisited, chatActive, location]);
 
   // Canvas tap handler — detect character taps
   const handleCanvasTap = useCallback(
@@ -1114,6 +1846,12 @@ export default function IceCreamGame() {
       const gx = (clientX - rect.left) * scaleX;
       const gy = (clientY - rect.top) * scaleY;
 
+      // Door: drawn at x = W - 18 .. W - 4, y = 20 .. 70. Tap to travel (once alien has been visited).
+      if (alienVisited && gx >= W - 18 && gx <= W - 2 && gy >= 20 && gy <= 70) {
+        handleDoorTap();
+        return;
+      }
+
       // Check shopkeeper (drawn at x=64, y=70, body extends ~14px up)
       if (Math.abs(gx - 64) < 12 && gy > 50 && gy < 78) {
         playBoop();
@@ -1124,30 +1862,114 @@ export default function IceCreamGame() {
         return;
       }
 
-      // Check customer (if waiting)
+      // Check customer (if waiting/served)
       if (customer && (customer.state === "waiting" || customer.state === "served")) {
         const cx = Math.round(customer.x);
         if (Math.abs(gx - cx) < 14 && gy > 58 && gy < 100) {
           playBoop();
           setChatTarget("customer");
-          setChatDialogue(pickDialogue("customer"));
+          // Alien VIP after-service uses offer dialogue via completeOrder; casual taps use alien-customer pool
+          if (customer.isAlienVIP) {
+            setChatDialogue(ALIEN_CUSTOMER_DIALOGUES[0]);
+          } else {
+            setChatDialogue(pickDialogue("customer"));
+          }
           setChatNodeIdx(0);
           setChatActive(true);
         }
       }
     },
-    [chatActive, customer, pickDialogue]
+    [chatActive, customer, pickDialogue, alienVisited, handleDoorTap]
   );
 
   const handleChatChoice = useCallback((nextIdx: number) => {
     playBoop();
+    if (nextIdx === 100) {
+      // ACCEPT → beam-up cutscene (earth -> alien)
+      setChatActive(false);
+      setChatTarget(null);
+      setCutsceneType("beam-up");
+      setCutsceneTick(0);
+      setPhase("cutscene");
+      return;
+    }
+    if (nextIdx === 200) {
+      // DECLINE → bye message then walk out
+      setChatDialogue(ALIEN_BYE_DIALOGUE);
+      setChatNodeIdx(0);
+      return;
+    }
     setChatNodeIdx(nextIdx);
   }, []);
 
   const closeChat = useCallback(() => {
     setChatActive(false);
     setChatTarget(null);
+    // If the alien VIP is still there after bye, walk them out
+    setCustomer((prev) => prev && prev.isAlienVIP ? { ...prev, state: "walking-out" } : prev);
   }, []);
+
+  // ── Cutscene driver ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== "cutscene" || !cutsceneType) return;
+    const tickMs = 40;
+    // Duration thresholds per cutscene (in ticks)
+    const endAt: Record<CutsceneType, number> = {
+      "alien-arrival": 110,
+      "beam-up": 100,
+      "earth-departure": 100,
+      "journey-out": 150,
+      "journey-back": 150,
+      "landing-alien": 100,
+      "landing-earth": 100,
+    };
+    const interval = setInterval(() => {
+      setCutsceneTick((t) => {
+        const next = t + 1;
+        if (next >= endAt[cutsceneType]) {
+          clearInterval(interval);
+          // Transition to next stage
+          if (cutsceneType === "alien-arrival") {
+            // Spawn alien VIP at counter, continue playing on earth
+            customerIdRef.current += 1;
+            setCustomer(createAlienVIP(customerIdRef.current));
+            setCutsceneType(null);
+            setPhase("playing");
+          } else if (cutsceneType === "beam-up") {
+            // Earth -> journey out
+            setCutsceneType("journey-out");
+            return 0;
+          } else if (cutsceneType === "earth-departure") {
+            // Alien -> journey back
+            setCutsceneType("journey-back");
+            return 0;
+          } else if (cutsceneType === "journey-out") {
+            setCutsceneType("landing-alien");
+            return 0;
+          } else if (cutsceneType === "journey-back") {
+            setCutsceneType("landing-earth");
+            return 0;
+          } else if (cutsceneType === "landing-alien") {
+            setLocation("alien-planet");
+            setCutsceneType(null);
+            setPhase("playing");
+            setAlienVisited(true);
+            window.localStorage.setItem("scoopstack-alien-visited", "1");
+            // Reset customer flow for new location
+            setCustomer(null);
+          } else if (cutsceneType === "landing-earth") {
+            setLocation("earth");
+            setCutsceneType(null);
+            setPhase("playing");
+            setCustomer(null);
+          }
+          return 0;
+        }
+        return next;
+      });
+    }, tickMs);
+    return () => clearInterval(interval);
+  }, [phase, cutsceneType]);
 
   useEffect(() => {
     return () => {
