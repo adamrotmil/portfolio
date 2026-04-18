@@ -22,7 +22,11 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "result";
+
+type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
+type Laser = { id: number; x: number; y: number; };
+type PilotInputs = { left: boolean; right: boolean; up: boolean; down: boolean; fire: boolean };
 
 type Location = "earth" | "alien-planet";
 
@@ -1301,6 +1305,75 @@ function drawSpaceScene(ctx: CanvasRenderingContext2D, tick: number, direction: 
   });
 }
 
+// ── Pilot Minigame Drawing ───────────────────────────────────────────────────
+
+function drawPilotSaucer(ctx: CanvasRenderingContext2D, cx: number, cy: number, tick: number, invulnerable: boolean) {
+  // Flash effect during invuln
+  if (invulnerable && Math.floor(tick / 3) % 2 === 0) {
+    ctx.globalAlpha = 0.4;
+  }
+  // Thruster flames below
+  const flameLen = 2 + (tick % 4);
+  for (let i = 0; i < 3; i++) {
+    const fx = cx - 4 + i * 4;
+    for (let fy = 0; fy < flameLen; fy++) {
+      const color = fy < flameLen - 1 ? "#FFE080" : "#FF8040";
+      px(ctx, fx, cy + 3 + fy, 1, 1, color);
+    }
+  }
+  drawFlyingSaucer(ctx, cx, cy, tick);
+  ctx.globalAlpha = 1;
+}
+
+function drawAsteroid(ctx: CanvasRenderingContext2D, a: Asteroid) {
+  const { x, y, size } = a;
+  const cx = Math.floor(x);
+  const cy = Math.floor(y);
+  // Jagged rock shape
+  for (let dy = -size; dy <= size; dy++) {
+    for (let dx = -size; dx <= size; dx++) {
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= size) {
+        const jitter = ((cx + dy) * 7 + (cy + dx) * 13) % 4;
+        const r = d + jitter * 0.4;
+        if (r > size) continue;
+        const edge = r > size - 1.5;
+        const crater = ((cx + dx) * 5 + (cy + dy) * 9) % 11 === 0 && d < size - 2;
+        px(ctx, cx + dx, cy + dy, 1, 1,
+          edge ? "#403020" : crater ? "#20180E" : "#70503A");
+      }
+    }
+  }
+  // Highlight
+  px(ctx, cx - Math.floor(size / 2), cy - Math.floor(size / 2), 1, 1, "#A07050");
+}
+
+function drawLaser(ctx: CanvasRenderingContext2D, l: Laser) {
+  const x = Math.floor(l.x);
+  const y = Math.floor(l.y);
+  px(ctx, x, y, 1, 5, "#FFFFFF");
+  px(ctx, x - 1, y + 1, 1, 3, "#80FF80");
+  px(ctx, x + 1, y + 1, 1, 3, "#80FF80");
+  px(ctx, x, y, 1, 1, "#FFFF80");
+}
+
+function drawPilotScene(ctx: CanvasRenderingContext2D, ship: {x:number; y:number}, asteroids: Asteroid[], lasers: Laser[], tick: number, invuln: boolean, hits: number, lives: number) {
+  drawSpaceScene(ctx, tick, "out");
+  asteroids.forEach((a) => drawAsteroid(ctx, a));
+  lasers.forEach((l) => drawLaser(ctx, l));
+  drawPilotSaucer(ctx, ship.x, ship.y, tick, invuln);
+
+  // HUD strip at top
+  drawText(ctx, `HITS ${hits}`, 24, 12, "#FFFFFF", 0.6);
+  // Lives as small hearts on the right
+  for (let i = 0; i < lives; i++) {
+    const lx = W - 18 + i * 5;
+    px(ctx, lx, 10, 2, 2, "#FF4444");
+    px(ctx, lx + 2, 10, 2, 2, "#FF4444");
+    px(ctx, lx + 1, 12, 2, 2, "#FF4444");
+  }
+}
+
 // ── Black Hole Drawing ───────────────────────────────────────────────────────
 
 // Fills entire canvas with swirling spiral gravity wells
@@ -1663,12 +1736,30 @@ export default function IceCreamGame() {
   const [blackholeBonus, setBlackholeBonus] = useState(0);
   const [blackholeMessage, setBlackholeMessage] = useState<string | null>(null);
 
+  // Pilot minigame state — most of the gameplay uses refs to avoid excessive
+  // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
+  const [pilotOfferActive, setPilotOfferActive] = useState(false);
+  const [pilotTick, setPilotTick] = useState(0);
+  const [pilotHits, setPilotHits] = useState(0);
+  const [pilotLives, setPilotLives] = useState(3);
+  const [pilotReturnTo, setPilotReturnTo] = useState<"alien" | "earth">("alien");
+  const pilotOfferRef = useRef(false);
+  const pilotResumeTickRef = useRef(0);
+  const pilotShipRef = useRef({ x: 64, y: 90 });
+  const pilotAsteroidsRef = useRef<Asteroid[]>([]);
+  const pilotLasersRef = useRef<Laser[]>([]);
+  const pilotInvulnRef = useRef(0); // ticks remaining of invulnerability
+  const pilotInputsRef = useRef<PilotInputs>({ left: false, right: false, up: false, down: false, fire: false });
+  const pilotLastFireRef = useRef(0);
+  const pilotIdRef = useRef(0);
+  const pilotBonusRef = useRef(0);
+
   const level = Math.floor(customersServed / 3) + 1;
   const totalGold = earthCoins + alienCoins;
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -1869,6 +1960,20 @@ export default function IceCreamGame() {
       }
     }
 
+    function drawPilot() {
+      if (!ctx) return;
+      drawPilotScene(
+        ctx,
+        pilotShipRef.current,
+        pilotAsteroidsRef.current,
+        pilotLasersRef.current,
+        pilotTick,
+        pilotInvulnRef.current > 0,
+        pilotHits,
+        pilotLives,
+      );
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -1876,16 +1981,18 @@ export default function IceCreamGame() {
         drawCutscene();
       } else if (phase === "blackhole") {
         drawBlackhole();
+      } else if (phase === "pilot") {
+        drawPilot();
       } else {
         drawShopScene();
       }
-      drawHud();
+      if (phase !== "pilot") drawHud();
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -2109,6 +2216,11 @@ export default function IceCreamGame() {
     setLocation("earth");
     setCutsceneType(null); setCutsceneTick(0);
     setBlackholeScene(null); setBlackholeTick(0); setBlackholeBonus(0); setBlackholeMessage(null);
+    setPilotOfferActive(false); pilotOfferRef.current = false;
+    setPilotTick(0); setPilotHits(0); setPilotLives(3);
+    pilotAsteroidsRef.current = []; pilotLasersRef.current = [];
+    pilotInputsRef.current = { left: false, right: false, up: false, down: false, fire: false };
+    pilotBonusRef.current = 0; pilotInvulnRef.current = 0;
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -2252,10 +2364,24 @@ export default function IceCreamGame() {
     };
     // Mid-journey tick where we roll the 50% black hole chance
     const blackholeRollTick = 60;
+    const pilotOfferTick = 28;
     let blackholeRolled = false;
+    let pilotOffered = false;
     const interval = setInterval(() => {
+      // Pause tick advancement while an interactive offer is open
+      if (pilotOfferRef.current) return;
       setCutsceneTick((t) => {
         const next = t + 1;
+        // Pilot offer (first time during any journey)
+        if (!pilotOffered &&
+            (cutsceneType === "journey-out" || cutsceneType === "journey-back") &&
+            next === pilotOfferTick) {
+          pilotOffered = true;
+          pilotOfferRef.current = true;
+          setPilotReturnTo(cutsceneType === "journey-out" ? "alien" : "earth");
+          setPilotOfferActive(true);
+          return t; // freeze tick here; decline resumes, accept moves to pilot phase
+        }
         // 50% black hole intercept mid-journey
         if (!blackholeRolled &&
             (cutsceneType === "journey-out" || cutsceneType === "journey-back") &&
@@ -2350,6 +2476,184 @@ export default function IceCreamGame() {
     }, 40);
     return () => clearInterval(interval);
   }, [phase, blackholeScene, blackholeReturnTo, blackholeBonus]);
+
+  // Pilot offer accepted: init minigame state and switch phase
+  const acceptPilotOffer = useCallback(() => {
+    playDing();
+    pilotOfferRef.current = false;
+    setPilotOfferActive(false);
+    pilotResumeTickRef.current = cutsceneTick;
+    pilotShipRef.current = { x: 64, y: 90 };
+    pilotAsteroidsRef.current = [];
+    pilotLasersRef.current = [];
+    pilotInvulnRef.current = 0;
+    pilotInputsRef.current = { left: false, right: false, up: false, down: false, fire: false };
+    pilotLastFireRef.current = 0;
+    pilotBonusRef.current = 0;
+    setPilotTick(0);
+    setPilotHits(0);
+    setPilotLives(3);
+    setPhase("pilot");
+  }, [cutsceneTick]);
+
+  const declinePilotOffer = useCallback(() => {
+    playBoop();
+    pilotOfferRef.current = false;
+    setPilotOfferActive(false);
+    // tick advancement resumes automatically on next interval fire
+  }, []);
+
+  // ── Pilot game loop ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== "pilot") return;
+    const tickMs = 40;
+    const gameDuration = 450; // ~18s
+    const interval = setInterval(() => {
+      setPilotTick((t) => {
+        const next = t + 1;
+        const ship = pilotShipRef.current;
+        const inputs = pilotInputsRef.current;
+
+        // Move ship
+        const speed = 1.6;
+        if (inputs.left) ship.x = Math.max(6, ship.x - speed);
+        if (inputs.right) ship.x = Math.min(W - 6, ship.x + speed);
+        if (inputs.up) ship.y = Math.max(30, ship.y - speed);
+        if (inputs.down) ship.y = Math.min(H - 6, ship.y + speed);
+
+        // Fire laser (rate-limited)
+        if (inputs.fire && next - pilotLastFireRef.current >= 6) {
+          pilotLastFireRef.current = next;
+          pilotIdRef.current += 1;
+          pilotLasersRef.current.push({ id: pilotIdRef.current, x: ship.x, y: ship.y - 6 });
+          playBoop();
+        }
+
+        // Spawn asteroids (rate accelerates over time)
+        const spawnRate = Math.max(10, 28 - Math.floor(next / 30));
+        if (next % spawnRate === 0) {
+          pilotIdRef.current += 1;
+          pilotAsteroidsRef.current.push({
+            id: pilotIdRef.current,
+            x: 8 + Math.random() * (W - 16),
+            y: -6,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: 0.6 + Math.random() * 1.2,
+            size: 3 + Math.floor(Math.random() * 4),
+          });
+        }
+
+        // Advance lasers (upward)
+        pilotLasersRef.current = pilotLasersRef.current
+          .map((l) => ({ ...l, y: l.y - 3 }))
+          .filter((l) => l.y > 12);
+
+        // Advance asteroids
+        pilotAsteroidsRef.current = pilotAsteroidsRef.current
+          .map((a) => ({ ...a, x: a.x + a.vx, y: a.y + a.vy }))
+          .filter((a) => a.y < H + 8 && a.x > -10 && a.x < W + 10);
+
+        // Laser vs asteroid collisions
+        const survivingAsteroids: Asteroid[] = [];
+        const survivingLasers: Laser[] = [];
+        const hitLaserIds = new Set<number>();
+        for (const a of pilotAsteroidsRef.current) {
+          let hit = false;
+          for (const l of pilotLasersRef.current) {
+            if (hitLaserIds.has(l.id)) continue;
+            const dx = a.x - l.x;
+            const dy = a.y - l.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= a.size + 1) {
+              hit = true;
+              hitLaserIds.add(l.id);
+              pilotBonusRef.current += 10 + a.size * 2;
+              setPilotHits((h) => h + 1);
+              break;
+            }
+          }
+          if (!hit) survivingAsteroids.push(a);
+        }
+        for (const l of pilotLasersRef.current) {
+          if (!hitLaserIds.has(l.id)) survivingLasers.push(l);
+        }
+        pilotAsteroidsRef.current = survivingAsteroids;
+        pilotLasersRef.current = survivingLasers;
+        if (hitLaserIds.size > 0) playCoinSound();
+
+        // Asteroid vs ship
+        if (pilotInvulnRef.current > 0) {
+          pilotInvulnRef.current -= 1;
+        } else {
+          for (const a of pilotAsteroidsRef.current) {
+            const dx = a.x - ship.x;
+            const dy = a.y - ship.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= a.size + 4) {
+              pilotInvulnRef.current = 30;
+              playWrong();
+              setPilotLives((lv) => Math.max(0, lv - 1));
+              break;
+            }
+          }
+        }
+
+        // End on duration; the lives-out end path is handled by a separate effect
+        const shouldEnd = next >= gameDuration;
+        return shouldEnd ? 0 : next;
+      });
+    }, tickMs);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  // End pilot game when lives depleted or tick loops (ended in setter)
+  useEffect(() => {
+    if (phase !== "pilot") return;
+    if (pilotLives > 0 && pilotTick < 449) return;
+    // Credit bonus coins, return to cutscene at saved tick
+    const bonus = pilotBonusRef.current;
+    if (pilotReturnTo === "alien") {
+      setAlienCoins((g) => {
+        const n = g + bonus;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+      setCutsceneType("journey-out");
+    } else {
+      setEarthCoins((g) => {
+        const n = g + bonus;
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+      setCutsceneType("journey-back");
+    }
+    // Resume journey just past the offer tick so the journey continues toward landing
+    setCutsceneTick(Math.max(pilotResumeTickRef.current, 29));
+    setPhase("cutscene");
+  }, [phase, pilotLives, pilotTick, pilotReturnTo]);
+
+  // Keyboard controls during pilot phase
+  useEffect(() => {
+    if (phase !== "pilot") return;
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") pilotInputsRef.current.left = true;
+      if (e.key === "ArrowRight") pilotInputsRef.current.right = true;
+      if (e.key === "ArrowUp") pilotInputsRef.current.up = true;
+      if (e.key === "ArrowDown") pilotInputsRef.current.down = true;
+      if (e.key === " " || e.key === "Spacebar") pilotInputsRef.current.fire = true;
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") pilotInputsRef.current.left = false;
+      if (e.key === "ArrowRight") pilotInputsRef.current.right = false;
+      if (e.key === "ArrowUp") pilotInputsRef.current.up = false;
+      if (e.key === "ArrowDown") pilotInputsRef.current.down = false;
+      if (e.key === " " || e.key === "Spacebar") pilotInputsRef.current.fire = false;
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [phase]);
 
   // Choose a door in the dimension fork
   const handleBlackholeDoor = useCallback((door: BlackholeScene) => {
@@ -2644,6 +2948,117 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Pilot offer overlay (mid-journey) */}
+      {pilotOfferActive && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #102040, #204080)",
+            borderColor: "#80C0FF",
+            color: "#F0F8FF",
+            boxShadow: "0 0 20px rgba(128, 192, 255, 0.5)",
+          }}>
+          <p className="text-lg font-bold mb-2" style={{ color: "#FFE080" }}>
+            ZARIXA
+          </p>
+          <p className="mb-3 leading-relaxed">
+            &ldquo;My tentacles get tired. Wanna take the controls and blast a few asteroids?&rdquo;
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={acceptPilotOffer}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: "linear-gradient(180deg, #FFE080, #E0A040)",
+                borderBottomColor: "#806020", color: "#333",
+              }}>
+              LET ME DRIVE!
+            </button>
+            <button onClick={declinePilotOffer}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: "linear-gradient(180deg, #B8E0FF, #6090C0)",
+                borderBottomColor: "#2060A0", color: "#FFF",
+              }}>
+              You drive
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pilot controls (on-screen d-pad + fire) */}
+      {phase === "pilot" && (
+        <div className="w-full max-w-lg flex items-center justify-between gap-3 mb-3 select-none"
+          style={{ fontFamily: "monospace" }}>
+          {/* D-pad */}
+          <div className="grid grid-cols-3 grid-rows-3 gap-1" style={{ width: 160, height: 160 }}>
+            <div />
+            <button
+              onTouchStart={(e) => { e.preventDefault(); pilotInputsRef.current.up = true; }}
+              onTouchEnd={(e) => { e.preventDefault(); pilotInputsRef.current.up = false; }}
+              onMouseDown={() => { pilotInputsRef.current.up = true; }}
+              onMouseUp={() => { pilotInputsRef.current.up = false; }}
+              onMouseLeave={() => { pilotInputsRef.current.up = false; }}
+              className="rounded-lg border-b-4 text-2xl font-bold"
+              style={{ background: "linear-gradient(180deg,#E0E0E0,#A0A0A0)", borderBottomColor: "#606060", color: "#222" }}
+              aria-label="Up">&uarr;</button>
+            <div />
+            <button
+              onTouchStart={(e) => { e.preventDefault(); pilotInputsRef.current.left = true; }}
+              onTouchEnd={(e) => { e.preventDefault(); pilotInputsRef.current.left = false; }}
+              onMouseDown={() => { pilotInputsRef.current.left = true; }}
+              onMouseUp={() => { pilotInputsRef.current.left = false; }}
+              onMouseLeave={() => { pilotInputsRef.current.left = false; }}
+              className="rounded-lg border-b-4 text-2xl font-bold"
+              style={{ background: "linear-gradient(180deg,#E0E0E0,#A0A0A0)", borderBottomColor: "#606060", color: "#222" }}
+              aria-label="Left">&larr;</button>
+            <div />
+            <button
+              onTouchStart={(e) => { e.preventDefault(); pilotInputsRef.current.right = true; }}
+              onTouchEnd={(e) => { e.preventDefault(); pilotInputsRef.current.right = false; }}
+              onMouseDown={() => { pilotInputsRef.current.right = true; }}
+              onMouseUp={() => { pilotInputsRef.current.right = false; }}
+              onMouseLeave={() => { pilotInputsRef.current.right = false; }}
+              className="rounded-lg border-b-4 text-2xl font-bold"
+              style={{ background: "linear-gradient(180deg,#E0E0E0,#A0A0A0)", borderBottomColor: "#606060", color: "#222" }}
+              aria-label="Right">&rarr;</button>
+            <div />
+            <button
+              onTouchStart={(e) => { e.preventDefault(); pilotInputsRef.current.down = true; }}
+              onTouchEnd={(e) => { e.preventDefault(); pilotInputsRef.current.down = false; }}
+              onMouseDown={() => { pilotInputsRef.current.down = true; }}
+              onMouseUp={() => { pilotInputsRef.current.down = false; }}
+              onMouseLeave={() => { pilotInputsRef.current.down = false; }}
+              className="rounded-lg border-b-4 text-2xl font-bold"
+              style={{ background: "linear-gradient(180deg,#E0E0E0,#A0A0A0)", borderBottomColor: "#606060", color: "#222" }}
+              aria-label="Down">&darr;</button>
+            <div />
+          </div>
+
+          {/* Score + Fire */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-xs text-center" style={{ color: "#C44569" }}>
+              hits: <strong>{pilotHits}</strong>
+              <br />
+              <span style={{ color: "#FF4444" }}>{"\u2665".repeat(pilotLives)}{"\u2661".repeat(3 - pilotLives)}</span>
+            </div>
+            <button
+              onTouchStart={(e) => { e.preventDefault(); pilotInputsRef.current.fire = true; }}
+              onTouchEnd={(e) => { e.preventDefault(); pilotInputsRef.current.fire = false; }}
+              onMouseDown={() => { pilotInputsRef.current.fire = true; }}
+              onMouseUp={() => { pilotInputsRef.current.fire = false; }}
+              onMouseLeave={() => { pilotInputsRef.current.fire = false; }}
+              className="rounded-full border-b-4 font-bold text-lg"
+              style={{
+                width: 110, height: 110,
+                background: "radial-gradient(circle at 30% 30%, #FFC0C0, #FF4040)",
+                borderBottomColor: "#A02020", color: "#FFF",
+                textShadow: "1px 1px 0 #802020",
+              }}
+              aria-label="Fire">FIRE {"\u{1F525}"}</button>
+          </div>
+        </div>
+      )}
+
       {/* Black hole interactive overlay */}
       {phase === "blackhole" && (
         <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
@@ -2840,7 +3255,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && (
+      {phase !== "blackhole" && phase !== "pilot" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
