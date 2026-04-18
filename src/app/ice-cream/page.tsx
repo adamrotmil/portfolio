@@ -22,11 +22,31 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "result";
 
 type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
 type Laser = { id: number; x: number; y: number; };
 type PilotInputs = { left: boolean; right: boolean; up: boolean; down: boolean; fire: boolean };
+
+type ShopItem = {
+  id: string;        // stable id used as inventory key
+  name: string;
+  emoji: string;
+  price: number;
+  description: string;
+};
+
+type Shop = {
+  id: string;
+  name: string;
+  ownerName: string;
+  signColor: string;       // awning / sign
+  wallColor: string;
+  accentColor: string;
+  location: Location;
+  items: ShopItem[];
+  greeting: string;        // short blurb when opened
+};
 
 type Location = "earth" | "alien-planet";
 
@@ -196,6 +216,96 @@ const ALIEN_OFFER_DIALOGUE: DialogueNode[] = [
 const ALIEN_BYE_DIALOGUE: DialogueNode[] = [
   { speaker: "them", text: "Understood. Earth is your home. I will visit again someday! \u{1F44B}" },
 ];
+
+// ── Shops ────────────────────────────────────────────────────────────────────
+const EARTH_SHOPS: Shop[] = [
+  {
+    id: "sprinkle-hut",
+    name: "Sprinkle Hut",
+    ownerName: "Tina",
+    signColor: "#FFB0CB",
+    wallColor: "#FFF5D6",
+    accentColor: "#D4567A",
+    location: "earth",
+    greeting: "Sprinkles! Jimmies! Sparkles! You name it, I've got it shiny!",
+    items: [
+      { id: "rainbow-sprinkles", name: "Rainbow Sprinkles", emoji: "\u{1F308}", price: 15, description: "Adds color to any scoop." },
+      { id: "golden-cherry",     name: "Golden Cherry",     emoji: "\u{1F352}", price: 40, description: "Rare cherry. Wins a smile." },
+      { id: "unicorn-horn",      name: "Unicorn Horn",      emoji: "\u{1F984}", price: 120, description: "Mythical topping. Grants a tiny luck bonus." },
+    ],
+  },
+  {
+    id: "cone-shack",
+    name: "Cone Shack",
+    ownerName: "Marco",
+    signColor: "#E0A050",
+    wallColor: "#FFE8C0",
+    accentColor: "#8B5A20",
+    location: "earth",
+    greeting: "Fresh cones! Pressed this morning. Or pressed by the ORIGINAL MAGIC CONE, if you believe the stories.",
+    items: [
+      { id: "waffle-cone",  name: "Waffle Cone",  emoji: "\u{1F366}", price: 10, description: "Classic crunch." },
+      { id: "sugar-cone",   name: "Sugar Cone",   emoji: "\u{1F36E}", price: 20, description: "Sweet and sturdy." },
+      { id: "magic-cone",   name: "Magic Cone",   emoji: "\u2728",    price: 200, description: "Glows faintly. Rumored to transform blobs." },
+    ],
+  },
+  {
+    id: "scooper-gear",
+    name: "Scooper Gear",
+    ownerName: "Kiko",
+    signColor: "#80C8FF",
+    wallColor: "#E0F0FF",
+    accentColor: "#2060A0",
+    location: "earth",
+    greeting: "Best scoopers in the business! A good tool is half the scoop.",
+    items: [
+      { id: "silver-scooper", name: "Silver Scooper", emoji: "\u{1F944}", price: 60, description: "Keeps scoops round." },
+      { id: "gold-scooper",   name: "Gold Scooper",   emoji: "\u{1F3C6}", price: 180, description: "Shinier. Fancier." },
+      { id: "time-scooper",   name: "Time Scooper",   emoji: "\u23F3",    price: 300, description: "Scoops yesterday's ice cream. Confusing but delicious." },
+    ],
+  },
+];
+
+const ALIEN_SHOPS: Shop[] = [
+  {
+    id: "galactic-goods",
+    name: "Galactic Goods",
+    ownerName: "Blorp",
+    signColor: "#80E0B0",
+    wallColor: "#B0FFD0",
+    accentColor: "#208050",
+    location: "alien-planet",
+    greeting: "Wares from SIX galaxies! Don't ask about returns on the rhombus items.",
+    items: [
+      { id: "antenna-extender", name: "Antenna Extender", emoji: "\u{1F4E1}", price: 25, description: "For those who want to hear more." },
+      { id: "gravity-boots",    name: "Gravity Boots",    emoji: "\u{1F462}", price: 90, description: "Walk on any ceiling. Any. Ceiling." },
+      { id: "pocket-nebula",    name: "Pocket Nebula",    emoji: "\u{1F30C}", price: 250, description: "Tiny personal nebula. Keep in a cool place." },
+    ],
+  },
+  {
+    id: "void-scoops",
+    name: "Void Scoops",
+    ownerName: "Xarnix",
+    signColor: "#C080FF",
+    wallColor: "#2A1A4A",
+    accentColor: "#FFD0FF",
+    location: "alien-planet",
+    greeting: "We sell what you cannot find. Prices are in coins and also in regret.",
+    items: [
+      { id: "void-sprinkles",  name: "Void Sprinkles", emoji: "\u2B50",    price: 30, description: "Tiny cold dots. Absorb sound when you lick them." },
+      { id: "time-cone",       name: "Time Cone",      emoji: "\u23F3",    price: 160, description: "Melts into yesterday." },
+      { id: "singularity-dip", name: "Singularity Dip", emoji: "\u{1F30C}", price: 420, description: "Dip your scoop. Briefly become infinite." },
+    ],
+  },
+];
+
+function getShops(location: Location): Shop[] {
+  return location === "alien-planet" ? ALIEN_SHOPS : EARTH_SHOPS;
+}
+
+function shopById(id: string): Shop | undefined {
+  return [...EARTH_SHOPS, ...ALIEN_SHOPS].find((s) => s.id === id);
+}
 
 // ── Dialogue Trees ───────────────────────────────────────────────────────────
 const CUSTOMER_DIALOGUES: DialogueNode[][] = [
@@ -1305,6 +1415,269 @@ function drawSpaceScene(ctx: CanvasRenderingContext2D, tick: number, direction: 
   });
 }
 
+// ── Street + Shop Drawing ────────────────────────────────────────────────────
+
+// Hero (player character) — full-body standing/walking figure
+function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number, walking: boolean, alien: boolean) {
+  const pal = alien
+    ? { body: "#C080FF", accent: "#8040C0", eyes: "#FFF" }
+    : { body: "#90EE90", accent: "#6BC56B", eyes: "#1A1A2E" };
+  const bob = walking ? Math.floor(Math.sin(Date.now() / 180) * 1.2) : 0;
+  const legAnim = walking ? Math.floor(Math.sin(Date.now() / 150) * 1) : 0;
+  // Shadow
+  px(ctx, x - 5, y + 14, 11, 2, "rgba(0,0,0,0.18)");
+  // Feet
+  px(ctx, x - 3, y + 10 + bob + legAnim, 2, 3, pal.accent);
+  px(ctx, x + 2, y + 10 + bob - legAnim, 2, 3, pal.accent);
+  // Body
+  for (let dy = -10; dy <= 9; dy++) {
+    const progress = (dy + 10) / 19;
+    const halfW = Math.round(7 * Math.sin(progress * Math.PI));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const edge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + bob, 1, 1, edge ? pal.accent : pal.body);
+    }
+  }
+  // Highlight
+  for (let dy = -7; dy <= -3; dy++) {
+    px(ctx, x - 3, y + dy + bob, 2, 1, lightenColor(pal.body, 40));
+  }
+  // Arms
+  px(ctx, x - 7, y + 1 + bob, 2, 2, pal.accent);
+  px(ctx, x + 6, y + 1 + bob, 2, 2, pal.accent);
+  // Eyes
+  px(ctx, x - 3, y - 3 + bob, 3, 3, pal.eyes);
+  px(ctx, x - 3, y - 3 + bob, 1, 1, "#FFF");
+  px(ctx, x + 2, y - 3 + bob, 3, 3, pal.eyes);
+  px(ctx, x + 2, y - 3 + bob, 1, 1, "#FFF");
+  // Mouth + blush
+  px(ctx, x - 1, y + 2 + bob, 3, 1, "#E06060");
+  px(ctx, x - 6, y + bob, 2, 2, "#FFB0B0");
+  px(ctx, x + 5, y + bob, 2, 2, "#FFB0B0");
+  // Chef hat w/ pink band
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 14 + bob, 1, 1, "#FFFFFF");
+  }
+  for (let dx = -3; dx <= 3; dx++) {
+    px(ctx, x + dx, y - 16 + bob, 1, 1, "#FFFFFF");
+    px(ctx, x + dx, y - 15 + bob, 1, 1, "#FFFFFF");
+  }
+  for (let dx = -4; dx <= 4; dx++) {
+    px(ctx, x + dx, y - 13 + bob, 1, 1, "#FF69B4");
+  }
+}
+
+// Storefront building — draws awning + wall + door + sign at x..x+w
+function drawShopFront(ctx: CanvasRenderingContext2D, shop: Shop, bx: number, bw: number, tick: number, highlighted: boolean) {
+  const baseY = 76;
+  const roofY = 16;
+  // Wall
+  for (let dy = roofY; dy < baseY; dy++) {
+    for (let dx = 0; dx < bw; dx++) {
+      const edge = dx === 0 || dx === bw - 1 || dy === roofY;
+      px(ctx, bx + dx, dy, 1, 1, edge ? shop.accentColor : shop.wallColor);
+    }
+  }
+  // Awning (stripes)
+  for (let dx = 0; dx < bw; dx++) {
+    const stripe = Math.floor(dx / 3) % 2;
+    for (let dy = 0; dy < 5; dy++) {
+      px(ctx, bx + dx, roofY - 5 + dy, 1, 1, stripe ? "#FFFFFF" : shop.signColor);
+    }
+  }
+  // Sign board
+  const sgnW = bw - 4;
+  const sgnX = bx + 2;
+  const sgnY = roofY - 11;
+  for (let dx = 0; dx < sgnW; dx++) {
+    for (let dy = 0; dy < 6; dy++) {
+      const edge = dx === 0 || dx === sgnW - 1 || dy === 0 || dy === 5;
+      px(ctx, sgnX + dx, sgnY + dy, 1, 1, edge ? "#333" : "#FFFDE8");
+    }
+  }
+  // Short label on sign (trimmed to fit)
+  const short = shop.name.split(" ")[0].toUpperCase().slice(0, 8);
+  drawText(ctx, short, bx + Math.floor(bw / 2), sgnY + 3, shop.accentColor, 0.4);
+  // Door (center, 8 wide, 18 tall)
+  const doorW = 8;
+  const doorX = bx + Math.floor((bw - doorW) / 2);
+  const doorY = baseY - 20;
+  for (let dy = 0; dy < 20; dy++) {
+    for (let dx = 0; dx < doorW; dx++) {
+      const edge = dx === 0 || dx === doorW - 1 || dy === 0;
+      px(ctx, doorX + dx, doorY + dy, 1, 1, edge ? "#5A3A10" : "#A07030");
+    }
+  }
+  // Door handle
+  px(ctx, doorX + 2, doorY + 10, 1, 1, "#FFD700");
+  // Window above door
+  const winY = roofY + 3;
+  const winW = Math.min(bw - 6, 10);
+  const winX = bx + Math.floor((bw - winW) / 2);
+  for (let dy = 0; dy < 6; dy++) {
+    for (let dx = 0; dx < winW; dx++) {
+      const edge = dx === 0 || dx === winW - 1 || dy === 0 || dy === 5;
+      px(ctx, winX + dx, winY + dy, 1, 1, edge ? "#6A4A20" : "#87CEEB");
+    }
+  }
+  // Highlight outline when selected
+  if (highlighted) {
+    const pulse = Math.floor(tick / 4) % 2;
+    const hl = pulse ? "#FFE080" : "#FF80C0";
+    for (let dx = -1; dx <= bw; dx++) {
+      px(ctx, bx + dx, roofY - 6, 1, 1, hl);
+      px(ctx, bx + dx, baseY, 1, 1, hl);
+    }
+    for (let dy = -1; dy <= baseY - roofY + 6; dy++) {
+      px(ctx, bx - 1, roofY - 6 + dy, 1, 1, hl);
+      px(ctx, bx + bw, roofY - 6 + dy, 1, 1, hl);
+    }
+  }
+}
+
+// Draws street backdrop (sky, sidewalk, road) and returns building x ranges
+function drawStreetScene(
+  ctx: CanvasRenderingContext2D,
+  tick: number,
+  location: Location,
+  shops: Shop[],
+  heroX: number,
+  walking: boolean,
+  npcs: { x: number; spriteIdx: number; alien: boolean }[],
+  highlightId: string | null,
+) {
+  // Sky
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let color;
+      if (location === "alien-planet") {
+        color = y < 16 ? "#0E2A3A" : y < 76 ? "#1E4A5A" : y < 80 ? "#505060" : (Math.floor(x / 6) + Math.floor(y / 4)) % 2 ? "#70C080" : "#506050";
+      } else {
+        color = y < 16 ? "#A0D8F0" : y < 76 ? "#CFECF8" : y < 80 ? "#606060" : (Math.floor(x / 6) + Math.floor(y / 4)) % 2 ? "#A0A0A0" : "#808080";
+      }
+      px(ctx, x, y, 1, 1, color);
+    }
+  }
+  // Clouds / stars depending on location
+  if (location === "alien-planet") {
+    for (let i = 0; i < 20; i++) {
+      const sx = (i * 13 + Math.floor(tick / 4)) % W;
+      const sy = (i * 5) % 14;
+      if ((Math.floor(tick / 20) + i) % 3 === 0) px(ctx, sx, sy, 1, 1, "#FFFFFF");
+    }
+    // Twin moons
+    for (let dy = -5; dy <= 5; dy++) {
+      for (let dx = -5; dx <= 5; dx++) {
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= 5) px(ctx, 16 + dx, 10 + dy, 1, 1, d > 4 ? "#8040A0" : "#B070C0");
+        if (d <= 3) px(ctx, 112 + dx, 8 + dy, 1, 1, d > 2 ? "#C08040" : "#FFB060");
+      }
+    }
+  } else {
+    // Clouds
+    const cloudXs = [10 + ((tick / 12) % 140) - 20, 70 + ((tick / 8) % 140) - 40];
+    cloudXs.forEach((cxRaw) => {
+      const cx = Math.floor(cxRaw);
+      for (let dx = -6; dx <= 6; dx++) {
+        for (let dy = -2; dy <= 1; dy++) {
+          if (Math.abs(dx) + Math.abs(dy) < 7) px(ctx, cx + dx, 6 + dy, 1, 1, "#FFFFFF");
+        }
+      }
+    });
+  }
+
+  // Buildings
+  const gap = 2;
+  const totalGap = gap * (shops.length - 1);
+  const bw = Math.floor((W - 4 - totalGap) / shops.length);
+  shops.forEach((shop, i) => {
+    const bx = 2 + i * (bw + gap);
+    drawShopFront(ctx, shop, bx, bw, tick, highlightId === shop.id);
+  });
+
+  // NPCs on sidewalk
+  npcs.forEach((n) => {
+    if (n.alien) drawAlienSprite(ctx, Math.floor(n.x), 82, n.spriteIdx, true);
+    else         drawCustomerSprite(ctx, Math.floor(n.x), 82, n.spriteIdx, true);
+  });
+
+  // Hero on sidewalk
+  drawHero(ctx, Math.floor(heroX), 82, walking, false);
+
+  // "tap a shop to enter" hint
+  drawText(ctx, location === "alien-planet" ? "ALIEN STREET" : "MAIN STREET", W / 2, 94, "#FFFFFF", 0.55);
+}
+
+// Shop interior — draws owner behind counter and shop-themed backdrop
+function drawShopInterior(ctx: CanvasRenderingContext2D, shop: Shop, tick: number) {
+  // Wall
+  for (let y = 0; y < 70; y++) {
+    for (let x = 0; x < W; x++) {
+      const stripe = Math.floor(y / 10) % 2;
+      px(ctx, x, y, 1, 1, stripe ? shop.wallColor : lightenColor(shop.wallColor, -15));
+    }
+  }
+  // Awning
+  for (let x = 0; x < W; x++) {
+    const stripe = Math.floor(x / 5) % 2;
+    for (let y = 0; y < 6; y++) {
+      px(ctx, x, y, 1, 1, stripe ? "#FFFFFF" : shop.signColor);
+    }
+  }
+  // Sign
+  drawText(ctx, shop.name.toUpperCase(), W / 2, 13, shop.accentColor, 0.75);
+
+  // Counter
+  for (let x = 0; x < W; x++) {
+    px(ctx, x, 70, 1, 1, shop.accentColor);
+    px(ctx, x, 71, 1, 1, lightenColor(shop.accentColor, -20));
+    px(ctx, x, 72, 1, 1, lightenColor(shop.accentColor, -40));
+  }
+
+  // Display shelves with the 3 items
+  shop.items.forEach((item, i) => {
+    const tx = 10 + i * 36;
+    for (let dy = 0; dy < 8; dy++) {
+      for (let dx = 0; dx < 28; dx++) {
+        const edge = dx === 0 || dx === 27 || dy === 0 || dy === 7;
+        px(ctx, tx + dx, 60 + dy, 1, 1, edge ? "#333" : "#FFF");
+      }
+    }
+    drawText(ctx, `${item.price}G`, tx + 14, 64, shop.accentColor, 0.5);
+  });
+
+  // Floor
+  for (let y = 73; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const check = (Math.floor(x / 6) + Math.floor(y / 4)) % 2;
+      px(ctx, x, y, 1, 1, check ? "#D0D0D0" : "#B8B8B8");
+    }
+  }
+
+  // Owner sprite (alien or human customer-style)
+  if (shop.location === "alien-planet") {
+    drawAlienSprite(ctx, 64, 60, 2, false);
+  } else {
+    drawCustomerSprite(ctx, 64, 60, 4, false);
+  }
+
+  // Bouncing "!" above owner when idle
+  const bounce = Math.floor(Math.sin(tick / 8) * 2);
+  drawText(ctx, "\u2728", 64, 44 + bounce, shop.accentColor, 0.7);
+
+  // Door back to street on the right
+  const dx0 = W - 18;
+  for (let dy = 20; dy < 70; dy++) {
+    for (let ddx = 0; ddx < 14; ddx++) {
+      const isBorder = ddx === 0 || ddx === 13 || dy === 20;
+      px(ctx, dx0 + ddx, dy, 1, 1, isBorder ? "#5A3A10" : "#A07030");
+    }
+  }
+  drawText(ctx, "EXIT", dx0 + 7, 42, "#FFFF80", 0.55);
+  px(ctx, dx0 + 3, 50, 2, 2, "#FFD700");
+}
+
 // ── Pilot Minigame Drawing ───────────────────────────────────────────────────
 
 function drawPilotSaucer(ctx: CanvasRenderingContext2D, cx: number, cy: number, tick: number, invulnerable: boolean) {
@@ -1736,6 +2109,23 @@ export default function IceCreamGame() {
   const [blackholeBonus, setBlackholeBonus] = useState(0);
   const [blackholeMessage, setBlackholeMessage] = useState<string | null>(null);
 
+  // Street / shop state
+  const [doorOfferActive, setDoorOfferActive] = useState(false);
+  const [currentShopId, setCurrentShopId] = useState<string | null>(null);
+  const [shopTab, setShopTab] = useState<"buy" | "inventory">("buy");
+  const [shopFlash, setShopFlash] = useState<string | null>(null);
+  const [heroX, setHeroX] = useState(30);
+  const heroDirRef = useRef<-1 | 0 | 1>(0);
+  const [streetTick, setStreetTick] = useState(0);
+  const [streetNpcs, setStreetNpcs] = useState<{ id: number; x: number; spriteIdx: number; alien: boolean; dir: -1 | 1 }[]>([]);
+  const [inventory, setInventory] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = window.localStorage.getItem("scoopstack-inventory");
+      return saved ? (JSON.parse(saved) as Record<string, number>) : {};
+    } catch { return {}; }
+  });
+
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
   const [pilotOfferActive, setPilotOfferActive] = useState(false);
@@ -1759,7 +2149,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -1974,6 +2364,27 @@ export default function IceCreamGame() {
       );
     }
 
+    function drawStreet() {
+      if (!ctx) return;
+      drawStreetScene(
+        ctx,
+        streetTick,
+        location,
+        getShops(location),
+        heroX,
+        heroDirRef.current !== 0,
+        streetNpcs,
+        null,
+      );
+    }
+
+    function drawShop() {
+      if (!ctx) return;
+      const shop = currentShopId ? shopById(currentShopId) : null;
+      if (!shop) return;
+      drawShopInterior(ctx, shop, streetTick);
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -1983,6 +2394,10 @@ export default function IceCreamGame() {
         drawBlackhole();
       } else if (phase === "pilot") {
         drawPilot();
+      } else if (phase === "street") {
+        drawStreet();
+      } else if (phase === "shop") {
+        drawShop();
       } else {
         drawShopScene();
       }
@@ -1992,7 +2407,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -2221,6 +2636,9 @@ export default function IceCreamGame() {
     pilotAsteroidsRef.current = []; pilotLasersRef.current = [];
     pilotInputsRef.current = { left: false, right: false, up: false, down: false, fire: false };
     pilotBonusRef.current = 0; pilotInvulnRef.current = 0;
+    setDoorOfferActive(false);
+    setCurrentShopId(null); setShopTab("buy"); setShopFlash(null);
+    setHeroX(30); heroDirRef.current = 0; setStreetTick(0); setStreetNpcs([]);
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -2248,11 +2666,35 @@ export default function IceCreamGame() {
     return pool[idx];
   }, [location]);
 
-  // Door tap → travel between shops (bidirectional)
+  // Spawn a handful of ambient passersby on the street
+  const seedStreetNpcs = useCallback((loc: Location) => {
+    const list: { id: number; x: number; spriteIdx: number; alien: boolean; dir: -1 | 1 }[] = [];
+    const count = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < count; i++) {
+      list.push({
+        id: i,
+        x: 20 + Math.random() * 90,
+        spriteIdx: Math.floor(Math.random() * 6),
+        alien: loc === "alien-planet",
+        dir: Math.random() > 0.5 ? 1 : -1,
+      });
+    }
+    setStreetNpcs(list);
+  }, []);
+
+  // Door tap: open the fork panel (Ship vs Shops). For first-time use the
+  // door is only enabled after the player has visited the alien planet at least once.
   const handleDoorTap = useCallback(() => {
-    if (!alienVisited) return; // only enabled after first alien trip
     if (chatActive) return;
     playDing();
+    setDoorOfferActive(true);
+  }, [chatActive]);
+
+  // Fork action: take the ship (the existing bi-directional cutscene)
+  const chooseShipFromDoor = useCallback(() => {
+    if (!alienVisited) return; // can't take the ship until we've been shown the way
+    playDing();
+    setDoorOfferActive(false);
     if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
     setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
@@ -2263,7 +2705,233 @@ export default function IceCreamGame() {
     }
     setCutsceneTick(0);
     setPhase("cutscene");
-  }, [alienVisited, chatActive, location]);
+  }, [alienVisited, location]);
+
+  // Fork action: walk to shops (enter street phase for the current planet)
+  const chooseShopsFromDoor = useCallback(() => {
+    playDing();
+    setDoorOfferActive(false);
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    setHeroX(30);
+    seedStreetNpcs(location);
+    setStreetTick(0);
+    setPhase("street");
+  }, [location, seedStreetNpcs]);
+
+  const closeDoorOffer = useCallback(() => {
+    playBoop();
+    setDoorOfferActive(false);
+  }, []);
+
+  // ── Street + Shop handlers ─────────────────────────────────────────────
+  const persistInventory = useCallback((inv: Record<string, number>) => {
+    try { window.localStorage.setItem("scoopstack-inventory", JSON.stringify(inv)); } catch { /* private mode etc. */ }
+  }, []);
+
+  // Enter a shop from the street
+  const enterShop = useCallback((shopId: string) => {
+    playDing();
+    setCurrentShopId(shopId);
+    setShopTab("buy");
+    setShopFlash(null);
+    setPhase("shop");
+  }, []);
+
+  // Exit shop back to the street
+  const exitShop = useCallback(() => {
+    playBoop();
+    setCurrentShopId(null);
+    setShopFlash(null);
+    setPhase("street");
+  }, []);
+
+  // Exit street back to home (re-enter own scoop shop)
+  const exitStreet = useCallback(() => {
+    playBoop();
+    setStreetNpcs([]);
+    setPhase("playing");
+  }, []);
+
+  // Buy an item: deduct coins, add to inventory
+  const buyItem = useCallback((item: ShopItem) => {
+    const have = totalGold;
+    if (have < item.price) {
+      playWrong();
+      setShopFlash(`need ${item.price - have} more G!`);
+      return;
+    }
+    playCoinSound();
+    // Prefer deducting from current-location coins first, then the other pot
+    if (location === "alien-planet") {
+      setAlienCoins((g) => {
+        const fromAlien = Math.min(g, item.price);
+        const rest = item.price - fromAlien;
+        if (rest > 0) {
+          setEarthCoins((e) => {
+            const n = Math.max(0, e - rest);
+            window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+            return n;
+          });
+        }
+        const n = g - fromAlien;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+    } else {
+      setEarthCoins((g) => {
+        const fromEarth = Math.min(g, item.price);
+        const rest = item.price - fromEarth;
+        if (rest > 0) {
+          setAlienCoins((a) => {
+            const n = Math.max(0, a - rest);
+            window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+            return n;
+          });
+        }
+        const n = g - fromEarth;
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+    }
+    setInventory((inv) => {
+      const next = { ...inv, [item.id]: (inv[item.id] || 0) + 1 };
+      persistInventory(next);
+      return next;
+    });
+    setShopFlash(`Bought ${item.name}! +1`);
+  }, [totalGold, location, persistInventory]);
+
+  // Return an item: refund coins to the shop's planet, remove from inventory
+  const returnItem = useCallback((item: ShopItem) => {
+    if (!inventory[item.id] || inventory[item.id] <= 0) return;
+    playCoinSound();
+    if (location === "alien-planet") {
+      setAlienCoins((g) => {
+        const n = g + item.price;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+    } else {
+      setEarthCoins((g) => {
+        const n = g + item.price;
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+    }
+    setInventory((inv) => {
+      const n = (inv[item.id] || 0) - 1;
+      const copy = { ...inv };
+      if (n <= 0) delete copy[item.id];
+      else copy[item.id] = n;
+      persistInventory(copy);
+      return copy;
+    });
+    setShopFlash(`Returned ${item.name}. +${item.price}G`);
+  }, [inventory, location, persistInventory]);
+
+  // Hero walk buttons (handled via held-down d-pad buttons)
+  // The street tick drives ambient NPC movement and hero walking animation.
+  useEffect(() => {
+    if (phase !== "street") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      if (heroDirRef.current !== 0) {
+        setHeroX((x) => Math.max(8, Math.min(W - 8, x + heroDirRef.current * 1.2)));
+      }
+      setStreetNpcs((prev) => prev.map((n) => {
+        let nx = n.x + n.dir * 0.4;
+        let dir = n.dir;
+        if (nx < 8) { nx = 8; dir = 1 as const; }
+        if (nx > W - 8) { nx = W - 8; dir = -1 as const; }
+        return { ...n, x: nx, dir };
+      }));
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  // Tap handler for the street canvas — route to the correct shop or NPC
+  const handleStreetTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (chatActive) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+
+      // NPC tap (sprite drawn around y=82, width ~14)
+      if (gy > 70 && gy < 96) {
+        for (const n of streetNpcs) {
+          if (Math.abs(gx - n.x) < 8) {
+            playBoop();
+            setChatTarget("customer");
+            setChatDialogue(pickDialogue("customer"));
+            setChatNodeIdx(0);
+            setChatActive(true);
+            return;
+          }
+        }
+      }
+
+      // Building tap
+      const shops = getShops(location);
+      const gap = 2;
+      const totalGap = gap * (shops.length - 1);
+      const bw = Math.floor((W - 4 - totalGap) / shops.length);
+      for (let i = 0; i < shops.length; i++) {
+        const bx = 2 + i * (bw + gap);
+        if (gx >= bx && gx <= bx + bw && gy >= 11 && gy <= 76) {
+          enterShop(shops[i].id);
+          return;
+        }
+      }
+    },
+    [chatActive, streetNpcs, location, pickDialogue, enterShop]
+  );
+
+  // Tap handler for the shop interior — route exit door tap, owner chat
+  const handleShopTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (chatActive) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      // Exit door at right side
+      if (gx >= W - 18 && gx <= W - 2 && gy >= 20 && gy <= 70) {
+        exitShop();
+        return;
+      }
+      // Owner (center)
+      if (Math.abs(gx - 64) < 12 && gy > 50 && gy < 78) {
+        const shop = currentShopId ? shopById(currentShopId) : null;
+        if (shop) {
+          playBoop();
+          setChatTarget("customer");
+          setChatDialogue([
+            { speaker: "them", text: `${shop.ownerName}: ${shop.greeting}`, choiceA: { label: "Cool!", next: 1 }, choiceB: { label: "Any specials?", next: 1 } },
+            { speaker: "them", text: "Tap an item on the counter to buy. Swap to INVENTORY to return anything." },
+          ]);
+          setChatNodeIdx(0);
+          setChatActive(true);
+        }
+      }
+    },
+    [chatActive, currentShopId, exitShop]
+  );
 
   // Canvas tap handler — detect character taps
   const handleCanvasTap = useCallback(
@@ -2285,8 +2953,8 @@ export default function IceCreamGame() {
       const gx = (clientX - rect.left) * scaleX;
       const gy = (clientY - rect.top) * scaleY;
 
-      // Door: drawn at x = W - 18 .. W - 4, y = 20 .. 70. Tap to travel (once alien has been visited).
-      if (alienVisited && gx >= W - 18 && gx <= W - 2 && gy >= 20 && gy <= 70) {
+      // Door: drawn at x = W - 18 .. W - 4, y = 20 .. 70. Tap to open fork (ship/shops).
+      if (gx >= W - 18 && gx <= W - 2 && gy >= 20 && gy <= 70) {
         handleDoorTap();
         return;
       }
@@ -2318,7 +2986,7 @@ export default function IceCreamGame() {
         }
       }
     },
-    [chatActive, customer, pickDialogue, alienVisited, handleDoorTap]
+    [chatActive, customer, pickDialogue, handleDoorTap]
   );
 
   const handleChatChoice = useCallback((nextIdx: number) => {
@@ -2845,8 +3513,16 @@ export default function IceCreamGame() {
           ref={canvasRef}
           width={CANVAS_W}
           height={CANVAS_H}
-          onClick={handleCanvasTap}
-          onTouchStart={handleCanvasTap}
+          onClick={
+            phase === "street" ? handleStreetTap
+            : phase === "shop" ? handleShopTap
+            : handleCanvasTap
+          }
+          onTouchStart={
+            phase === "street" ? handleStreetTap
+            : phase === "shop" ? handleShopTap
+            : handleCanvasTap
+          }
           style={{
             width: "100%",
             height: "auto",
@@ -2947,6 +3623,220 @@ export default function IceCreamGame() {
           </div>
         </div>
       )}
+
+      {/* Door fork (ship vs shops) */}
+      {doorOfferActive && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #FFF, #FFF4B8)",
+            borderColor: "#FF9EBA",
+            color: "#333",
+          }}>
+          <p className="font-bold mb-3">Where to?</p>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <button onClick={chooseShopsFromDoor}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: "linear-gradient(180deg, #B0FFC8, #50C080)",
+                borderBottomColor: "#208050", color: "#FFF",
+              }}>
+              {"\u{1F6CD}\uFE0F"} Walk to shops
+            </button>
+            <button onClick={chooseShipFromDoor}
+              disabled={!alienVisited}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: alienVisited
+                  ? "linear-gradient(180deg, #B8E0FF, #5070D0)"
+                  : "linear-gradient(180deg, #DDD, #999)",
+                borderBottomColor: alienVisited ? "#2060A0" : "#666",
+                color: "#FFF",
+                opacity: alienVisited ? 1 : 0.6,
+              }}>
+              {"\u{1F6F8}"} Take the ship
+            </button>
+          </div>
+          {!alienVisited && (
+            <p className="text-xs mb-2" style={{ color: "#888" }}>
+              The ship option unlocks after your first alien visit.
+            </p>
+          )}
+          <button onClick={closeDoorOffer}
+            className="text-sm underline mt-1" style={{ color: "#C44569" }}>
+            never mind, stay inside
+          </button>
+        </div>
+      )}
+
+      {/* Street controls: left / right / enter-home */}
+      {phase === "street" && (
+        <div className="w-full max-w-lg flex items-center justify-between gap-2 mb-3 select-none"
+          style={{ fontFamily: "monospace" }}>
+          <div className="flex gap-2">
+            <button
+              onTouchStart={(e) => { e.preventDefault(); heroDirRef.current = -1; }}
+              onTouchEnd={(e) => { e.preventDefault(); heroDirRef.current = 0; }}
+              onMouseDown={() => { heroDirRef.current = -1; }}
+              onMouseUp={() => { heroDirRef.current = 0; }}
+              onMouseLeave={() => { heroDirRef.current = 0; }}
+              className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+              style={{ background: "linear-gradient(180deg,#FFF,#FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}
+              aria-label="Walk left">&larr;</button>
+            <button
+              onTouchStart={(e) => { e.preventDefault(); heroDirRef.current = 1; }}
+              onTouchEnd={(e) => { e.preventDefault(); heroDirRef.current = 0; }}
+              onMouseDown={() => { heroDirRef.current = 1; }}
+              onMouseUp={() => { heroDirRef.current = 0; }}
+              onMouseLeave={() => { heroDirRef.current = 0; }}
+              className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+              style={{ background: "linear-gradient(180deg,#FFF,#FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}
+              aria-label="Walk right">&rarr;</button>
+          </div>
+          <p className="text-sm" style={{ color: "#555" }}>tap a shop to enter</p>
+          <button onClick={exitStreet}
+            className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
+            style={{ background: "linear-gradient(180deg, #B0FFC8, #50C080)", borderBottomColor: "#208050", color: "#FFF" }}>
+            {"\u{1F3E0}"} Go home
+          </button>
+        </div>
+      )}
+
+      {/* Shop panel: buy / inventory tabs */}
+      {phase === "shop" && currentShopId && (() => {
+        const shop = shopById(currentShopId);
+        if (!shop) return null;
+        const owned = Object.entries(inventory).filter(([, n]) => n > 0);
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+            style={{
+              fontFamily: "monospace",
+              background: "#FFF",
+              borderColor: shop.accentColor,
+              color: "#333",
+            }}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <strong style={{ color: shop.accentColor }}>{shop.name}</strong>
+                <span className="ml-2 text-xs" style={{ color: "#888" }}>
+                  owner: {shop.ownerName}
+                </span>
+              </div>
+              <div className="text-sm font-bold" style={{ color: "#C08010" }}>
+                {totalGold}G
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 mb-2">
+              <button onClick={() => setShopTab("buy")}
+                className="flex-1 py-1 rounded text-sm font-bold border-b-2"
+                style={{
+                  background: shopTab === "buy" ? shop.signColor : "#EEE",
+                  borderBottomColor: shop.accentColor,
+                  color: shopTab === "buy" ? "#FFF" : "#666",
+                }}>BUY</button>
+              <button onClick={() => setShopTab("inventory")}
+                className="flex-1 py-1 rounded text-sm font-bold border-b-2"
+                style={{
+                  background: shopTab === "inventory" ? shop.signColor : "#EEE",
+                  borderBottomColor: shop.accentColor,
+                  color: shopTab === "inventory" ? "#FFF" : "#666",
+                }}>INVENTORY</button>
+            </div>
+
+            {shopFlash && (
+              <p className="text-xs text-center mb-2 rounded bg-yellow-50 py-1"
+                style={{ color: "#666", background: "#FFFDE8" }}>
+                {shopFlash}
+              </p>
+            )}
+
+            {shopTab === "buy" && (
+              <div className="grid grid-cols-1 gap-2">
+                {shop.items.map((item) => {
+                  const affordable = totalGold >= item.price;
+                  const owningCount = inventory[item.id] || 0;
+                  return (
+                    <button key={item.id} onClick={() => buyItem(item)}
+                      disabled={!affordable}
+                      className="flex items-center gap-3 p-2 rounded-lg text-left transition-all active:scale-[0.99] border-b-4"
+                      style={{
+                        background: affordable ? "linear-gradient(180deg, #FFF, #FFF4B8)" : "linear-gradient(180deg, #EEE, #CCC)",
+                        borderBottomColor: affordable ? shop.signColor : "#999",
+                        color: "#333",
+                        opacity: affordable ? 1 : 0.7,
+                      }}>
+                      <span className="text-2xl">{item.emoji}</span>
+                      <span className="flex-1">
+                        <strong>{item.name}</strong>
+                        <br /><span className="text-xs" style={{ color: "#666" }}>{item.description}</span>
+                      </span>
+                      <span className="text-right">
+                        <span className="font-bold" style={{ color: shop.accentColor }}>{item.price}G</span>
+                        {owningCount > 0 && (
+                          <><br /><span className="text-xs" style={{ color: "#888" }}>x{owningCount} owned</span></>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {shopTab === "inventory" && (
+              <div>
+                {owned.length === 0 ? (
+                  <p className="text-sm text-center py-4" style={{ color: "#888" }}>
+                    No items yet. Buy something in BUY tab!
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2">
+                    {owned.map(([id, n]) => {
+                      const item = shop.items.find((i) => i.id === id)
+                        ?? [...EARTH_SHOPS, ...ALIEN_SHOPS].flatMap((s) => s.items).find((i) => i.id === id);
+                      if (!item) return null;
+                      const canReturn = !!shop.items.find((i) => i.id === id);
+                      return (
+                        <div key={id} className="flex items-center gap-3 p-2 rounded-lg border-b-4"
+                          style={{
+                            background: "linear-gradient(180deg, #FFF, #F0F0F0)",
+                            borderBottomColor: shop.signColor, color: "#333",
+                          }}>
+                          <span className="text-2xl">{item.emoji}</span>
+                          <span className="flex-1">
+                            <strong>{item.name}</strong>
+                            <br /><span className="text-xs" style={{ color: "#666" }}>x{n} owned</span>
+                          </span>
+                          {canReturn ? (
+                            <button onClick={() => returnItem(item)}
+                              className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
+                              style={{ background: "linear-gradient(180deg, #FFF, #FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}>
+                              return +{item.price}G
+                            </button>
+                          ) : (
+                            <span className="text-xs" style={{ color: "#888" }}>not sold here</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-3">
+              <button onClick={exitShop}
+                className="text-sm underline" style={{ color: shop.accentColor }}>
+                {"\u2190"} back to street
+              </button>
+              <span className="text-xs" style={{ color: "#888" }}>
+                tap owner on canvas to chat
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Pilot offer overlay (mid-journey) */}
       {pilotOfferActive && (
@@ -3255,7 +4145,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
