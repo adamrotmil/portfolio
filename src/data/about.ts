@@ -104,6 +104,14 @@ export const LAB_ITEMS: LabItem[] = [
     thumbnail: "/images/lab/foothills.svg",
   },
   {
+    title: "Maryland Playgrounds",
+    description:
+      "Maps and ranks kids' playgrounds across Maryland. Pipeline fetches OpenStreetMap, enriches features by proximity (restrooms, splash pads, picnic tables), and has a Claude-API seam for classifying review text.",
+    url: "https://adamrotmil.github.io/geographic-trends/",
+    tech: "TypeScript · MapLibre · OSM pipeline · Claude API",
+    thumbnail: "/images/lab/maryland-playgrounds.svg",
+  },
+  {
     title: "SwiftUI Interaction Lab",
     description:
       "Native iOS and macOS interaction experiments I'm building in public while learning SwiftUI.",

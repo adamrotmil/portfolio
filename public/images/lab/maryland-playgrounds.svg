@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Maryland Playgrounds — map and ranked list">
+  <defs>
+    <linearGradient id="mdBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#eef5ee"/>
+      <stop offset="0.6"  stop-color="#dde9dd"/>
+      <stop offset="1"    stop-color="#c7dbcd"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="40%" r="55%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="listCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="rgba(255,255,255,0.96)"/>
+      <stop offset="1"   stop-color="rgba(255,255,255,0.88)"/>
+    </linearGradient>
+    <filter id="pinShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Base "map" canvas -->
+  <rect width="480" height="360" fill="url(#mdBg)"/>
+  <rect width="480" height="360" fill="url(#glow)"/>
+
+  <!-- Chesapeake Bay — stylized blue -->
+  <path d="M 330 40 C 340 80, 312 110, 330 150 S 310 220, 344 260 L 360 360 L 260 360 C 270 300, 288 260, 282 220 S 304 170, 296 130 S 316 80, 330 40 Z"
+        fill="#9ec7e6" opacity="0.78"/>
+  <path d="M 330 40 C 340 80, 312 110, 330 150 S 310 220, 344 260 L 360 360 L 260 360 C 270 300, 288 260, 282 220 S 304 170, 296 130 S 316 80, 330 40 Z"
+        fill="none" stroke="#7aaed0" stroke-width="1" opacity="0.55"/>
+
+  <!-- Maryland silhouette (stylized panhandle + main body), semi-transparent overlay -->
+  <path d="M 40 130 L 160 130 L 175 118 L 210 122 L 225 130 L 238 128 L 256 134
+           L 290 150 L 306 160 L 296 200 L 270 212 L 246 230 L 226 226
+           L 208 240 L 184 246 L 152 250 L 120 240 L 92 228 L 70 210 L 52 186 Z"
+        fill="#a7c9a4" fill-opacity="0.55" stroke="#7a9f77" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Subtle road network -->
+  <g stroke="#ffffff" stroke-width="1.6" fill="none" opacity="0.65" stroke-linecap="round">
+    <path d="M 60 210 Q 130 190, 200 210 T 320 210"/>
+    <path d="M 100 180 Q 150 170, 200 184 T 300 180"/>
+    <path d="M 150 240 L 220 225 L 280 232"/>
+    <path d="M 110 148 L 175 158 L 240 150"/>
+  </g>
+
+  <!-- Playground clusters / pins. Color encodes score. Shadow for depth. -->
+  <g filter="url(#pinShadow)">
+    <!-- Baltimore metro cluster (high score) -->
+    <circle cx="262" cy="172" r="14" fill="#22c55e"/>
+    <text x="262" y="176" text-anchor="middle"
+          font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+          font-size="11" font-weight="700" fill="#ffffff">24</text>
+
+    <!-- DC suburbs cluster -->
+    <circle cx="198" cy="220" r="17" fill="#3b82f6"/>
+    <text x="198" y="225" text-anchor="middle"
+          font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+          font-size="11" font-weight="700" fill="#ffffff">47</text>
+
+    <!-- Individual pins -->
+    <circle cx="228" cy="190" r="6" fill="#22c55e" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="248" cy="206" r="6" fill="#86efac" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="172" cy="190" r="6" fill="#fde68a" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="140" cy="208" r="6" fill="#22c55e" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="108" cy="196" r="6" fill="#fecaca" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="84"  cy="212" r="5" fill="#fde68a" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="210" cy="170" r="6" fill="#22c55e" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+
+  <!-- Ranked-list panel floating on right -->
+  <g transform="translate(338, 58)">
+    <rect width="124" height="250" rx="12"
+          fill="url(#listCard)"
+          stroke="rgba(15,23,42,0.08)" stroke-width="1"/>
+
+    <text x="14" y="24"
+          font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif"
+          font-size="10" font-weight="700" fill="rgba(15,23,42,0.55)" letter-spacing="0.8">
+      RANKED
+    </text>
+
+    <!-- Row 1 -->
+    <g transform="translate(12, 40)">
+      <rect width="28" height="28" rx="6" fill="#22c55e"/>
+      <text x="14" y="19" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="11" font-weight="700" fill="#ffffff">87</text>
+      <text x="38" y="14"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="10" font-weight="600" fill="#0f172a">Patterson Park</text>
+      <text x="38" y="26"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" fill="rgba(15,23,42,0.55)">Baltimore</text>
+    </g>
+
+    <!-- Row 2 -->
+    <g transform="translate(12, 76)">
+      <rect width="28" height="28" rx="6" fill="#22c55e"/>
+      <text x="14" y="19" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="11" font-weight="700" fill="#ffffff">81</text>
+      <text x="38" y="14"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="10" font-weight="600" fill="#0f172a">Rockville Tot Lot</text>
+      <text x="38" y="26"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" fill="rgba(15,23,42,0.55)">Rockville</text>
+    </g>
+
+    <!-- Row 3 -->
+    <g transform="translate(12, 112)">
+      <rect width="28" height="28" rx="6" fill="#84cc16"/>
+      <text x="14" y="19" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="11" font-weight="700" fill="#ffffff">74</text>
+      <text x="38" y="14"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="10" font-weight="600" fill="#0f172a">Greenbelt Park</text>
+      <text x="38" y="26"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" fill="rgba(15,23,42,0.55)">Greenbelt</text>
+    </g>
+
+    <!-- Row 4 -->
+    <g transform="translate(12, 148)">
+      <rect width="28" height="28" rx="6" fill="#f59e0b"/>
+      <text x="14" y="19" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="11" font-weight="700" fill="#ffffff">68</text>
+      <text x="38" y="14"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="10" font-weight="600" fill="#0f172a">Clopper Lake</text>
+      <text x="38" y="26"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" fill="rgba(15,23,42,0.55)">Gaithersburg</text>
+    </g>
+
+    <!-- Filter chips -->
+    <g transform="translate(12, 192)">
+      <rect width="50" height="18" rx="9" fill="#0f172a"/>
+      <text x="25" y="12" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" font-weight="600" fill="#ffffff">Restrooms</text>
+
+      <rect x="56" y="0" width="38" height="18" rx="9"
+            fill="rgba(15,23,42,0.08)" stroke="rgba(15,23,42,0.12)"/>
+      <text x="75" y="12" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" font-weight="600" fill="rgba(15,23,42,0.7)">Shade</text>
+
+      <rect y="22" width="42" height="18" rx="9"
+            fill="rgba(15,23,42,0.08)" stroke="rgba(15,23,42,0.12)"/>
+      <text x="21" y="34" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" font-weight="600" fill="rgba(15,23,42,0.7)">Ages 3–5</text>
+
+      <rect x="48" y="22" width="46" height="18" rx="9"
+            fill="rgba(15,23,42,0.08)" stroke="rgba(15,23,42,0.12)"/>
+      <text x="71" y="34" text-anchor="middle"
+            font-family="-apple-system, system-ui, sans-serif"
+            font-size="8" font-weight="600" fill="rgba(15,23,42,0.7)">Splash</text>
+    </g>
+  </g>
+
+  <!-- Brand / caption -->
+  <g font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif">
+    <text x="32" y="320" font-size="11" font-weight="700" fill="rgba(15,23,42,0.72)" letter-spacing="0.4">Maryland Playgrounds</text>
+    <text x="32" y="336" font-size="10" fill="rgba(15,23,42,0.5)">OSM pipeline · proximity enrichment · Claude review classifier</text>
+  </g>
+</svg>
