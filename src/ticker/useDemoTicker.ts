@@ -122,10 +122,18 @@ export function useDemoTicker(): DemoTickerApi {
         // flowing line rather than a jagged one.  Drift decay bumped to
         // 0.95 (line holds direction for longer), random kick halved,
         // shock events rarer.
+        //
+        // Shock + gravity tuned to keep the total range small enough that
+        // Liveline's internal Y-axis ease (base lerp 0.08) catches up
+        // before the line exits the displayed band.  Previously a max-
+        // volatility shock could drop $24 in one tick — faster than the
+        // axis could zoom out, so the line would briefly render below the
+        // chart area.  Lower shock magnitude + stronger gravity keeps the
+        // walk inside a more contained band.
         driftRef.current = driftRef.current * 0.95 + (Math.random() - 0.5) * vol * 0.28 * scale;
         const kick    = (Math.random() - 0.5) * vol * 0.20 * scale;
-        const gravity = (INITIAL_PRICE - prev) * 0.003;
-        const shock   = Math.random() < 0.008 ? (Math.random() - 0.5) * vol * 2.2 * scale : 0;
+        const gravity = (INITIAL_PRICE - prev) * 0.006;
+        const shock   = Math.random() < 0.006 ? (Math.random() - 0.5) * vol * 1.3 * scale : 0;
 
         let pushBias = 0;
         if (pushDecayRef.current > 0) {
