@@ -367,6 +367,15 @@ function getAudioCtx(): AudioContext | null {
 // subsequent getAudioCtx() calls return a fully-running context.
 async function initAudio(): Promise<void> {
   try {
+    // iOS 16.4+: opt into the "playback" audio session so Web Audio is NOT
+    // silenced by the ringer/silent switch on the built-in speaker. Without
+    // this, audio only plays via external routes (headphones, Bluetooth,
+    // CarPlay) because the default ambient session honours the mute switch.
+    const nav = navigator as unknown as { audioSession?: { type?: string } };
+    if (nav.audioSession) {
+      try { nav.audioSession.type = "playback"; } catch { /* older iOS */ }
+    }
+
     if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
       sharedAudioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     }
