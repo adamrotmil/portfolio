@@ -22,7 +22,7 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "result";
 
 type Location = "earth" | "alien-planet";
 
@@ -34,6 +34,15 @@ type CutsceneType =
   | "earth-departure"    // shopkeeper beamed up from alien planet
   | "journey-back"       // flying back through space toward earth
   | "landing-earth";     // saucer lands on earth, deposits shopkeeper
+
+type BlackholeScene =
+  | "pull-in"            // saucer spaghettified into spiral, auto
+  | "fork"               // 3 doors: mirrors / clockwork / library
+  | "mirrors"            // future-self dialogue
+  | "clockwork"          // time clocks dialogue
+  | "library"            // infinite library dialogue
+  | "exit"               // exit portal prompt
+  | "burst-out";         // white-hole burst, auto -> landing
 
 type Customer = {
   id: number;
@@ -1292,6 +1301,286 @@ function drawSpaceScene(ctx: CanvasRenderingContext2D, tick: number, direction: 
   });
 }
 
+// ── Black Hole Drawing ───────────────────────────────────────────────────────
+
+// Fills entire canvas with swirling spiral gravity wells
+function drawBlackHoleInterior(ctx: CanvasRenderingContext2D, tick: number, intensity: number) {
+  // base void
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      px(ctx, x, y, 1, 1, "#050010");
+    }
+  }
+  // Concentric spiral arcs
+  const cx = W / 2;
+  const cy = H / 2;
+  const palette = ["#1A0033", "#3A0055", "#6020A0", "#A050E0", "#E080FF", "#FFD0FF"];
+  for (let r = 2; r < 90; r += 1) {
+    const circumference = Math.max(6, Math.floor(r * 2 * Math.PI));
+    for (let i = 0; i < circumference; i++) {
+      const angle = (i / circumference) * Math.PI * 2 + tick / 30 + r / 8;
+      const x0 = cx + Math.cos(angle) * r;
+      const y0 = cy + Math.sin(angle) * r * 0.85;
+      if (x0 < 0 || x0 >= W || y0 < 0 || y0 >= H) continue;
+      // spiral stripe pattern
+      const stripe = Math.floor((angle * 6 + tick / 5) % palette.length);
+      if (stripe >= 0 && Math.random() > 0.3 - intensity * 0.1) {
+        px(ctx, Math.floor(x0), Math.floor(y0), 1, 1, palette[Math.max(0, Math.min(palette.length - 1, stripe))]);
+      }
+    }
+  }
+  // Central singularity (darkest)
+  for (let dy = -6; dy <= 6; dy++) {
+    for (let dx = -6; dx <= 6; dx++) {
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= 6) px(ctx, cx + dx, cy + dy, 1, 1, d > 5 ? "#20003A" : "#000000");
+    }
+  }
+}
+
+function drawBlackHolePullIn(ctx: CanvasRenderingContext2D, tick: number) {
+  // Progressive pull: space with growing spiral, saucer stretching inward
+  const progress = Math.min(1, tick / 100); // 0..1
+  // Base: scrolling stars
+  drawSpaceScene(ctx, tick, "out");
+  // Overlay: growing dark spiral
+  const cx = W / 2;
+  const cy = H / 2;
+  const maxR = 10 + progress * 80;
+  for (let r = 1; r < maxR; r += 1) {
+    const circ = Math.max(6, Math.floor(r * 2 * Math.PI));
+    for (let i = 0; i < circ; i++) {
+      const angle = (i / circ) * Math.PI * 2 + tick / 10 + r / 5;
+      const x0 = Math.floor(cx + Math.cos(angle) * r);
+      const y0 = Math.floor(cy + Math.sin(angle) * r * 0.85);
+      if (x0 < 0 || x0 >= W || y0 < 0 || y0 >= H) continue;
+      const alpha = Math.min(1, progress * 1.5 + (maxR - r) / maxR);
+      if (Math.random() < alpha * 0.6) {
+        const c = r < 10 ? "#000000" : r < 30 ? "#1A0033" : "#6020A0";
+        px(ctx, x0, y0, 1, 1, c);
+      }
+    }
+  }
+  // Saucer being stretched toward center
+  const saucerX = Math.floor(cx + Math.cos(tick / 8) * (30 - progress * 28));
+  const saucerY = Math.floor(cy + Math.sin(tick / 8) * (20 - progress * 18));
+  const stretch = 1 - progress;
+  if (stretch > 0.1) {
+    drawFlyingSaucer(ctx, saucerX, saucerY, tick);
+  }
+  // Warning text
+  if (tick < 30) {
+    drawText(ctx, "BLACK HOLE!", W / 2, 20, "#FF4040", 1.0);
+  } else if (tick < 70) {
+    drawText(ctx, "PULLED IN!", W / 2, 20, "#FF80FF", 0.9);
+  }
+}
+
+function drawDimensionFork(ctx: CanvasRenderingContext2D, tick: number) {
+  drawBlackHoleInterior(ctx, tick, 0.4);
+  // Three glowing doorways
+  const doorDefs = [
+    { x: 22, color: "#80D0FF", label: "MIRRORS" },
+    { x: 64, color: "#FFD060", label: "CLOCKS" },
+    { x: 106, color: "#80FFA0", label: "BOOKS" },
+  ];
+  doorDefs.forEach((d, i) => {
+    const glow = Math.floor(Math.sin(tick / 10 + i) * 1) + 1;
+    // Door frame
+    for (let dy = 0; dy < 40; dy++) {
+      for (let dx = -8 - glow; dx <= 8 + glow; dx++) {
+        const edge = Math.abs(dx) >= 8 + glow - 1 || dy <= 1 || dy >= 38;
+        if (edge) {
+          px(ctx, d.x + dx, 40 + dy, 1, 1, d.color);
+        } else if (Math.abs(dx) >= 8) {
+          // side pillar
+          px(ctx, d.x + dx, 40 + dy, 1, 1, "#202050");
+        } else {
+          // inside of doorway: shimmer
+          const shimmer = ((dy + Math.floor(tick / 3)) + Math.abs(dx)) % 5;
+          px(ctx, d.x + dx, 40 + dy, 1, 1,
+            shimmer === 0 ? d.color : shimmer === 1 ? "#FFFFFF" : "#101030");
+        }
+      }
+    }
+    // Label below
+    drawText(ctx, d.label, d.x, 88, d.color, 0.6);
+  });
+  drawText(ctx, "CHOOSE A DOOR", W / 2, 14, "#FFFFFF", 0.8);
+}
+
+function drawMirrorYou(ctx: CanvasRenderingContext2D, tick: number) {
+  drawBlackHoleInterior(ctx, tick, 0.25);
+  // Left: present-you (Scoopy)
+  drawShopkeeper(ctx, 32, 72);
+  // Right: future-you (shimmering duplicate, flipped via slight offset)
+  const flicker = Math.floor(Math.sin(tick / 4) * 2);
+  ctx.globalAlpha = 0.85;
+  drawShopkeeper(ctx, 96, 72);
+  ctx.globalAlpha = 1;
+  // Crown/halo on future self
+  for (let dx = -5; dx <= 5; dx++) {
+    px(ctx, 96 + dx, 52 + flicker, 1, 1, "#FFD700");
+  }
+  px(ctx, 93, 50 + flicker, 2, 2, "#FFD700");
+  px(ctx, 99, 50 + flicker, 2, 2, "#FFD700");
+  // Shimmer particles between them
+  for (let i = 0; i < 8; i++) {
+    const px0 = 40 + ((tick * 2 + i * 8) % 48);
+    const py0 = 50 + Math.floor(Math.sin((tick + i * 5) / 6) * 6);
+    px(ctx, px0, py0, 1, 1, i % 2 ? "#FFFFFF" : "#FFD0FF");
+  }
+  drawText(ctx, "HALL OF MIRRORS", W / 2, 14, "#FFD0FF", 0.7);
+}
+
+function drawClockNebula(ctx: CanvasRenderingContext2D, tick: number) {
+  drawBlackHoleInterior(ctx, tick, 0.3);
+  // Multiple floating clocks
+  const clocks = [
+    { cx: 30, cy: 42, r: 8, speed: -1 },
+    { cx: 96, cy: 36, r: 6, speed: -2 },
+    { cx: 64, cy: 68, r: 10, speed: -1.5 },
+    { cx: 22, cy: 75, r: 5, speed: 1 },
+    { cx: 108, cy: 72, r: 5, speed: 2 },
+  ];
+  clocks.forEach((c, i) => {
+    // Face
+    for (let dy = -c.r; dy <= c.r; dy++) {
+      for (let dx = -c.r; dx <= c.r; dx++) {
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= c.r) {
+          const edge = d > c.r - 1;
+          px(ctx, c.cx + dx, c.cy + dy, 1, 1, edge ? "#C0A040" : i === 2 ? "#FFF5D6" : "#E8DCB0");
+        }
+      }
+    }
+    // Hour/minute hand ticking BACKWARDS
+    const hour = -((tick * c.speed) / 40) + i;
+    const hx = Math.cos(hour) * (c.r - 2);
+    const hy = Math.sin(hour) * (c.r - 2);
+    px(ctx, c.cx, c.cy, 1, 1, "#000");
+    for (let s = 1; s <= c.r - 2; s++) {
+      px(ctx, Math.floor(c.cx + (hx * s) / (c.r - 2)), Math.floor(c.cy + (hy * s) / (c.r - 2)), 1, 1, "#200");
+    }
+    const min = -((tick * c.speed) / 15) + i;
+    const mx = Math.cos(min) * (c.r - 1);
+    const my = Math.sin(min) * (c.r - 1);
+    for (let s = 1; s <= c.r - 1; s++) {
+      px(ctx, Math.floor(c.cx + (mx * s) / (c.r - 1)), Math.floor(c.cy + (my * s) / (c.r - 1)), 1, 1, "#400");
+    }
+    // Glow on "special" clock (index 2)
+    if (i === 2) {
+      for (let dy = -c.r - 2; dy <= c.r + 2; dy++) {
+        for (let dx = -c.r - 2; dx <= c.r + 2; dx++) {
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d > c.r && d < c.r + 2 && ((tick + dx) % 3 === 0)) {
+            px(ctx, c.cx + dx, c.cy + dy, 1, 1, "#FFFF80");
+          }
+        }
+      }
+    }
+  });
+  drawText(ctx, "CLOCK NEBULA", W / 2, 14, "#FFE880", 0.7);
+}
+
+function drawInfiniteLibrary(ctx: CanvasRenderingContext2D, tick: number) {
+  drawBlackHoleInterior(ctx, tick, 0.2);
+  // Receding stacks of books - perspective lines
+  for (let depth = 0; depth < 7; depth++) {
+    const y0 = 25 + depth * 8;
+    const shrink = depth * 2;
+    const color = depth === 3 ? "#FFD060" : depth % 2 ? "#80A0FF" : "#FF80A0";
+    for (let x = shrink; x < W - shrink; x++) {
+      // shelf line
+      px(ctx, x, y0 + 6, 1, 1, "#604020");
+      // books on shelf
+      if (x % 4 < 3) {
+        for (let dy = 0; dy < 5; dy++) {
+          px(ctx, x, y0 + dy, 1, 1, color);
+        }
+      }
+    }
+  }
+  // Floating open book in center
+  const bookY = 50 + Math.floor(Math.sin(tick / 10) * 2);
+  for (let dy = 0; dy < 10; dy++) {
+    for (let dx = -10; dx <= 10; dx++) {
+      const color = Math.abs(dx) < 1 ? "#604020" : dx < 0 ? "#FFF5D6" : "#FFF0C0";
+      px(ctx, 64 + dx, bookY + dy, 1, 1, color);
+    }
+  }
+  // Text lines on pages
+  for (let ly = 0; ly < 3; ly++) {
+    for (let lx = -8; lx <= -2; lx++) {
+      if (lx % 2 === 0) px(ctx, 64 + lx, bookY + 2 + ly * 3, 1, 1, "#404040");
+    }
+    for (let lx = 2; lx <= 8; lx++) {
+      if (lx % 2 === 0) px(ctx, 64 + lx, bookY + 2 + ly * 3, 1, 1, "#404040");
+    }
+  }
+  drawText(ctx, "INFINITE LIBRARY", W / 2, 14, "#FFE0C0", 0.7);
+}
+
+function drawExitPortal(ctx: CanvasRenderingContext2D, tick: number) {
+  drawBlackHoleInterior(ctx, tick, 0.4);
+  // White hole bloom in center
+  const cx = W / 2;
+  const cy = H / 2 + 4;
+  const pulse = Math.sin(tick / 6) * 3 + 20;
+  for (let r = 0; r < pulse + 8; r += 1) {
+    const circ = Math.max(6, Math.floor(r * 2 * Math.PI));
+    for (let i = 0; i < circ; i++) {
+      const angle = (i / circ) * Math.PI * 2;
+      const x0 = Math.floor(cx + Math.cos(angle) * r);
+      const y0 = Math.floor(cy + Math.sin(angle) * r * 0.9);
+      if (x0 < 0 || x0 >= W || y0 < 0 || y0 >= H) continue;
+      let c = "#FFFFFF";
+      if (r > pulse) c = "#FFFFE0";
+      if (r > pulse + 3) c = "#FFE080";
+      if (r > pulse + 6) continue;
+      if (Math.random() < 0.7) px(ctx, x0, y0, 1, 1, c);
+    }
+  }
+  drawText(ctx, "THE WAY OUT", W / 2, 14, "#FFFFFF", 0.85);
+  drawText(ctx, "dive in?", W / 2, H - 12, "#FFFFE0", 0.7);
+}
+
+function drawBurstOut(ctx: CanvasRenderingContext2D, tick: number) {
+  // White flash giving way to space
+  if (tick < 25) {
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        px(ctx, x, y, 1, 1, "#FFFFFF");
+      }
+    }
+    if (tick > 12) {
+      // Iris opens: reveal space in center
+      const cx = W / 2;
+      const cy = H / 2;
+      const r = (tick - 12) * 5;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d <= r && cx + dx >= 0 && cx + dx < W && cy + dy >= 0 && cy + dy < H) {
+            px(ctx, cx + dx, cy + dy, 1, 1, "#080018");
+          }
+        }
+      }
+    }
+    // Saucer bursting forward
+    if (tick > 8) {
+      drawFlyingSaucer(ctx, W / 2, H / 2, tick);
+    }
+  } else {
+    drawSpaceScene(ctx, tick, "out");
+    // Saucer zooms to foreground then off
+    const sx = 64 + Math.floor(Math.sin(tick / 8) * 4);
+    const sy = 56;
+    drawFlyingSaucer(ctx, sx, sy, tick);
+    drawText(ctx, "WE MADE IT!", W / 2, 20, "#80FF80", 0.85);
+  }
+}
+
 // Gold coin drawing helper
 function drawGoldCoin(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
   // Outer ring
@@ -1367,12 +1656,19 @@ export default function IceCreamGame() {
     return Number.isNaN(n) ? 0 : n;
   });
 
+  // Black hole detour state
+  const [blackholeScene, setBlackholeScene] = useState<BlackholeScene | null>(null);
+  const [blackholeTick, setBlackholeTick] = useState(0);
+  const [blackholeReturnTo, setBlackholeReturnTo] = useState<"alien" | "earth">("alien");
+  const [blackholeBonus, setBlackholeBonus] = useState(0);
+  const [blackholeMessage, setBlackholeMessage] = useState<string | null>(null);
+
   const level = Math.floor(customersServed / 3) + 1;
   const totalGold = earthCoins + alienCoins;
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -1559,11 +1855,27 @@ export default function IceCreamGame() {
       }
     }
 
+    function drawBlackhole() {
+      if (!ctx) return;
+      const t = blackholeTick;
+      switch (blackholeScene) {
+        case "pull-in":     drawBlackHolePullIn(ctx, t); break;
+        case "fork":        drawDimensionFork(ctx, t); break;
+        case "mirrors":     drawMirrorYou(ctx, t); break;
+        case "clockwork":   drawClockNebula(ctx, t); break;
+        case "library":     drawInfiniteLibrary(ctx, t); break;
+        case "exit":        drawExitPortal(ctx, t); break;
+        case "burst-out":   drawBurstOut(ctx, t); break;
+      }
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
       if (phase === "cutscene") {
         drawCutscene();
+      } else if (phase === "blackhole") {
+        drawBlackhole();
       } else {
         drawShopScene();
       }
@@ -1573,7 +1885,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -1796,6 +2108,7 @@ export default function IceCreamGame() {
     setGoldCoins([]);
     setLocation("earth");
     setCutsceneType(null); setCutsceneTick(0);
+    setBlackholeScene(null); setBlackholeTick(0); setBlackholeBonus(0); setBlackholeMessage(null);
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -1937,24 +2250,39 @@ export default function IceCreamGame() {
       "landing-alien": 100,
       "landing-earth": 100,
     };
+    // Mid-journey tick where we roll the 50% black hole chance
+    const blackholeRollTick = 60;
+    let blackholeRolled = false;
     const interval = setInterval(() => {
       setCutsceneTick((t) => {
         const next = t + 1;
+        // 50% black hole intercept mid-journey
+        if (!blackholeRolled &&
+            (cutsceneType === "journey-out" || cutsceneType === "journey-back") &&
+            next === blackholeRollTick &&
+            Math.random() < 0.5) {
+          blackholeRolled = true;
+          clearInterval(interval);
+          setBlackholeReturnTo(cutsceneType === "journey-out" ? "alien" : "earth");
+          setBlackholeBonus(0);
+          setBlackholeMessage(null);
+          setCutsceneType(null);
+          setBlackholeScene("pull-in");
+          setBlackholeTick(0);
+          setPhase("blackhole");
+          return 0;
+        }
         if (next >= endAt[cutsceneType]) {
           clearInterval(interval);
-          // Transition to next stage
           if (cutsceneType === "alien-arrival") {
-            // Spawn alien VIP at counter, continue playing on earth
             customerIdRef.current += 1;
             setCustomer(createAlienVIP(customerIdRef.current));
             setCutsceneType(null);
             setPhase("playing");
           } else if (cutsceneType === "beam-up") {
-            // Earth -> journey out
             setCutsceneType("journey-out");
             return 0;
           } else if (cutsceneType === "earth-departure") {
-            // Alien -> journey back
             setCutsceneType("journey-back");
             return 0;
           } else if (cutsceneType === "journey-out") {
@@ -1969,7 +2297,6 @@ export default function IceCreamGame() {
             setPhase("playing");
             setAlienVisited(true);
             window.localStorage.setItem("scoopstack-alien-visited", "1");
-            // Reset customer flow for new location
             setCustomer(null);
           } else if (cutsceneType === "landing-earth") {
             setLocation("earth");
@@ -1984,6 +2311,73 @@ export default function IceCreamGame() {
     }, tickMs);
     return () => clearInterval(interval);
   }, [phase, cutsceneType]);
+
+  // ── Black hole ambient tick + auto-transitions ────────────────────────
+  useEffect(() => {
+    if (phase !== "blackhole" || !blackholeScene) return;
+    const interval = setInterval(() => {
+      setBlackholeTick((t) => {
+        const next = t + 1;
+        if (blackholeScene === "pull-in" && next >= 110) {
+          setBlackholeScene("fork");
+          return 0;
+        }
+        if (blackholeScene === "burst-out" && next >= 80) {
+          clearInterval(interval);
+          // Credit bonus coins to destination, then hand off to landing cutscene
+          if (blackholeReturnTo === "alien") {
+            setAlienCoins((g) => {
+              const n = g + blackholeBonus;
+              window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+              return n;
+            });
+            setCutsceneType("landing-alien");
+          } else {
+            setEarthCoins((g) => {
+              const n = g + blackholeBonus;
+              window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+              return n;
+            });
+            setCutsceneType("landing-earth");
+          }
+          setBlackholeScene(null);
+          setCutsceneTick(0);
+          setPhase("cutscene");
+          return 0;
+        }
+        return next;
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase, blackholeScene, blackholeReturnTo, blackholeBonus]);
+
+  // Choose a door in the dimension fork
+  const handleBlackholeDoor = useCallback((door: BlackholeScene) => {
+    playBoop();
+    setBlackholeScene(door);
+    setBlackholeTick(0);
+    setBlackholeMessage(null);
+  }, []);
+
+  // Scene-specific choice handler: label, reward coin count, follow-up message
+  const handleBlackholeChoice = useCallback((coins: number, msg: string) => {
+    playCoinSound();
+    setBlackholeBonus((b) => b + coins);
+    setBlackholeMessage(msg);
+  }, []);
+
+  const handleBlackholeExit = useCallback(() => {
+    playBoop();
+    setBlackholeScene("exit");
+    setBlackholeTick(0);
+    setBlackholeMessage(null);
+  }, []);
+
+  const handleBlackholeDive = useCallback(() => {
+    playDing();
+    setBlackholeScene("burst-out");
+    setBlackholeTick(0);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -2250,8 +2644,174 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Black hole interactive overlay */}
+      {phase === "blackhole" && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #100028, #200048)",
+            borderColor: "#A050E0",
+            color: "#FFF0FF",
+            boxShadow: "0 0 24px rgba(160, 80, 224, 0.6)",
+          }}>
+          {blackholeScene === "pull-in" && (
+            <p className="text-lg font-bold" style={{ color: "#FF80FF", letterSpacing: 2 }}>
+              SPACE-TIME BENDING...
+            </p>
+          )}
+
+          {blackholeScene === "fork" && (
+            <>
+              <p className="mb-3 leading-relaxed" style={{ color: "#FFF0FF" }}>
+                Three doorways bloom in the dark. Each whispers something different.
+                Which do you enter?
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button onClick={() => handleBlackholeDoor("mirrors")}
+                  className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{
+                    background: "linear-gradient(180deg, #B0E0FF, #5090E0)",
+                    borderBottomColor: "#2060A0", color: "#FFF",
+                  }}>
+                  MIRRORS
+                </button>
+                <button onClick={() => handleBlackholeDoor("clockwork")}
+                  className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{
+                    background: "linear-gradient(180deg, #FFE080, #C0A040)",
+                    borderBottomColor: "#806020", color: "#333",
+                  }}>
+                  CLOCKS
+                </button>
+                <button onClick={() => handleBlackholeDoor("library")}
+                  className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{
+                    background: "linear-gradient(180deg, #B0FFC8, #50C080)",
+                    borderBottomColor: "#208050", color: "#FFF",
+                  }}>
+                  BOOKS
+                </button>
+              </div>
+            </>
+          )}
+
+          {blackholeScene === "mirrors" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                {blackholeMessage ?? (
+                  <>A shimmering version of you stands opposite.<br />
+                    <em>&ldquo;I&rsquo;m you — from twelve years ahead. The scoop shop does&hellip; WELL.&rdquo;</em>
+                  </>
+                )}
+              </p>
+              {!blackholeMessage ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleBlackholeChoice(50, "Future-you whispers: 47 branches. MARS too. You cry a little.")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FFB0CB, #FF85A2)", borderBottomColor: "#D4567A", color: "#FFF" }}>
+                    A: Tell me more!
+                  </button>
+                  <button onClick={() => handleBlackholeChoice(35, "Future-you grins: 'You taught me. I just got the press.'")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #B8E0FF, #87CEEB)", borderBottomColor: "#5BB5E0", color: "#333" }}>
+                    B: Can you scoop faster?
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleBlackholeExit}
+                  className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{ background: "linear-gradient(180deg, #D0B0FF, #A050E0)", borderBottomColor: "#6020A0", color: "#FFF" }}>
+                  Keep going... (+{blackholeBonus}G)
+                </button>
+              )}
+            </>
+          )}
+
+          {blackholeScene === "clockwork" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                {blackholeMessage ?? (
+                  <>Clocks float in every direction, ticking <em>backwards</em>.
+                    One of them glows.</>
+                )}
+              </p>
+              {!blackholeMessage ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleBlackholeChoice(60, "Time loops. You witness the shop's very first scoop — and leave a tip for past-you.")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FFF080, #FFB830)", borderBottomColor: "#C07010", color: "#333" }}>
+                    A: Touch the glowing clock
+                  </button>
+                  <button onClick={() => handleBlackholeChoice(30, "A brass gear drifts past, wrapped in ribbon. It purrs like a cat.")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #C0C0C0, #808080)", borderBottomColor: "#404040", color: "#FFF" }}>
+                    B: Leave it alone
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleBlackholeExit}
+                  className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{ background: "linear-gradient(180deg, #FFE080, #C0A040)", borderBottomColor: "#806020", color: "#333" }}>
+                  Drift onward... (+{blackholeBonus}G)
+                </button>
+              )}
+            </>
+          )}
+
+          {blackholeScene === "library" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                {blackholeMessage ?? (
+                  <>An endless library. A recipe book lies open to a page that hasn&rsquo;t
+                    been written yet.</>
+                )}
+              </p>
+              {!blackholeMessage ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleBlackholeChoice(55, "You read the Original Magic Cone recipe. Your antennae grow. You didn't have antennae.")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #B0FFC8, #50C080)", borderBottomColor: "#208050", color: "#FFF" }}>
+                    A: Read the page
+                  </button>
+                  <button onClick={() => handleBlackholeChoice(40, "You write your own recipe. Scoopers a thousand years from now will taste it.")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FFE0B0, #E0A050)", borderBottomColor: "#805020", color: "#FFF" }}>
+                    B: Write on it
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleBlackholeExit}
+                  className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{ background: "linear-gradient(180deg, #B0FFC8, #50C080)", borderBottomColor: "#208050", color: "#FFF" }}>
+                  Step back from the shelves... (+{blackholeBonus}G)
+                </button>
+              )}
+            </>
+          )}
+
+          {blackholeScene === "exit" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                A white hole blooms ahead. The way out. You carry <strong>+{blackholeBonus}G</strong> of time-coins.
+              </p>
+              <button onClick={handleBlackholeDive}
+                className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #FFFFFF, #FFE080)", borderBottomColor: "#C09020", color: "#333" }}>
+                DIVE IN! {"\u{1F300}"}
+              </button>
+            </>
+          )}
+
+          {blackholeScene === "burst-out" && (
+            <p className="text-lg font-bold" style={{ color: "#80FFA0", letterSpacing: 2 }}>
+              BURSTING BACK TO OUR UNIVERSE...
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Order instruction - big readable text below canvas */}
-      {customer && customer.state === "waiting" && (
+      {phase === "playing" && customer && customer.state === "waiting" && (
         <div className="w-full max-w-lg rounded-xl p-3 mb-3 text-center border-2"
           style={{ background: "#FFF", borderColor: "#FFD6E8", fontFamily: "monospace" }}>
           {!toppingsPhase && scoopsDone < customer.order.length ? (
@@ -2280,6 +2840,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
+      {phase !== "blackhole" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
@@ -2340,6 +2901,7 @@ export default function IceCreamGame() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
