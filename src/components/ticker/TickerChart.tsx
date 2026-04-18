@@ -57,7 +57,16 @@ export default function TickerChart({
   );
 
   return (
-    <div className="relative h-full w-full">
+    // flex-col is load-bearing.  Liveline renders a React Fragment whose
+    // children become siblings in our wrapper: badge, value label, window
+    // buttons, then a canvas-wrap div with inline `height: 100%`.  In a
+    // block-display parent, that 100% evaluates to the parent's full
+    // height — so the canvas ends up 318px AFTER the ~74px of chrome
+    // above it, pushing the rendered line below our container's bottom
+    // edge.  As a flex column, each Liveline sibling takes its natural
+    // height and the canvas wrap's 100% collapses to the remaining space.
+    // `min-h-0` prevents flex children from insisting on content size.
+    <div className="relative h-full w-full flex flex-col min-h-0 [&>div:last-of-type]:min-h-0">
       {/* Symbol label — bottom-left so it doesn't collide with Liveline's
           own value overlay in the top-left.  Purely decorative context. */}
       <div
