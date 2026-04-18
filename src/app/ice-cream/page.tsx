@@ -47,6 +47,7 @@ type Shop = {
   location: Location;
   items: ShopItem[];
   greeting: string;        // short blurb when opened
+  type?: "retail" | "casino";
 };
 
 type Location = "earth" | "alien-planet";
@@ -310,6 +311,18 @@ const EARTH_SHOPS: Shop[] = [
       { id: "cozy-rug",      name: "Cozy Rug",      emoji: "\u{1FAA9}", price: 20, description: "Softens the floor.", slot: "decor" },
     ],
   },
+  {
+    id: "cherry-slots",
+    name: "Cherry Slots",
+    ownerName: "Vince",
+    signColor: "#FFC040",
+    wallColor: "#2A1A20",
+    accentColor: "#E02040",
+    location: "earth",
+    greeting: "1G a spin! Match three cherries for a payout. House keeps your coin if you miss. Feeling lucky?",
+    items: [],
+    type: "casino",
+  },
 ];
 
 const ALIEN_SHOPS: Shop[] = [
@@ -343,7 +356,39 @@ const ALIEN_SHOPS: Shop[] = [
       { id: "singularity-dip", name: "Singularity Dip", emoji: "\u{1F30C}", price: 420, description: "Dip your scoop. Briefly become infinite." },
     ],
   },
+  {
+    id: "orbit-spins",
+    name: "Orbit Spins",
+    ownerName: "Zork",
+    signColor: "#80E0FF",
+    wallColor: "#100030",
+    accentColor: "#FFD040",
+    location: "alien-planet",
+    greeting: "Galactic slots, earthling! Match three UFOs or cosmic objects for riches. House has the edge. Bet carefully.",
+    items: [],
+    type: "casino",
+  },
 ];
+
+// ── Slot machine symbols + payouts ───────────────────────────────────────────
+// House edge: 5 symbols, uniform weights -> P(3-of-a-kind) = 4%. Avg payout
+// 23.6G -> expected return 0.944G/spin against a 1G bet = ~5.6% house edge.
+const SLOT_SYMBOLS_EARTH = ["\u{1F352}", "\u{1F34B}", "\u{1F514}", "7\uFE0F\u20E3", "\u2B50"];
+const SLOT_PAYOUTS_EARTH: Record<string, number> = {
+  "\u{1F352}": 5,   // cherry
+  "\u{1F34B}": 8,   // lemon
+  "\u{1F514}": 15,  // bell
+  "7\uFE0F\u20E3": 30, // seven
+  "\u2B50": 60,     // star
+};
+const SLOT_SYMBOLS_ALIEN = ["\u{1F6F8}", "\u{1F319}", "\u{1FA90}", "\u2604\uFE0F", "\u{1F30C}"];
+const SLOT_PAYOUTS_ALIEN: Record<string, number> = {
+  "\u{1F6F8}": 5,       // ufo
+  "\u{1F319}": 8,       // crescent moon
+  "\u{1FA90}": 15,      // ringed planet
+  "\u2604\uFE0F": 30,   // comet
+  "\u{1F30C}": 60,      // nebula
+};
 
 function getShops(location: Location): Shop[] {
   return location === "alien-planet" ? ALIEN_SHOPS : EARTH_SHOPS;
@@ -2315,6 +2360,12 @@ export default function IceCreamGame() {
     } catch { return []; }
   });
 
+  // Slot machine state (casino shops)
+  const [slotReels, setSlotReels] = useState<[string, string, string]>(["\u{1F352}", "\u{1F34B}", "\u{1F514}"]);
+  const [slotSpinning, setSlotSpinning] = useState(false);
+  const [slotMessage, setSlotMessage] = useState<string | null>(null);
+  const slotIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
   const [pilotOfferActive, setPilotOfferActive] = useState(false);
@@ -2831,6 +2882,8 @@ export default function IceCreamGame() {
     setDoorOfferActive(false);
     setCurrentShopId(null); setShopTab("buy"); setShopFlash(null);
     setHeroX(30); heroDirRef.current = 0; setStreetTick(0); setStreetNpcs([]);
+    setSlotReels(["\u{1F352}", "\u{1F34B}", "\u{1F514}"]); setSlotSpinning(false); setSlotMessage(null);
+    if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -2948,6 +3001,9 @@ export default function IceCreamGame() {
     setCurrentShopId(shopId);
     setShopTab("buy");
     setShopFlash(null);
+    setSlotMessage(null);
+    setSlotSpinning(false);
+    if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
     setPhase("shop");
   }, []);
 
@@ -2956,8 +3012,100 @@ export default function IceCreamGame() {
     playBoop();
     setCurrentShopId(null);
     setShopFlash(null);
+    setSlotMessage(null);
+    setSlotSpinning(false);
+    if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
     setPhase("street");
   }, []);
+
+  // Casino: pull the lever
+  const handleSpin = useCallback(() => {
+    const shop = currentShopId ? shopById(currentShopId) : null;
+    if (!shop || shop.type !== "casino") return;
+    if (slotSpinning) return;
+    if (totalGold < 1) {
+      playWrong();
+      setSlotMessage("need at least 1G to spin!");
+      return;
+    }
+    // Deduct the 1G bet up-front (from current-planet pot first, then spill)
+    if (location === "alien-planet") {
+      setAlienCoins((g) => {
+        if (g > 0) {
+          const n = g - 1;
+          window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+          return n;
+        }
+        setEarthCoins((e) => {
+          const n = Math.max(0, e - 1);
+          window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+          return n;
+        });
+        return g;
+      });
+    } else {
+      setEarthCoins((g) => {
+        if (g > 0) {
+          const n = g - 1;
+          window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+          return n;
+        }
+        setAlienCoins((a) => {
+          const n = Math.max(0, a - 1);
+          window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+          return n;
+        });
+        return g;
+      });
+    }
+    setSlotSpinning(true);
+    setSlotMessage(null);
+    playBoop();
+
+    const symbols = shop.location === "alien-planet" ? SLOT_SYMBOLS_ALIEN : SLOT_SYMBOLS_EARTH;
+    const payouts = shop.location === "alien-planet" ? SLOT_PAYOUTS_ALIEN : SLOT_PAYOUTS_EARTH;
+
+    // Fast reel animation — three reels stop staggered
+    let ticks = 0;
+    const stopAt: [number, number, number] = [18, 26, 34]; // stop frames per reel
+    slotIntervalRef.current = setInterval(() => {
+      ticks += 1;
+      setSlotReels(([r0, r1, r2]) => [
+        ticks < stopAt[0] ? symbols[Math.floor(Math.random() * symbols.length)] : r0,
+        ticks < stopAt[1] ? symbols[Math.floor(Math.random() * symbols.length)] : r1,
+        ticks < stopAt[2] ? symbols[Math.floor(Math.random() * symbols.length)] : r2,
+      ]);
+      if (ticks >= stopAt[2]) {
+        if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
+        // Final fair roll — use the frozen reels as-is (already random)
+        setSlotReels(([a, b, c]) => {
+          if (a === b && b === c) {
+            const payout = payouts[a] ?? 5;
+            if (shop.location === "alien-planet") {
+              setAlienCoins((g) => {
+                const n = g + payout;
+                window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+                return n;
+              });
+            } else {
+              setEarthCoins((g) => {
+                const n = g + payout;
+                window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                return n;
+              });
+            }
+            setSlotMessage(`JACKPOT! Three ${a}! +${payout}G`);
+            playCoinSound();
+          } else {
+            setSlotMessage("no match. -1G");
+            playWrong();
+          }
+          return [a, b, c];
+        });
+        setSlotSpinning(false);
+      }
+    }, 55);
+  }, [currentShopId, slotSpinning, totalGold, location]);
 
   // Exit street back to home (re-enter own scoop shop)
   const exitStreet = useCallback(() => {
@@ -3578,6 +3726,7 @@ export default function IceCreamGame() {
   useEffect(() => {
     return () => {
       if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+      if (slotIntervalRef.current) clearInterval(slotIntervalRef.current);
       if (musicRef.current) { musicRef.current.stop(); musicRef.current = null; }
     };
   }, []);
@@ -3926,10 +4075,103 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Casino panel (slot machine) */}
+      {phase === "shop" && currentShopId && (() => {
+        const shop = shopById(currentShopId);
+        if (!shop || shop.type !== "casino") return null;
+        const payouts = shop.location === "alien-planet" ? SLOT_PAYOUTS_ALIEN : SLOT_PAYOUTS_EARTH;
+        const symbols = shop.location === "alien-planet" ? SLOT_SYMBOLS_ALIEN : SLOT_SYMBOLS_EARTH;
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
+            style={{
+              fontFamily: "monospace",
+              background: "linear-gradient(180deg, #2A1A20, #1A1020)",
+              borderColor: shop.accentColor,
+              color: "#FFE080",
+              boxShadow: `0 0 20px ${shop.signColor}`,
+            }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <strong style={{ color: shop.signColor }}>{shop.name}</strong>
+                <span className="ml-2 text-xs" style={{ color: "#C08040" }}>
+                  host: {shop.ownerName}
+                </span>
+              </div>
+              <div className="text-sm font-bold" style={{ color: "#FFE080" }}>
+                {totalGold}G
+              </div>
+            </div>
+
+            {/* Reels */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {slotReels.map((sym, i) => (
+                <div key={i}
+                  className="aspect-square rounded-lg flex items-center justify-center text-5xl sm:text-6xl border-b-4 border-t-2"
+                  style={{
+                    background: "linear-gradient(180deg, #FFFDE8, #FFE080)",
+                    borderBottomColor: shop.accentColor,
+                    borderTopColor: "#FFF",
+                    color: "#333",
+                    fontFamily: "sans-serif",
+                    animation: slotSpinning ? "none" : undefined,
+                  }}>
+                  {sym}
+                </div>
+              ))}
+            </div>
+
+            {/* Spin button */}
+            <button onClick={handleSpin} disabled={slotSpinning || totalGold < 1}
+              className="w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-95 border-b-4 mb-2"
+              style={{
+                background: (slotSpinning || totalGold < 1)
+                  ? "linear-gradient(180deg, #888, #555)"
+                  : "linear-gradient(180deg, #FFD060, #E02040)",
+                borderBottomColor: (slotSpinning || totalGold < 1) ? "#333" : "#801010",
+                color: "#FFF",
+                textShadow: "1px 1px 0 #400",
+                opacity: (slotSpinning || totalGold < 1) ? 0.7 : 1,
+                cursor: slotSpinning ? "wait" : "pointer",
+              }}>
+              {slotSpinning ? "SPINNING..." : totalGold < 1 ? "NOT ENOUGH COINS" : "SPIN (1G)"}
+            </button>
+
+            {slotMessage && (
+              <p className="text-center py-2 rounded mb-2 font-bold"
+                style={{
+                  background: slotMessage.startsWith("JACKPOT") ? "#FFE080" : "#3A1020",
+                  color: slotMessage.startsWith("JACKPOT") ? "#A02010" : "#FFB080",
+                }}>
+                {slotMessage}
+              </p>
+            )}
+
+            <details className="text-xs mb-2" style={{ color: "#C08040" }}>
+              <summary className="cursor-pointer">payouts</summary>
+              <ul className="mt-1 space-y-0.5">
+                {symbols.map((s) => (
+                  <li key={s}>{s}{s}{s} &rarr; +{payouts[s]}G</li>
+                ))}
+              </ul>
+            </details>
+
+            <div className="flex justify-between items-center mt-2">
+              <button onClick={exitShop}
+                className="text-sm underline" style={{ color: shop.signColor }}>
+                {"\u2190"} back to street
+              </button>
+              <span className="text-xs" style={{ color: "#C08040" }}>
+                house has the edge
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Shop panel: buy / inventory tabs */}
       {phase === "shop" && currentShopId && (() => {
         const shop = shopById(currentShopId);
-        if (!shop) return null;
+        if (!shop || shop.type === "casino") return null;
         const owned = Object.entries(inventory).filter(([, n]) => n > 0);
         return (
           <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
