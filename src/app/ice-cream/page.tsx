@@ -34,6 +34,7 @@ type ShopItem = {
   emoji: string;
   price: number;
   description: string;
+  slot?: "held" | "decor";  // if present, item is equippable tamagotchi-style
 };
 
 type Shop = {
@@ -262,6 +263,51 @@ const EARTH_SHOPS: Shop[] = [
       { id: "silver-scooper", name: "Silver Scooper", emoji: "\u{1F944}", price: 60, description: "Keeps scoops round." },
       { id: "gold-scooper",   name: "Gold Scooper",   emoji: "\u{1F3C6}", price: 180, description: "Shinier. Fancier." },
       { id: "time-scooper",   name: "Time Scooper",   emoji: "\u23F3",    price: 300, description: "Scoops yesterday's ice cream. Confusing but delicious." },
+    ],
+  },
+  {
+    id: "page-turner",
+    name: "Page Turner",
+    ownerName: "Nora",
+    signColor: "#C8A878",
+    wallColor: "#FFF0D8",
+    accentColor: "#6B4020",
+    location: "earth",
+    greeting: "Books! Affordable wisdom by the page. Tap BUY, then EQUIP to hold one.",
+    items: [
+      { id: "picture-book", name: "Picture Book", emoji: "\u{1F4D7}", price: 5,  description: "A cute story. Hold while you scoop.", slot: "held" },
+      { id: "recipe-book",  name: "Recipe Book",  emoji: "\u{1F4D9}", price: 10, description: "Secrets of the scoop.", slot: "held" },
+      { id: "spell-book",   name: "Spell Book",   emoji: "\u{1F4D6}", price: 15, description: "Whispers flavor ideas.", slot: "held" },
+    ],
+  },
+  {
+    id: "toy-box",
+    name: "Toy Box",
+    ownerName: "Pip",
+    signColor: "#FFB0E0",
+    wallColor: "#FFE0F0",
+    accentColor: "#A03080",
+    location: "earth",
+    greeting: "Toys! Pick something to carry around. Good vibes only.",
+    items: [
+      { id: "bouncy-ball", name: "Bouncy Ball", emoji: "\u26BE",     price: 5,  description: "Bounces high. Fits in one tentacle.", slot: "held" },
+      { id: "teddy-bear",  name: "Teddy Bear",  emoji: "\u{1F9F8}",  price: 8,  description: "Soft, loyal, quiet.", slot: "held" },
+      { id: "balloon",     name: "Balloon",     emoji: "\u{1F388}",  price: 6,  description: "Red balloon. Tugs upward.", slot: "held" },
+    ],
+  },
+  {
+    id: "trinkets",
+    name: "Trinkets",
+    ownerName: "Lulu",
+    signColor: "#A0E0C0",
+    wallColor: "#E8FFF0",
+    accentColor: "#208060",
+    location: "earth",
+    greeting: "Decorate your shop! Equip a decoration and it'll show up inside.",
+    items: [
+      { id: "potted-plant",  name: "Potted Plant",  emoji: "\u{1FAB4}", price: 15, description: "A happy little plant for the counter.", slot: "decor" },
+      { id: "wall-poster",   name: "Wall Poster",   emoji: "\u{1F5BC}\uFE0F", price: 10, description: "Adds mood to a bare wall.", slot: "decor" },
+      { id: "cozy-rug",      name: "Cozy Rug",      emoji: "\u{1FAA9}", price: 20, description: "Softens the floor.", slot: "decor" },
     ],
   },
 ];
@@ -772,7 +818,7 @@ function drawCustomerSprite(ctx: CanvasRenderingContext2D, x: number, y: number,
   px(ctx, x + 5, y + bobY, 2, 2, "#FFB0B0");
 }
 
-function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number) {
+function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, heldItemId: string | null = null) {
   const pal = { body: "#90EE90", accent: "#6BC56B", eyes: "#1A1A2E" }; // green shopkeeper
 
   // Body behind counter (only upper half visible)
@@ -831,6 +877,9 @@ function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number) {
     }
   }
   drawText(ctx, "SCOOPY", x, tagY + 3, "#FF69B4", 0.4);
+
+  // Held item resting on the counter in front of Scoopy
+  drawHeldItemIcon(ctx, heldItemId, x + 9, y - 3);
 }
 
 function lightenColor(hex: string, amt: number): string {
@@ -1415,10 +1464,106 @@ function drawSpaceScene(ctx: CanvasRenderingContext2D, tick: number, direction: 
   });
 }
 
+// ── Item icons + home-shop decor ─────────────────────────────────────────────
+
+// Draws a small pixel-art icon for a held item; x,y is the top-left-ish corner.
+function drawHeldItemIcon(ctx: CanvasRenderingContext2D, itemId: string | null, x: number, y: number) {
+  if (!itemId) return;
+  switch (itemId) {
+    case "picture-book":
+      for (let dy = 0; dy < 5; dy++) for (let dx = 0; dx < 6; dx++) {
+        const c = dx === 0 ? "#1A5A1A" : dx === 5 ? "#228822" : dy === 0 || dy === 4 ? "#C0E0C0" : "#FFFFFF";
+        px(ctx, x + dx, y + dy, 1, 1, c);
+      }
+      break;
+    case "recipe-book":
+      for (let dy = 0; dy < 5; dy++) for (let dx = 0; dx < 6; dx++) {
+        const c = dx === 0 ? "#805020" : dx === 5 ? "#A06830" : dy === 0 || dy === 4 ? "#FFC080" : "#FFE8C0";
+        px(ctx, x + dx, y + dy, 1, 1, c);
+      }
+      break;
+    case "spell-book":
+      for (let dy = 0; dy < 5; dy++) for (let dx = 0; dx < 6; dx++) {
+        const c = dx === 0 ? "#401040" : dx === 5 ? "#602060" : dy === 0 || dy === 4 ? "#B080B0" : "#FFD0FF";
+        px(ctx, x + dx, y + dy, 1, 1, c);
+      }
+      px(ctx, x + 2, y + 2, 1, 1, "#FFD700");
+      break;
+    case "bouncy-ball":
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= 2.2) px(ctx, x + dx, y + dy, 1, 1, "#FF4040");
+      }
+      px(ctx, x - 1, y - 1, 1, 1, "#FFB0B0");
+      break;
+    case "teddy-bear":
+      px(ctx, x - 2, y, 5, 4, "#8B5E3C");
+      px(ctx, x - 2, y - 2, 2, 2, "#8B5E3C");
+      px(ctx, x + 1, y - 2, 2, 2, "#8B5E3C");
+      px(ctx, x - 1, y + 1, 1, 1, "#1A1A2E");
+      px(ctx, x + 1, y + 1, 1, 1, "#1A1A2E");
+      px(ctx, x, y + 3, 1, 1, "#1A1A2E");
+      break;
+    case "balloon":
+      for (let dy = -4; dy <= 0; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const d = Math.sqrt(dx * dx + (dy + 1.5) ** 2);
+        if (d <= 2.4) px(ctx, x + dx, y + dy, 1, 1, "#FF4040");
+      }
+      px(ctx, x, y + 1, 1, 3, "#AAAAAA");
+      px(ctx, x - 1, y - 3, 1, 1, "#FFB0B0");
+      break;
+  }
+}
+
+// Places equipped decor inside the home shop backdrop (called after drawBackground).
+function drawHomeDecor(ctx: CanvasRenderingContext2D, decorIds: string[], tick: number) {
+  decorIds.forEach((id) => {
+    if (id === "potted-plant") {
+      const bx = 108, by = 64;
+      // Pot
+      for (let dy = 0; dy < 5; dy++) for (let dx = 0; dx < 8; dx++) {
+        const edge = dx === 0 || dx === 7;
+        px(ctx, bx + dx, by + 3 + dy, 1, 1, edge ? "#602010" : "#A05020");
+      }
+      px(ctx, bx, by + 2, 8, 1, "#4A1808");
+      // Leaves
+      const sway = Math.floor(Math.sin(tick / 18) * 1);
+      for (let dy = -6; dy <= 1; dy++) for (let dx = -1; dx <= 8; dx++) {
+        const r = Math.abs(dx - 3.5) / 2 + Math.abs(dy + 3) / 2;
+        if (r < 2.8) px(ctx, bx + dx + sway, by + dy, 1, 1, "#50C060");
+      }
+      px(ctx, bx + 3 + sway, by - 5, 1, 1, "#A0FFB0");
+    } else if (id === "wall-poster") {
+      const px0 = 34, py0 = 18;
+      for (let dy = 0; dy < 10; dy++) for (let dx = 0; dx < 9; dx++) {
+        const edge = dx === 0 || dx === 8 || dy === 0 || dy === 9;
+        px(ctx, px0 + dx, py0 + dy, 1, 1, edge ? "#502818" : "#FFE8B0");
+      }
+      // tiny heart motif
+      px(ctx, px0 + 3, py0 + 3, 2, 2, "#FF69B4");
+      px(ctx, px0 + 5, py0 + 3, 2, 2, "#FF69B4");
+      px(ctx, px0 + 4, py0 + 5, 1, 1, "#FF69B4");
+      px(ctx, px0 + 3, py0 + 6, 3, 1, "#FF4488");
+    } else if (id === "cozy-rug") {
+      const rx = 42, ry = 100;
+      for (let dy = 0; dy < 6; dy++) for (let dx = 0; dx < 44; dx++) {
+        const stripe = Math.floor(dx / 5) % 2;
+        const edge = dy === 0 || dy === 5 || dx === 0 || dx === 43;
+        px(ctx, rx + dx, ry + dy, 1, 1, edge ? "#803050" : stripe ? "#FFB0CB" : "#FFFDE8");
+      }
+      // tassels
+      for (let i = 0; i < 8; i++) {
+        px(ctx, rx - 2 + i, ry + 6, 1, 2, "#D4567A");
+        px(ctx, rx + 44 - 8 + i, ry + 6, 1, 2, "#D4567A");
+      }
+    }
+  });
+}
+
 // ── Street + Shop Drawing ────────────────────────────────────────────────────
 
 // Hero (player character) — full-body standing/walking figure
-function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number, walking: boolean, alien: boolean) {
+function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number, walking: boolean, alien: boolean, heldItemId: string | null = null) {
   const pal = alien
     ? { body: "#C080FF", accent: "#8040C0", eyes: "#FFF" }
     : { body: "#90EE90", accent: "#6BC56B", eyes: "#1A1A2E" };
@@ -1466,6 +1611,8 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number, walking: 
   for (let dx = -4; dx <= 4; dx++) {
     px(ctx, x + dx, y - 13 + bob, 1, 1, "#FF69B4");
   }
+  // Held item tucked under right arm
+  drawHeldItemIcon(ctx, heldItemId, x + 8, y + 2 + bob);
 }
 
 // Storefront building — draws awning + wall + door + sign at x..x+w
@@ -1536,7 +1683,22 @@ function drawShopFront(ctx: CanvasRenderingContext2D, shop: Shop, bx: number, bw
   }
 }
 
-// Draws street backdrop (sky, sidewalk, road) and returns building x ranges
+// Building layout constants so tap handlers and rendering stay in sync
+const STREET_SHOP_W = 28;
+const STREET_GAP = 4;
+const STREET_MARGIN = 2;
+
+function streetWorldWidth(shops: Shop[]): number {
+  return STREET_MARGIN * 2 + shops.length * STREET_SHOP_W + (shops.length - 1) * STREET_GAP;
+}
+
+function streetCameraX(heroX: number, shops: Shop[]): number {
+  const worldW = streetWorldWidth(shops);
+  if (worldW <= W) return 0;
+  return Math.max(0, Math.min(worldW - W, Math.floor(heroX - W / 2)));
+}
+
+// Draws street backdrop with a scrolling camera when the world is wider than the viewport
 function drawStreetScene(
   ctx: CanvasRenderingContext2D,
   tick: number,
@@ -1546,7 +1708,9 @@ function drawStreetScene(
   walking: boolean,
   npcs: { x: number; spriteIdx: number; alien: boolean }[],
   highlightId: string | null,
+  heldItemId: string | null,
 ) {
+  const cameraX = streetCameraX(heroX, shops);
   // Sky
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
@@ -1587,25 +1751,31 @@ function drawStreetScene(
     });
   }
 
-  // Buildings
-  const gap = 2;
-  const totalGap = gap * (shops.length - 1);
-  const bw = Math.floor((W - 4 - totalGap) / shops.length);
+  // Buildings (world coords, shifted by camera)
   shops.forEach((shop, i) => {
-    const bx = 2 + i * (bw + gap);
-    drawShopFront(ctx, shop, bx, bw, tick, highlightId === shop.id);
+    const bxWorld = STREET_MARGIN + i * (STREET_SHOP_W + STREET_GAP);
+    const bx = bxWorld - cameraX;
+    if (bx + STREET_SHOP_W < -4 || bx > W + 4) return; // off-screen cull
+    drawShopFront(ctx, shop, bx, STREET_SHOP_W, tick, highlightId === shop.id);
   });
 
-  // NPCs on sidewalk
+  // NPCs on sidewalk (world coords)
   npcs.forEach((n) => {
-    if (n.alien) drawAlienSprite(ctx, Math.floor(n.x), 82, n.spriteIdx, true);
-    else         drawCustomerSprite(ctx, Math.floor(n.x), 82, n.spriteIdx, true);
+    const nx = Math.floor(n.x - cameraX);
+    if (nx < -8 || nx > W + 8) return;
+    if (n.alien) drawAlienSprite(ctx, nx, 82, n.spriteIdx, true);
+    else         drawCustomerSprite(ctx, nx, 82, n.spriteIdx, true);
   });
 
   // Hero on sidewalk
-  drawHero(ctx, Math.floor(heroX), 82, walking, false);
+  drawHero(ctx, Math.floor(heroX - cameraX), 82, walking, false, heldItemId);
 
-  // "tap a shop to enter" hint
+  // Scroll hints when camera can scroll further
+  const worldW = streetWorldWidth(shops);
+  if (cameraX > 0) drawText(ctx, "\u2190", 6, 50, "#FFFFFF", 1.0);
+  if (cameraX < worldW - W) drawText(ctx, "\u2192", W - 6, 50, "#FFFFFF", 1.0);
+
+  // Street label
   drawText(ctx, location === "alien-planet" ? "ALIEN STREET" : "MAIN STREET", W / 2, 94, "#FFFFFF", 0.55);
 }
 
@@ -2125,6 +2295,25 @@ export default function IceCreamGame() {
       return saved ? (JSON.parse(saved) as Record<string, number>) : {};
     } catch { return {}; }
   });
+  // Equipped items, tamagotchi-style
+  const [equippedHeld, setEquippedHeld] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = window.localStorage.getItem("scoopstack-equipped");
+      if (!saved) return null;
+      const parsed = JSON.parse(saved) as { held?: string | null; decor?: string[] };
+      return parsed.held ?? null;
+    } catch { return null; }
+  });
+  const [equippedDecor, setEquippedDecor] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("scoopstack-equipped");
+      if (!saved) return [];
+      const parsed = JSON.parse(saved) as { held?: string | null; decor?: string[] };
+      return parsed.decor ?? [];
+    } catch { return []; }
+  });
 
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
@@ -2179,10 +2368,12 @@ export default function IceCreamGame() {
       const t = cutsceneTick;
       if (location === "alien-planet") {
         drawAlienPlanetBackground(ctx, t);
+        drawHomeDecor(ctx, equippedDecor, t);
         drawAlienShopkeeper(ctx, 64, 70, t);
       } else {
         drawBackground(ctx);
-        drawShopkeeper(ctx, 64, 70);
+        drawHomeDecor(ctx, equippedDecor, t);
+        drawShopkeeper(ctx, 64, 70, equippedHeld);
       }
 
       const cust = customer;
@@ -2375,6 +2566,7 @@ export default function IceCreamGame() {
         heroDirRef.current !== 0,
         streetNpcs,
         null,
+        equippedHeld,
       );
     }
 
@@ -2407,7 +2599,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -2666,14 +2858,15 @@ export default function IceCreamGame() {
     return pool[idx];
   }, [location]);
 
-  // Spawn a handful of ambient passersby on the street
+  // Spawn a handful of ambient passersby on the street (world coords)
   const seedStreetNpcs = useCallback((loc: Location) => {
+    const worldW = streetWorldWidth(getShops(loc));
     const list: { id: number; x: number; spriteIdx: number; alien: boolean; dir: -1 | 1 }[] = [];
-    const count = 2 + Math.floor(Math.random() * 2);
+    const count = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < count; i++) {
       list.push({
         id: i,
-        x: 20 + Math.random() * 90,
+        x: 16 + Math.random() * (worldW - 32),
         spriteIdx: Math.floor(Math.random() * 6),
         alien: loc === "alien-planet",
         dir: Math.random() > 0.5 ? 1 : -1,
@@ -2729,6 +2922,25 @@ export default function IceCreamGame() {
   const persistInventory = useCallback((inv: Record<string, number>) => {
     try { window.localStorage.setItem("scoopstack-inventory", JSON.stringify(inv)); } catch { /* private mode etc. */ }
   }, []);
+
+  const persistEquipped = useCallback((held: string | null, decor: string[]) => {
+    try { window.localStorage.setItem("scoopstack-equipped", JSON.stringify({ held, decor })); } catch { /* */ }
+  }, []);
+
+  const toggleEquip = useCallback((item: ShopItem) => {
+    if (!item.slot) return;
+    playBoop();
+    if (item.slot === "held") {
+      const next = equippedHeld === item.id ? null : item.id;
+      setEquippedHeld(next);
+      persistEquipped(next, equippedDecor);
+    } else if (item.slot === "decor") {
+      const already = equippedDecor.includes(item.id);
+      const next = already ? equippedDecor.filter((d) => d !== item.id) : [...equippedDecor, item.id];
+      setEquippedDecor(next);
+      persistEquipped(equippedHeld, next);
+    }
+  }, [equippedHeld, equippedDecor, persistEquipped]);
 
   // Enter a shop from the street
   const enterShop = useCallback((shopId: string) => {
@@ -2826,30 +3038,43 @@ export default function IceCreamGame() {
       if (n <= 0) delete copy[item.id];
       else copy[item.id] = n;
       persistInventory(copy);
+      // If we just sold our only copy of an equipped item, unequip it
+      if ((copy[item.id] || 0) === 0) {
+        if (equippedHeld === item.id) {
+          setEquippedHeld(null);
+          persistEquipped(null, equippedDecor);
+        }
+        if (equippedDecor.includes(item.id)) {
+          const nextDecor = equippedDecor.filter((d) => d !== item.id);
+          setEquippedDecor(nextDecor);
+          persistEquipped(equippedHeld === item.id ? null : equippedHeld, nextDecor);
+        }
+      }
       return copy;
     });
     setShopFlash(`Returned ${item.name}. +${item.price}G`);
-  }, [inventory, location, persistInventory]);
+  }, [inventory, location, persistInventory, equippedHeld, equippedDecor, persistEquipped]);
 
   // Hero walk buttons (handled via held-down d-pad buttons)
   // The street tick drives ambient NPC movement and hero walking animation.
   useEffect(() => {
     if (phase !== "street") return;
+    const worldW = streetWorldWidth(getShops(location));
     const interval = setInterval(() => {
       setStreetTick((t) => t + 1);
       if (heroDirRef.current !== 0) {
-        setHeroX((x) => Math.max(8, Math.min(W - 8, x + heroDirRef.current * 1.2)));
+        setHeroX((x) => Math.max(8, Math.min(worldW - 8, x + heroDirRef.current * 1.2)));
       }
       setStreetNpcs((prev) => prev.map((n) => {
         let nx = n.x + n.dir * 0.4;
         let dir = n.dir;
         if (nx < 8) { nx = 8; dir = 1 as const; }
-        if (nx > W - 8) { nx = W - 8; dir = -1 as const; }
+        if (nx > worldW - 8) { nx = worldW - 8; dir = -1 as const; }
         return { ...n, x: nx, dir };
       }));
     }, 40);
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [phase, location]);
 
   // Tap handler for the street canvas — route to the correct shop or NPC
   const handleStreetTap = useCallback(
@@ -2880,20 +3105,19 @@ export default function IceCreamGame() {
         }
       }
 
-      // Building tap
+      // Convert tap to world coords (account for camera scroll)
       const shops = getShops(location);
-      const gap = 2;
-      const totalGap = gap * (shops.length - 1);
-      const bw = Math.floor((W - 4 - totalGap) / shops.length);
+      const cameraX = streetCameraX(heroX, shops);
+      const worldGx = gx + cameraX;
       for (let i = 0; i < shops.length; i++) {
-        const bx = 2 + i * (bw + gap);
-        if (gx >= bx && gx <= bx + bw && gy >= 11 && gy <= 76) {
+        const bxWorld = STREET_MARGIN + i * (STREET_SHOP_W + STREET_GAP);
+        if (worldGx >= bxWorld && worldGx <= bxWorld + STREET_SHOP_W && gy >= 11 && gy <= 76) {
           enterShop(shops[i].id);
           return;
         }
       }
     },
-    [chatActive, streetNpcs, location, pickDialogue, enterShop]
+    [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX]
   );
 
   // Tap handler for the shop interior — route exit door tap, owner chat
@@ -3797,26 +4021,47 @@ export default function IceCreamGame() {
                         ?? [...EARTH_SHOPS, ...ALIEN_SHOPS].flatMap((s) => s.items).find((i) => i.id === id);
                       if (!item) return null;
                       const canReturn = !!shop.items.find((i) => i.id === id);
+                      const isEquipped = item.slot === "held"
+                        ? equippedHeld === item.id
+                        : item.slot === "decor"
+                          ? equippedDecor.includes(item.id)
+                          : false;
                       return (
                         <div key={id} className="flex items-center gap-3 p-2 rounded-lg border-b-4"
                           style={{
-                            background: "linear-gradient(180deg, #FFF, #F0F0F0)",
+                            background: isEquipped ? "linear-gradient(180deg, #FFFDE8, #FFE080)" : "linear-gradient(180deg, #FFF, #F0F0F0)",
                             borderBottomColor: shop.signColor, color: "#333",
                           }}>
                           <span className="text-2xl">{item.emoji}</span>
                           <span className="flex-1">
                             <strong>{item.name}</strong>
+                            {isEquipped && <span className="ml-1 text-xs" style={{ color: "#C08010" }}>(equipped)</span>}
                             <br /><span className="text-xs" style={{ color: "#666" }}>x{n} owned</span>
                           </span>
-                          {canReturn ? (
-                            <button onClick={() => returnItem(item)}
-                              className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
-                              style={{ background: "linear-gradient(180deg, #FFF, #FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}>
-                              return +{item.price}G
-                            </button>
-                          ) : (
-                            <span className="text-xs" style={{ color: "#888" }}>not sold here</span>
-                          )}
+                          <div className="flex flex-col gap-1 items-end">
+                            {item.slot && (
+                              <button onClick={() => toggleEquip(item)}
+                                className="rounded-lg border-b-4 font-bold py-1 px-2 text-xs"
+                                style={{
+                                  background: isEquipped
+                                    ? "linear-gradient(180deg, #FFE080, #E0A040)"
+                                    : "linear-gradient(180deg, #E0F0FF, #80C0FF)",
+                                  borderBottomColor: isEquipped ? "#806020" : "#2060A0",
+                                  color: "#333",
+                                }}>
+                                {isEquipped ? "unequip" : item.slot === "held" ? "hold" : "place"}
+                              </button>
+                            )}
+                            {canReturn ? (
+                              <button onClick={() => returnItem(item)}
+                                className="rounded-lg border-b-4 font-bold py-1 px-2 text-xs"
+                                style={{ background: "linear-gradient(180deg, #FFF, #FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}>
+                                return +{item.price}G
+                              </button>
+                            ) : (
+                              <span className="text-xs" style={{ color: "#888" }}>not sold here</span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
