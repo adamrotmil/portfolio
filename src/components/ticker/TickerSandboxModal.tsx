@@ -155,7 +155,7 @@ function ModalBody({ onClose }: { onClose: () => void }) {
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 overflow-y-auto lg:overflow-hidden">
           <div className="flex flex-col gap-3 lg:flex-1 lg:min-h-0 lg:flex-row">
             <div
-              className="h-[440px] lg:h-auto lg:flex-1 lg:min-h-[340px] relative overflow-hidden shrink-0"
+              className="h-[360px] lg:h-auto lg:flex-1 lg:min-h-[340px] relative overflow-hidden shrink-0"
               style={{
                 background: p.bgPrimary,
                 border: `1px solid ${p.line}`,
