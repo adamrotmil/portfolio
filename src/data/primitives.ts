@@ -12,6 +12,7 @@ import SvgMorph from "@/components/primitives/demos/SvgMorph";
 import SharedElementFlip from "@/components/primitives/demos/SharedElementFlip";
 import GestureScrub from "@/components/primitives/demos/GestureScrub";
 import MultiStageSequence from "@/components/primitives/demos/MultiStageSequence";
+import NativeFeedLab from "@/components/primitives/demos/NativeFeedLab";
 
 export type Primitive = {
   id: string;
@@ -20,6 +21,10 @@ export type Primitive = {
   description: string;
   why: string;
   Component: ComponentType;
+  /** Override the 16:10 demo stage aspect (e.g. "4 / 5" for phone-shaped demos). */
+  aspect?: string;
+  /** Spans 2 columns on the lg grid; used for featured/larger demos. */
+  wide?: boolean;
 };
 
 export const PRIMITIVES: Primitive[] = [
@@ -139,5 +144,16 @@ export const PRIMITIVES: Primitive[] = [
       "A chain of simple animations with deliberate pauses between them.",
     why: "Polished splashes and product intros are almost never a single animation — they're a choreographed chain. The secret is the *empty air* between stages. Rushed sequences feel frantic; well-paced ones feel cinematic. Delay is the director.",
     Component: MultiStageSequence,
+  },
+  {
+    id: "native-feed-lab",
+    title: "Native Feed Lab",
+    tag: "Mobile UI",
+    description:
+      "A high-performance social feed shell: spring pager, rubber-band bounds, canvas reaction burst, bottom sheet, and layered mobile chrome.",
+    why: "A composite of almost every other primitive in this kit — spring physics, rubber-band gestures, parallax, mask layering, liquid-glass chrome, particle burst — fused into one phone-scale shell. The lesson is compositional: React handles state at interaction boundaries, requestAnimationFrame owns continuous motion, and everything moves via transform and opacity. Swap the content for video, WebGL, or prototypes — the primitive is the shell.",
+    Component: NativeFeedLab,
+    aspect: "4 / 5",
+    wide: true,
   },
 ];

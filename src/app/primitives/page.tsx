@@ -35,7 +35,13 @@ export default function PrimitivesPage() {
       <section className="mx-auto max-w-[1200px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(5rem,10vh,8rem)]">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PRIMITIVES.map((p) => (
-            <PrimitiveCard key={p.id} primitive={p} />
+            <PrimitiveCard
+              key={p.id}
+              primitive={p}
+              className={
+                p.wide ? "sm:col-span-2 lg:col-span-2 lg:row-span-2" : ""
+              }
+            />
           ))}
         </div>
       </section>

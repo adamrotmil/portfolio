@@ -3,8 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { Primitive } from "@/data/primitives";
 
-export default function PrimitiveCard({ primitive }: { primitive: Primitive }) {
-  const { title, tag, description, why, Component } = primitive;
+export default function PrimitiveCard({
+  primitive,
+  className = "",
+}: {
+  primitive: Primitive;
+  className?: string;
+}) {
+  const { title, tag, description, why, Component, aspect } = primitive;
   const [replayKey, setReplayKey] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -32,14 +38,14 @@ export default function PrimitiveCard({ primitive }: { primitive: Primitive }) {
   return (
     <article
       ref={ref}
-      className="group flex flex-col overflow-hidden rounded-[14px] border border-border bg-bg-card transition-colors"
+      className={`group flex flex-col overflow-hidden rounded-[14px] border border-border bg-bg-card transition-colors ${className}`}
       onMouseEnter={() => setReplayKey((k) => k + 1)}
     >
       {/* Live demo stage */}
       <div
         className="relative w-full overflow-hidden"
         style={{
-          aspectRatio: "16 / 10",
+          aspectRatio: aspect ?? "16 / 10",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), #0c0c0e",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
