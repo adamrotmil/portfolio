@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { Primitive } from "@/data/primitives";
 
 export default function PrimitiveCard({
   primitive,
-  className = "",
 }: {
   primitive: Primitive;
-  className?: string;
 }) {
-  const { title, tag, description, why, Component, aspect } = primitive;
+  const { title, tag, description, why, Component, DetailComponent, id } =
+    primitive;
+  const hasDetail = Boolean(DetailComponent);
   const [replayKey, setReplayKey] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
 
   // Auto-play on first scroll into view — each primitive renders its demo
   // when it actually becomes visible, so cards never animate off-screen.
@@ -35,17 +36,13 @@ export default function PrimitiveCard({
     return () => obs.disconnect();
   }, []);
 
-  return (
-    <article
-      ref={ref}
-      className={`group flex flex-col overflow-hidden rounded-[14px] border border-border bg-bg-card transition-colors ${className}`}
-      onMouseEnter={() => setReplayKey((k) => k + 1)}
-    >
+  const inner = (
+    <>
       {/* Live demo stage */}
       <div
         className="relative w-full overflow-hidden"
         style={{
-          aspectRatio: aspect ?? "16 / 10",
+          aspectRatio: "16 / 10",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), #0c0c0e",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -70,7 +67,41 @@ export default function PrimitiveCard({
         <p className="font-sans text-[0.8rem] leading-[1.55] text-text-muted">
           {why}
         </p>
+        {hasDetail ? (
+          <span className="mt-1 font-sans text-[0.72rem] uppercase tracking-[0.14em] text-text-muted transition-colors group-hover:text-text-secondary">
+            Open lab →
+          </span>
+        ) : null}
       </div>
+    </>
+  );
+
+  const baseClass =
+    "group flex flex-col overflow-hidden rounded-[14px] border border-border bg-bg-card transition-colors";
+  const interactiveClass = hasDetail
+    ? " cursor-pointer hover:border-border-strong"
+    : "";
+
+  if (hasDetail) {
+    return (
+      <Link
+        ref={ref as unknown as React.RefObject<HTMLAnchorElement>}
+        href={`/primitives/${id}`}
+        className={`${baseClass}${interactiveClass}`}
+        onMouseEnter={() => setReplayKey((k) => k + 1)}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <article
+      ref={ref}
+      className={baseClass}
+      onMouseEnter={() => setReplayKey((k) => k + 1)}
+    >
+      {inner}
     </article>
   );
 }

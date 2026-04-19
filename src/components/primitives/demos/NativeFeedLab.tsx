@@ -244,9 +244,21 @@ export default function NativeFeedLab() {
 
     if (!motion.dragging && !reducedMotionRef.current) {
       const delta = motion.target - motion.position;
-      motion.velocity += delta * 0.085;
-      motion.velocity *= 0.78;
-      motion.position += motion.velocity;
+      const minPosition = -(FEED_POSTS.length - 1) * motion.height;
+      // Only the "you're past the end of the feed" state gets the bouncy
+      // spring. Regular post-to-post snaps ease in monotonically — no
+      // overshoot, so transitions read as precise swipes, not springs.
+      const pastBounds =
+        motion.position > 0.5 || motion.position < minPosition - 0.5;
+
+      if (pastBounds) {
+        motion.velocity += delta * 0.12;
+        motion.velocity *= 0.82;
+        motion.position += motion.velocity;
+      } else {
+        motion.position += delta * 0.22;
+        motion.velocity = 0;
+      }
 
       if (Math.abs(delta) < 0.18 && Math.abs(motion.velocity) < 0.18) {
         motion.position = motion.target;

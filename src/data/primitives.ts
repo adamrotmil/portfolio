@@ -13,6 +13,12 @@ import SharedElementFlip from "@/components/primitives/demos/SharedElementFlip";
 import GestureScrub from "@/components/primitives/demos/GestureScrub";
 import MultiStageSequence from "@/components/primitives/demos/MultiStageSequence";
 import NativeFeedLab from "@/components/primitives/demos/NativeFeedLab";
+import NativeFeedLabTeaser from "@/components/primitives/demos/NativeFeedLabTeaser";
+
+export type PrimitiveNote = {
+  heading: string;
+  body: string;
+};
 
 export type Primitive = {
   id: string;
@@ -20,11 +26,15 @@ export type Primitive = {
   tag: string;
   description: string;
   why: string;
+  /** Shown in the tile on /primitives. */
   Component: ComponentType;
-  /** Override the 16:10 demo stage aspect (e.g. "4 / 5" for phone-shaped demos). */
-  aspect?: string;
-  /** Spans 2 columns on the lg grid; used for featured/larger demos. */
-  wide?: boolean;
+  /**
+   * Opt-in detail page at /primitives/[id]. If present, the tile becomes
+   * a link and this component renders full-size on the detail page.
+   */
+  DetailComponent?: ComponentType;
+  /** Longer-form teaching notes rendered under the detail-page demo. */
+  notes?: PrimitiveNote[];
 };
 
 export const PRIMITIVES: Primitive[] = [
@@ -150,10 +160,35 @@ export const PRIMITIVES: Primitive[] = [
     title: "Native Feed Lab",
     tag: "Mobile UI",
     description:
-      "A high-performance social feed shell: spring pager, rubber-band bounds, canvas reaction burst, bottom sheet, and layered mobile chrome.",
-    why: "A composite of almost every other primitive in this kit — spring physics, rubber-band gestures, parallax, mask layering, liquid-glass chrome, particle burst — fused into one phone-scale shell. The lesson is compositional: React handles state at interaction boundaries, requestAnimationFrame owns continuous motion, and everything moves via transform and opacity. Swap the content for video, WebGL, or prototypes — the primitive is the shell.",
-    Component: NativeFeedLab,
-    aspect: "4 / 5",
-    wide: true,
+      "A high-performance social feed shell: snap pager, rubber-band ends, canvas reaction burst, bottom sheet, and layered mobile chrome.",
+    why: "A composite of almost every other primitive in this kit — easing, gesture thresholds, parallax, mask layering, liquid-glass chrome, particle burst — fused into one phone-scale shell. React handles state at interaction boundaries; requestAnimationFrame owns continuous motion; everything moves via transform and opacity. Swap the content for video, WebGL, or prototypes — the primitive is the shell.",
+    Component: NativeFeedLabTeaser,
+    DetailComponent: NativeFeedLab,
+    notes: [
+      {
+        heading: "What it demonstrates",
+        body: "A vertical pager with velocity-based post changes, rubber-band resistance at the ends, a canvas reaction-burst layer, a pull-to-refresh affordance, a bottom sheet, and tab dots — all inside one full-screen mobile shell. The same shell can host any content: video, cards, WebGL, prototypes. The primitive is the chrome plus the gesture physics.",
+      },
+      {
+        heading: "The motion rule",
+        body: "React owns state changes at interaction boundaries (active index, liked, sheet open). An on-demand requestAnimationFrame loop owns continuous motion and sleeps when settled. setState is never called during pointer movement. Moving layers use transform, opacity, and filter — never top/left/width/height — so the compositor keeps them on the GPU. The cost of this discipline is zero, the win is 60fps.",
+      },
+      {
+        heading: "Easing vs. spring (the tuning call)",
+        body: "Regular post-to-post transitions use exponential ease-out — position += (target - position) * 0.22 — which is monotonic, snappy, and never overshoots. The underdamped spring is reserved for the one moment it belongs: when you keep pulling past the first or last post and release. Then the ends bounce back with a visible overshoot that says 'this is the edge of the feed.' Overshoot is precious; spend it where it communicates.",
+      },
+      {
+        heading: "Tuning knobs",
+        body: "Ease coefficient 0.22 controls snap speed — higher is snappier, lower is slower. Drag threshold 72px and velocity threshold 7px/frame determine how much intent counts as a post change. The rubber-band constant 0.55 is the resistance curve past the ends. Inside the bouncy spring path, stiffness 0.12 and damping 0.82 shape how the edge rebound reads — softer or crisper.",
+      },
+      {
+        heading: "The reaction burst",
+        body: "The heart tap emits 34 particles from the click point into a canvas that spans the whole phone. Each frame: apply a gentle gravity, decay velocity, fade alpha by life remaining. Additive blending is implicit since the particles are drawn with alpha compositing onto a transparent canvas. When the particle array empties, the raf loop shuts itself off — zero cost when idle.",
+      },
+      {
+        heading: "Re-skin ideas",
+        body: "Swap the gradients for video loops, WebGL shaders, or case-study hero frames. Replace the reaction rail with custom affordances. Change the bottom sheet content to render a live MapLibre map, a Three.js scene, or a prototype iframe. The pager physics don't care what's inside each card.",
+      },
+    ],
   },
 ];
