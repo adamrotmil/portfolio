@@ -22,7 +22,7 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "boss-fight" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "boss-fight" | "sarahs-world" | "result";
 
 type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
 type Laser = { id: number; x: number; y: number; };
@@ -71,7 +71,7 @@ type Shop = {
   location: Location;
   items: ShopItem[];
   greeting: string;        // short blurb when opened
-  type?: "retail" | "casino";
+  type?: "retail" | "casino" | "arcade";
 };
 
 type Location = "earth" | "alien-planet";
@@ -371,6 +371,18 @@ const EARTH_SHOPS: Shop[] = [
     greeting: "1G a spin! Match three cherries for a payout. House keeps your coin if you miss. Feeling lucky?",
     items: [],
     type: "casino",
+  },
+  {
+    id: "pixel-arcade",
+    name: "Pixel Arcade",
+    ownerName: "Ren",
+    signColor: "#80C0FF",
+    wallColor: "#1A0E30",
+    accentColor: "#FFE080",
+    location: "earth",
+    greeting: "Welcome to the arcade! Pick a cabinet and play. Beat the game for big coins!",
+    items: [],
+    type: "arcade",
   },
 ];
 
@@ -1318,6 +1330,194 @@ function drawHealthBar(
     for (let dy = 2; dy < 5; dy++) for (let dx = 0; dx < segW - 1; dx++) {
       px(ctx, x + 2 + s * segW + dx, y + dy, 1, 1, fillColor);
     }
+  }
+}
+
+// ── Sarah's World (meta-game) drawing ───────────────────────────────────────
+
+// Pixel Sarah — the real player. Dark hair to shoulders, light tee, daisy-dot
+// leggings, sitting/kneeling on the rug.
+function drawPixelSarah(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number) {
+  const bob = Math.floor(Math.sin(tick / 30) * 1);
+  // Shadow
+  px(ctx, x - 6, y + 10, 13, 2, "rgba(0,0,0,0.15)");
+  // Legs (kneeling: short daisy leggings)
+  for (let dy = 6; dy < 10; dy++) for (let dx = -5; dx <= 5; dx++) {
+    const edge = dx === -5 || dx === 5 || dy === 9;
+    // Daisy specks
+    const speck = (dx + dy * 3) % 5 === 0;
+    px(ctx, x + dx, y + dy, 1, 1, edge ? "#1E2A2E" : speck ? "#FFFFFF" : "#36424A");
+  }
+  // Torso (gray tee with a print)
+  for (let dy = -2; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) {
+    const edge = Math.abs(dx) === 5 || dy === -2 || dy === 5;
+    px(ctx, x + dx, y + dy + bob, 1, 1, edge ? "#A0A8B0" : "#D8DCE0");
+  }
+  // T-shirt print (tiny pastel glyph)
+  px(ctx, x - 1, y + 1 + bob, 3, 2, "#FF9EBA");
+  px(ctx, x, y + 3 + bob, 1, 1, "#80E0FF");
+  // Arms
+  px(ctx, x - 7, y - 1 + bob, 2, 4, "#E8C0A0");
+  px(ctx, x + 6, y - 1 + bob, 2, 4, "#E8C0A0");
+  // Neck
+  px(ctx, x - 1, y - 3 + bob, 3, 1, "#E8C0A0");
+  // Head
+  for (let dy = -10; dy <= -3; dy++) for (let dx = -4; dx <= 4; dx++) {
+    const edge = Math.abs(dx) === 4 || dy === -10 || dy === -3;
+    px(ctx, x + dx, y + dy + bob, 1, 1, edge ? "#B88060" : "#E8C0A0");
+  }
+  // Long dark hair framing the face
+  for (let dy = -10; dy <= -2; dy++) for (let dx = -5; dx <= 5; dx++) {
+    const onFace = dy >= -8 && dy <= -5 && Math.abs(dx) <= 3;
+    if (onFace) continue;
+    if (Math.abs(dx) === 5 || Math.abs(dx) === 4 || dy === -10) {
+      px(ctx, x + dx, y + dy + bob, 1, 1, "#2A1A10");
+    }
+  }
+  // Bangs
+  for (let dx = -3; dx <= 3; dx++) {
+    px(ctx, x + dx, y - 9 + bob, 1, 1, "#2A1A10");
+  }
+  // Eyes
+  px(ctx, x - 2, y - 7 + bob, 1, 1, "#1A1A2E");
+  px(ctx, x + 2, y - 7 + bob, 1, 1, "#1A1A2E");
+  // Mouth
+  px(ctx, x - 1, y - 5 + bob, 3, 1, "#D04060");
+}
+
+// Pixel Julia — baby sister crawling on all fours. Small head, cream body,
+// polka-dot bib.
+function drawPixelJulia(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number, moving: boolean) {
+  const bob = moving ? Math.floor(Math.sin(tick / 6) * 1) : 0;
+  // Shadow
+  px(ctx, x - 6, y + 8, 13, 2, "rgba(0,0,0,0.18)");
+  // Body (cream/beige crawling pose — horizontal oval)
+  for (let dy = 1; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) {
+    const edge = Math.abs(dx) === 6 || dy === 1 || dy === 6;
+    px(ctx, x + dx, y + dy + bob, 1, 1, edge ? "#C89A70" : "#E8C8A0");
+  }
+  // Polka-dot bib in front
+  for (let dx = -3; dx <= 3; dx++) {
+    px(ctx, x + dx, y + bob, 1, 1, "#FFFFFF");
+    px(ctx, x + dx, y + 1 + bob, 1, 1, "#FFFFFF");
+  }
+  px(ctx, x - 2, y + 1 + bob, 1, 1, "#80C8FF");
+  px(ctx, x + 1, y + bob, 1, 1, "#80C8FF");
+  px(ctx, x + 2, y + 2 + bob, 1, 1, "#80C8FF");
+  // Arms/legs (crawling)
+  const legSwing = moving ? Math.floor(Math.sin(tick / 5) * 2) : 0;
+  px(ctx, x - 5, y + 6 + bob, 2, 3, "#C89A70");
+  px(ctx, x + 4, y + 6 + bob, 2, 3, "#C89A70");
+  px(ctx, x - 7 + legSwing, y + 3 + bob, 2, 3, "#C89A70");
+  px(ctx, x + 6 - legSwing, y + 3 + bob, 2, 3, "#C89A70");
+  // Head (peeking forward)
+  for (let dy = -4; dy <= 1; dy++) for (let dx = -3; dx <= 3; dx++) {
+    const edge = Math.abs(dx) === 3 || dy === -4;
+    px(ctx, x + dx, y + dy + bob, 1, 1, edge ? "#B88060" : "#E8C0A0");
+  }
+  // Hair (short dark tuft)
+  for (let dx = -2; dx <= 2; dx++) px(ctx, x + dx, y - 4 + bob, 1, 1, "#2A1A10");
+  px(ctx, x, y - 5 + bob, 1, 1, "#2A1A10");
+  // Eyes
+  px(ctx, x - 1, y - 2 + bob, 1, 1, "#1A1A2E");
+  px(ctx, x + 1, y - 2 + bob, 1, 1, "#1A1A2E");
+  // Drooly grin
+  px(ctx, x, y + bob, 1, 1, "#D04060");
+}
+
+// Stacked magnet tiles — rotating through translucent colors
+function drawTileStack(ctx: CanvasRenderingContext2D, cx: number, floorY: number, count: number) {
+  const tileColors = ["#80E0FF", "#FFB0E8", "#80FFA0", "#FFE080", "#B080FF", "#FF9080"];
+  const tileW = 14;
+  const tileH = 6;
+  for (let i = 0; i < count; i++) {
+    const ty = floorY - (i + 1) * tileH;
+    const color = tileColors[i % tileColors.length];
+    // Tile body with translucent diagonal pattern
+    for (let dy = 0; dy < tileH; dy++) for (let dx = 0; dx < tileW; dx++) {
+      const edge = dx === 0 || dx === tileW - 1 || dy === 0 || dy === tileH - 1;
+      const diag = (dx + dy) % 2 === 0;
+      px(ctx, cx - tileW / 2 + dx, ty + dy, 1, 1, edge ? "#101010" : diag ? color : lightenColor(color, -20));
+    }
+  }
+}
+
+// Playroom backdrop: wall + shelf + rug. No characters.
+function drawSarahsWorldBackdrop(ctx: CanvasRenderingContext2D) {
+  // Wall
+  for (let y = 0; y < 40; y++) for (let x = 0; x < W; x++) {
+    px(ctx, x, y, 1, 1, y < 8 ? "#E8D0B0" : "#F0E0C0");
+  }
+  // Shelves (wooden cubby)
+  for (let y = 12; y < 40; y++) for (let x = 0; x < W; x++) {
+    const inShelf = y < 38 && x > 8 && x < W - 8;
+    if (!inShelf) continue;
+    // Cubby outlines
+    const cubby = Math.floor((x - 8) / 18) % 2;
+    const cubbyEdge = ((x - 8) % 18) === 0 || ((x - 8) % 18) === 17 || y === 12 || y === 37;
+    px(ctx, x, y, 1, 1, cubbyEdge ? "#8A6A3A" : cubby ? "#D4B080" : "#C0A070");
+  }
+  // Tiny toys in the cubbies
+  px(ctx, 16, 28, 4, 6, "#FF80A0"); // pink toy
+  px(ctx, 38, 26, 3, 8, "#FFD040"); // yellow toy
+  px(ctx, 58, 30, 4, 4, "#80E0FF"); // blue block
+  px(ctx, 78, 27, 3, 7, "#80FF80"); // green toy
+  px(ctx, 100, 28, 4, 6, "#FF6060"); // red truck body
+  px(ctx, 100, 34, 1, 1, "#000"); px(ctx, 103, 34, 1, 1, "#000");
+
+  // Rug on the floor with floral motif
+  for (let y = 40; y < H; y++) for (let x = 0; x < W; x++) {
+    const leaf = ((x + y) % 8 === 0) && ((x * 3 + y) % 11 === 0);
+    px(ctx, x, y, 1, 1, leaf ? "#E0C0A0" : "#FAF0D8");
+  }
+  // Rug border
+  for (let x = 0; x < W; x++) {
+    px(ctx, x, 40, 1, 1, "#C09878");
+    px(ctx, x, 41, 1, 1, "#A07848");
+  }
+}
+
+function drawSarahsWorldScene(
+  ctx: CanvasRenderingContext2D,
+  tick: number,
+  tileCount: number,
+  juliaX: number,
+  juliaMoving: boolean,
+  shooCooldown: number,
+  timeLeftMs: number,
+  target: number,
+) {
+  drawSarahsWorldBackdrop(ctx);
+  // Tile stack in the middle
+  const floorY = H - 14;
+  drawTileStack(ctx, 64, floorY, tileCount);
+  // Sarah on the right
+  drawPixelSarah(ctx, 104, H - 16, tick);
+  // Julia on the left, crawling toward the tower
+  drawPixelJulia(ctx, Math.floor(juliaX), H - 14, tick, juliaMoving);
+
+  // Timer bar up top
+  const barW = 60;
+  const barX = Math.floor((W - barW) / 2);
+  for (let dx = 0; dx < barW; dx++) for (let dy = 0; dy < 4; dy++) {
+    const edge = dx === 0 || dx === barW - 1 || dy === 0 || dy === 3;
+    px(ctx, barX + dx, 4 + dy, 1, 1, edge ? "#333" : "#FFFDE8");
+  }
+  const fill = Math.max(0, Math.min(barW - 2, Math.floor((timeLeftMs / 45000) * (barW - 2))));
+  for (let dx = 0; dx < fill; dx++) for (let dy = 1; dy < 3; dy++) {
+    px(ctx, barX + 1 + dx, 4 + dy, 1, 1, timeLeftMs < 10000 ? "#FF4040" : "#50C080");
+  }
+  // Tile goal counter
+  drawText(ctx, `${tileCount}/${target}`, 16, 6, "#333", 0.6);
+  drawText(ctx, "SARAH'S WORLD", W / 2, 12, "#D04060", 0.7);
+  // Shoo cooldown indicator
+  if (shooCooldown > 0) {
+    drawText(ctx, "wait...", W - 16, 6, "#888", 0.5);
+  }
+  // Warning when Julia is close
+  if (juliaX > 46) {
+    const blink = Math.floor(tick / 4) % 2;
+    if (blink) drawText(ctx, "LOOK OUT!", W / 2, H - 4, "#FF4040", 0.55);
   }
 }
 
@@ -3013,6 +3213,19 @@ export default function IceCreamGame() {
   const [warpActive, setWarpActive] = useState(false);
   const [warpTick, setWarpTick] = useState(0);
 
+  // Sarah's World (meta-game in the arcade)
+  const [sarahsWorld, setSarahsWorld] = useState<{
+    tick: number;
+    tileCount: number;
+    juliaX: number;
+    juliaMoving: boolean;
+    shooCooldown: number;
+    timeLeft: number;      // ms
+    target: number;
+    phase: "play" | "won" | "lost";
+    phaseTick: number;
+  } | null>(null);
+
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
   const [pilotOfferActive, setPilotOfferActive] = useState(false);
@@ -3036,7 +3249,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -3292,6 +3505,29 @@ export default function IceCreamGame() {
       }
     }
 
+    function drawSarahsWorldView() {
+      if (!ctx || !sarahsWorld) return;
+      drawSarahsWorldScene(
+        ctx,
+        sarahsWorld.tick,
+        sarahsWorld.tileCount,
+        sarahsWorld.juliaX,
+        sarahsWorld.juliaMoving && sarahsWorld.phase === "play",
+        sarahsWorld.shooCooldown,
+        sarahsWorld.timeLeft,
+        sarahsWorld.target,
+      );
+      if (sarahsWorld.phase === "won") {
+        drawText(ctx, "YOU BUILT THE HOUSE!", W / 2, H / 2 - 4, "#20A050", 0.9);
+        drawText(ctx, "+150G", W / 2, H / 2 + 8, "#C08010", 0.7);
+      } else if (sarahsWorld.phase === "lost") {
+        drawText(ctx, "TIME'S UP!", W / 2, H / 2 - 4, "#D04060", 0.9);
+        if (sarahsWorld.tileCount > 0) {
+          drawText(ctx, `+${sarahsWorld.tileCount * 5}G`, W / 2, H / 2 + 8, "#C08010", 0.6);
+        }
+      }
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -3311,16 +3547,18 @@ export default function IceCreamGame() {
         drawChase();
       } else if (phase === "boss-fight") {
         drawBossFightView();
+      } else if (phase === "sarahs-world") {
+        drawSarahsWorldView();
       } else {
         drawShopScene();
       }
-      if (phase !== "pilot" && phase !== "boss-fight") drawHud();
+      if (phase !== "pilot" && phase !== "boss-fight" && phase !== "sarahs-world") drawHud();
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -3591,6 +3829,7 @@ export default function IceCreamGame() {
     lastBossAtRef.current = 0;
     pendingBossRef.current = false;
     setBossFight(null); setBossHitTick(0); bossEncounterRef.current = 0;
+    setSarahsWorld(null);
     setChaseMinions([]); setChaseTick(0);
     chaseResumeRef.current = null;
     setWarpActive(false); setWarpTick(0);
@@ -3776,6 +4015,58 @@ export default function IceCreamGame() {
     const t = setTimeout(() => setBossHitTick((v) => (v >= 8 ? 0 : v + 1)), 40);
     return () => clearTimeout(t);
   }, [bossHitTick]);
+
+  // Sarah's World driver — Julia advances, timer ticks, win/lose transitions.
+  useEffect(() => {
+    if (phase !== "sarahs-world" || !sarahsWorld) return;
+    const interval = setInterval(() => {
+      setSarahsWorld((cur) => {
+        if (!cur) return cur;
+        if (cur.phase !== "play") {
+          const nextPhaseTick = cur.phaseTick + 1;
+          if (nextPhaseTick >= 60) {
+            // Credit reward / small participation bonus, then return to arcade panel
+            const reward = cur.phase === "won"
+              ? 150
+              : Math.max(0, cur.tileCount * 5);
+            if (reward > 0) {
+              playCoinSound();
+              setEarthCoins((g) => {
+                const n = g + reward;
+                window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                return n;
+              });
+            }
+            setPhase("shop");
+            return null;
+          }
+          return { ...cur, phaseTick: nextPhaseTick };
+        }
+        const tick = cur.tick + 1;
+        const shooCooldown = Math.max(0, cur.shooCooldown - 40);
+        // Julia advances ~12 px/s toward the tower
+        let juliaX = cur.juliaX + 0.48;
+        let tileCount = cur.tileCount;
+        // Julia reaches the tower base around x=56 — knocks down 3 tiles and resets
+        if (juliaX >= 56) {
+          juliaX = 16;
+          tileCount = Math.max(0, tileCount - 3);
+          playWrong();
+        }
+        const timeLeft = Math.max(0, cur.timeLeft - 40);
+        // Win / lose transitions
+        if (tileCount >= cur.target) {
+          playCoinSound();
+          return { ...cur, tick, tileCount, juliaX, shooCooldown, timeLeft, phase: "won", phaseTick: 0 };
+        }
+        if (timeLeft <= 0) {
+          return { ...cur, tick, tileCount, juliaX, shooCooldown, timeLeft, phase: "lost", phaseTick: 0 };
+        }
+        return { ...cur, tick, tileCount, juliaX, shooCooldown, timeLeft };
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase, sarahsWorld]);
 
   // Player tap during a boss fight — only counts during the "tap" phase.
   const handleBossTap = useCallback(() => {
@@ -4026,6 +4317,48 @@ export default function IceCreamGame() {
     setSlotSpinning(false);
     if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
     setPhase("street");
+  }, []);
+
+  // Arcade: start Sarah's World
+  const startSarahsWorld = useCallback(() => {
+    playDing();
+    setSarahsWorld({
+      tick: 0,
+      tileCount: 0,
+      juliaX: 22,
+      juliaMoving: true,
+      shooCooldown: 0,
+      timeLeft: 45000,
+      target: 10,
+      phase: "play",
+      phaseTick: 0,
+    });
+    setPhase("sarahs-world");
+  }, []);
+
+  // Sarah's World: stack a tile
+  const handleStackTile = useCallback(() => {
+    setSarahsWorld((cur) => {
+      if (!cur || cur.phase !== "play") return cur;
+      playBoop();
+      return { ...cur, tileCount: cur.tileCount + 1 };
+    });
+  }, []);
+
+  // Sarah's World: shoo Julia back (short cooldown)
+  const handleShooJulia = useCallback(() => {
+    setSarahsWorld((cur) => {
+      if (!cur || cur.phase !== "play" || cur.shooCooldown > 0) return cur;
+      playBoop();
+      return { ...cur, juliaX: Math.max(12, cur.juliaX - 24), shooCooldown: 1200 };
+    });
+  }, []);
+
+  // Exit Sarah's World back to the arcade panel (shop)
+  const exitSarahsWorld = useCallback(() => {
+    playBoop();
+    setSarahsWorld(null);
+    setPhase("shop");
   }, []);
 
   // Casino: pull the lever
@@ -5118,6 +5451,121 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Arcade panel — pick a game */}
+      {phase === "shop" && currentShopId && (() => {
+        const shop = shopById(currentShopId);
+        if (!shop || shop.type !== "arcade") return null;
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
+            style={{
+              fontFamily: "monospace",
+              background: "linear-gradient(180deg, #1A0E30, #120820)",
+              borderColor: shop.signColor,
+              color: shop.accentColor,
+              boxShadow: `0 0 20px ${shop.signColor}`,
+            }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <strong style={{ color: shop.signColor }}>{shop.name}</strong>
+                <span className="ml-2 text-xs" style={{ color: "#C0C0FF" }}>
+                  host: {shop.ownerName}
+                </span>
+              </div>
+              <div className="text-sm font-bold" style={{ color: shop.accentColor }}>
+                {totalGold}G
+              </div>
+            </div>
+            <p className="text-xs mb-3" style={{ color: "#C0C0FF" }}>
+              Pick a cabinet, scooper!
+            </p>
+            <button onClick={startSarahsWorld}
+              className="w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-95 border-b-4 mb-3"
+              style={{
+                background: "linear-gradient(180deg, #FFB0CB, #D04060)",
+                borderBottomColor: "#801040", color: "#FFF",
+                textShadow: "1px 1px 0 #400020",
+              }}>
+              {"\u{1F3AE}"} SARAH&apos;S WORLD
+              <br />
+              <span className="text-xs font-normal" style={{ opacity: 0.85 }}>
+                stack the magnet tiles before baby Julia knocks them over
+              </span>
+            </button>
+            <div className="flex justify-between items-center">
+              <button onClick={exitShop}
+                className="text-sm underline" style={{ color: shop.signColor }}>
+                {"\u2190"} back to street
+              </button>
+              <span className="text-xs" style={{ color: "#C0C0FF" }}>
+                more cabinets coming soon
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Sarah's World controls */}
+      {phase === "sarahs-world" && sarahsWorld && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #FFF4E0, #FFD6E8)",
+            borderColor: "#D04060",
+            color: "#333",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <strong style={{ color: "#D04060" }}>{"\u{1F3AE}"} Sarah&apos;s World</strong>
+            </div>
+            <div className="text-sm font-bold" style={{ color: "#C08010" }}>
+              {totalGold}G &middot; tiles {sarahsWorld.tileCount}/{sarahsWorld.target} &middot; {(sarahsWorld.timeLeft / 1000).toFixed(1)}s
+            </div>
+          </div>
+          {sarahsWorld.phase === "play" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={handleStackTile}
+                onTouchStart={(e) => { e.preventDefault(); handleStackTile(); }}
+                className="py-6 rounded-xl font-bold text-xl transition-all active:scale-95 border-b-4"
+                style={{
+                  background: "linear-gradient(180deg, #80E0FF, #4060C0)",
+                  borderBottomColor: "#103060", color: "#FFF",
+                  textShadow: "1px 1px 0 #102040",
+                }}>
+                {"\u{1F9F1}"} STACK!
+              </button>
+              <button onClick={handleShooJulia}
+                onTouchStart={(e) => { e.preventDefault(); handleShooJulia(); }}
+                disabled={sarahsWorld.shooCooldown > 0}
+                className="py-6 rounded-xl font-bold text-xl transition-all active:scale-95 border-b-4"
+                style={{
+                  background: sarahsWorld.shooCooldown > 0
+                    ? "linear-gradient(180deg, #888, #555)"
+                    : "linear-gradient(180deg, #FFD080, #FF6040)",
+                  borderBottomColor: sarahsWorld.shooCooldown > 0 ? "#222" : "#801010",
+                  color: "#FFF",
+                  opacity: sarahsWorld.shooCooldown > 0 ? 0.6 : 1,
+                  cursor: sarahsWorld.shooCooldown > 0 ? "wait" : "pointer",
+                  textShadow: "1px 1px 0 #400",
+                }}>
+                {"\u{1F6D1}"} SHOO!
+                {sarahsWorld.shooCooldown > 0 && (
+                  <><br/><span className="text-xs font-normal">{(sarahsWorld.shooCooldown / 1000).toFixed(1)}s</span></>
+                )}
+              </button>
+            </div>
+          ) : (
+            <button onClick={exitSarahsWorld}
+              className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: "linear-gradient(180deg, #B0FFC8, #50C080)",
+                borderBottomColor: "#208050", color: "#FFF",
+              }}>
+              back to the arcade {"\u2190"}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Casino panel (slot machine) */}
       {phase === "shop" && currentShopId && (() => {
         const shop = shopById(currentShopId);
@@ -5214,7 +5662,7 @@ export default function IceCreamGame() {
       {/* Shop panel: buy / inventory tabs */}
       {phase === "shop" && currentShopId && (() => {
         const shop = shopById(currentShopId);
-        if (!shop || shop.type === "casino") return null;
+        if (!shop || shop.type === "casino" || shop.type === "arcade") return null;
         const owned = Object.entries(inventory).filter(([, n]) => n > 0);
         return (
           <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
@@ -5873,7 +6321,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
