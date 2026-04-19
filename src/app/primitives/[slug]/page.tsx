@@ -41,14 +41,25 @@ export default async function PrimitiveDetailPage({
       <Nav />
 
       <div className="mx-auto max-w-[1100px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(4rem,8vh,6rem)] pt-[clamp(6rem,12vh,9rem)]">
-        <Link
-          href="/primitives"
-          className="inline-block font-sans text-[0.8rem] uppercase tracking-[0.18em] text-text-muted transition-colors hover:text-text-secondary"
-        >
-          ← All primitives
-        </Link>
+        <nav className="font-sans text-[0.72rem] uppercase tracking-[0.2em] text-text-muted">
+          <Link
+            href="/#lab"
+            className="transition-colors hover:text-text-secondary"
+          >
+            Lab
+          </Link>
+          <span className="mx-2 opacity-60">/</span>
+          <Link
+            href="/primitives"
+            className="transition-colors hover:text-text-secondary"
+          >
+            Primitives
+          </Link>
+          <span className="mx-2 opacity-60">/</span>
+          <span className="text-text-secondary">{primitive.title}</span>
+        </nav>
 
-        <header className="mt-8 flex flex-wrap items-center gap-4">
+        <header className="mt-6 flex flex-wrap items-center gap-4">
           <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-[0.95] text-text-primary">
             {primitive.title}
           </h1>

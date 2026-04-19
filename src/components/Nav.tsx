@@ -57,13 +57,13 @@ export default function Nav() {
         {/* Desktop nav */}
         <div className="hidden md:flex gap-8 items-center">
           {links.map((link) => (
-            <a
+            <Link
               key={link.label}
               href={link.href}
               className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
           <a
             href={resumeHref}
@@ -116,14 +116,14 @@ export default function Nav() {
       {menuOpen && (
         <div className="md:hidden pb-6 flex flex-col gap-4">
           {links.map((link) => (
-            <a
+            <Link
               key={link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
           <a
             href={resumeHref}

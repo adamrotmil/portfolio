@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PrimitiveCard from "@/components/primitives/PrimitiveCard";
@@ -16,10 +17,17 @@ export default function PrimitivesPage() {
       <Nav />
 
       <header className="mx-auto max-w-[900px] px-[clamp(1.5rem,4vw,4rem)] pb-12 pt-[clamp(6rem,12vh,9rem)]">
-        <div className="font-sans text-[0.7rem] uppercase tracking-[0.22em] text-text-muted">
-          Lab
-        </div>
-        <h1 className="mt-3 font-serif text-[clamp(2.8rem,7vw,5.5rem)] leading-[0.95] text-text-primary">
+        <nav className="font-sans text-[0.72rem] uppercase tracking-[0.2em] text-text-muted">
+          <Link
+            href="/#lab"
+            className="transition-colors hover:text-text-secondary"
+          >
+            Lab
+          </Link>
+          <span className="mx-2 opacity-60">/</span>
+          <span className="text-text-secondary">Primitives</span>
+        </nav>
+        <h1 className="mt-4 font-serif text-[clamp(2.8rem,7vw,5.5rem)] leading-[0.95] text-text-primary">
           Primitives
         </h1>
         <p className="mt-6 max-w-[60ch] font-sans text-[clamp(1rem,1.2vw,1.125rem)] leading-[1.6] text-text-secondary">
