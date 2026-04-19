@@ -22,17 +22,35 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "boss-fight" | "result";
 
 type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
 type Laser = { id: number; x: number; y: number; };
 type PilotInputs = { left: boolean; right: boolean; up: boolean; down: boolean; fire: boolean };
 
 type BossAttackType = "ice" | "fire" | "slam";
-type BossAttackPhase = "idle" | "charging" | "staggered";
 
 type Minion = { id: number; quote: string; spriteIdx: number };
 type ChaseMinion = { id: number; x: number; y: number; vx: number; caught: boolean; spriteIdx: number };
+
+type BossFightPhase = "intro" | "round-start" | "tap" | "player-attack" | "boss-attack" | "won" | "lost";
+
+type BossFightState = {
+  phase: BossFightPhase;
+  round: number;
+  playerHP: number;
+  bossHP: number;
+  tapCount: number;
+  tapTarget: number;
+  timeLeft: number;       // ms remaining in current tap round
+  roundTime: number;      // total ms for the current tap round (for UI bar)
+  attackType: BossAttackType;   // which animation to play on boss-attack
+  phaseTick: number;      // ticks within current sub-phase
+  bossName: string;
+  bossOnAlien: boolean;
+  minionCount: number;
+  encounterIdx: number;   // 1-based boss encounter # (difficulty)
+};
 
 type ShopItem = {
   id: string;        // stable id used as inventory key
@@ -598,34 +616,6 @@ function createAlienVIP(id: number): Customer {
 }
 
 // Boss customer — complex order, 3 hearts. Wrong taps cost a heart and coins.
-function createBossCustomer(id: number, location: Location): Customer {
-  const pool = location === "alien-planet" ? ALIEN_FLAVORS : FLAVORS;
-  const tpool = location === "alien-planet" ? ALIEN_TOPPINGS : TOPPINGS;
-  const withMinions = Math.random() < 0.4;
-  const minions: Minion[] | undefined = withMinions
-    ? Array.from({ length: 2 }, (_, i) => ({
-        id: i,
-        quote: pick(MINION_QUOTES),
-        spriteIdx: Math.floor(Math.random() * 4),
-      }))
-    : undefined;
-  return {
-    id,
-    name: location === "alien-planet" ? "VOID WARLORD" : "FROZEN FURY",
-    spriteIdx: 0,
-    order: Array.from({ length: 5 }, () => pick(pool)),
-    toppings: [pick(tpool), pick(tpool)],
-    x: W + 10,
-    targetX: 28,
-    state: "walking-in",
-    reaction: "",
-    waitTicks: 0,
-    isBoss: true,
-    bossHearts: 3,
-    minions,
-  };
-}
-
 // ── Sound helpers (shared AudioContext for mobile compatibility) ──────────────
 // Mobile browsers require AudioContext to be created/resumed during a user gesture.
 // We create ONE shared context on first interaction and reuse it for all sounds.
@@ -1057,36 +1047,6 @@ function drawMinion(ctx: CanvasRenderingContext2D, x: number, y: number, tick: n
   px(ctx, x + 1, y + 3 + bob, 1, 1, "#FFF");
 }
 
-// Telegraph ring that pulses around the boss while they charge a special attack
-function drawBossChargeAura(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number, attack: BossAttackType) {
-  const color = BOSS_ATTACKS[attack].color;
-  const radius = 14 + Math.floor(Math.sin(tick / 3) * 2);
-  for (let a = 0; a < 40; a++) {
-    const angle = (a / 40) * Math.PI * 2 + tick / 6;
-    const rx = Math.floor(x + Math.cos(angle) * radius);
-    const ry = Math.floor(y + Math.sin(angle) * radius * 0.9);
-    if (rx < 0 || rx >= W || ry < 0 || ry >= H) continue;
-    px(ctx, rx, ry, 1, 1, a % 3 === 0 ? color : "#FFFFFF");
-  }
-  // Floating attack glyph above boss
-  if (attack === "ice") {
-    px(ctx, x - 1, y - 22, 3, 3, color);
-    px(ctx, x, y - 24, 1, 7, color);
-    px(ctx, x - 3, y - 21, 7, 1, color);
-  } else if (attack === "fire") {
-    for (let dy = 0; dy < 6; dy++) for (let dx = -2; dx <= 2; dx++) {
-      if (Math.abs(dx) <= 2 - Math.floor(dy / 2)) px(ctx, x + dx, y - 24 + dy, 1, 1, color);
-    }
-    px(ctx, x, y - 26, 1, 2, "#FFE080");
-  } else {
-    // slam — shockwave chevrons
-    for (let i = 0; i < 3; i++) {
-      px(ctx, x - 4 + i * 2, y - 22, 2, 1, color);
-      px(ctx, x + 2 - i * 2, y - 22, 2, 1, color);
-    }
-  }
-}
-
 // Quick 8-frame hit flash — overlays a colored wash and a shock ring
 function drawBossAttackHit(ctx: CanvasRenderingContext2D, tick: number, attack: BossAttackType) {
   const color = BOSS_ATTACKS[attack].color;
@@ -1220,6 +1180,145 @@ function drawWarpStars(ctx: CanvasRenderingContext2D, tick: number) {
   const jx = Math.floor(Math.sin(tick / 2) * 1);
   drawFlyingSaucer(ctx, 64 + jx, 56 + jx, tick);
   drawText(ctx, "WARP DRIVE", W / 2, 14, "#80E0FF", 0.85);
+}
+
+// Boss-fight arena — hero on left, boss on right, HP bars up top, banner
+// during intro/round-start/won/lost. `animOffset` slides hero or boss toward
+// the other during attack sequences.
+function drawBossFightScene(
+  ctx: CanvasRenderingContext2D,
+  state: BossFightState,
+  tick: number,
+) {
+  // Backdrop: gradient arena with action lines. Alien planet bosses get a
+  // darker purple arena; earth bosses get a red sky.
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let c;
+      if (state.bossOnAlien) {
+        if (y < 24) c = "#160030";
+        else if (y < 56) c = "#2E0848";
+        else if (y < 76) c = "#40104A";
+        else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#1A0828" : "#0E0420";
+      } else {
+        if (y < 24) c = "#3A0010";
+        else if (y < 56) c = "#7A1020";
+        else if (y < 76) c = "#A04030";
+        else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#301010" : "#1E0808";
+      }
+      px(ctx, x, y, 1, 1, c);
+    }
+  }
+
+  // Speed-lines rushing outward during tap phase
+  if (state.phase === "tap") {
+    for (let i = 0; i < 18; i++) {
+      const yy = (i * 7 + tick * 3) % H;
+      px(ctx, 2, yy, 6, 1, "#FFE080");
+      px(ctx, W - 8, (yy + 20) % H, 6, 1, "#FFE080");
+    }
+  }
+
+  // HP bars
+  drawHealthBar(ctx, 4, 22, 50, state.playerHP, 3, "#20E040", "#FFF");
+  drawText(ctx, "YOU", 30, 18, "#FFFFFF", 0.5);
+  drawHealthBar(ctx, W - 54, 22, 50, state.bossHP, 3, "#E02040", "#FFF");
+  drawText(ctx, state.bossName, W - 28, 18, "#FFFFFF", 0.48);
+
+  // Hero / boss positions — animate toward each other during attacks
+  let heroX = 32;
+  let bossX = W - 36;
+  if (state.phase === "player-attack") {
+    const t = state.phaseTick / 50;
+    const ease = t < 0.4 ? t / 0.4 : t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
+    heroX = 32 + Math.floor(ease * 44);
+  } else if (state.phase === "boss-attack") {
+    const t = state.phaseTick / 50;
+    const ease = t < 0.4 ? t / 0.4 : t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
+    bossX = W - 36 - Math.floor(ease * 44);
+  }
+
+  // Minions flanking the boss, with rotating rude quote bubbles
+  for (let i = 0; i < state.minionCount; i++) {
+    const mx = W - 50 - i * 14;
+    drawMinion(ctx, mx, 78, tick + i * 7, i);
+    if (state.phase === "tap" || state.phase === "round-start") {
+      const q = MINION_QUOTES[(Math.floor(tick / 90) + i) % MINION_QUOTES.length];
+      const bw = Math.min(W - 2, q.length * 3 + 8);
+      const bx = Math.max(1, Math.min(W - bw - 1, mx - Math.floor(bw / 2)));
+      const by = 66;
+      for (let dy = 0; dy < 7; dy++) for (let dx = 0; dx < bw; dx++) {
+        const edge = dx === 0 || dx === bw - 1 || dy === 0 || dy === 6;
+        px(ctx, bx + dx, by + dy, 1, 1, edge ? "#333" : "#FFFDE8");
+      }
+      drawText(ctx, q, bx + bw / 2, by + 3, "#A02010", 0.35);
+    }
+  }
+
+  drawHero(ctx, heroX, 74, state.phase === "tap" || state.phase === "player-attack", state.bossOnAlien, null);
+  drawBossSprite(ctx, bossX, 70, state.phase === "boss-attack", tick);
+
+  // Impact particles on contact frames
+  if ((state.phase === "player-attack" || state.phase === "boss-attack")
+      && state.phaseTick >= 20 && state.phaseTick <= 30) {
+    const target = state.phase === "player-attack" ? bossX : heroX;
+    const ty = state.phase === "player-attack" ? 70 : 74;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const r = (state.phaseTick - 20) * 1.8 + 4;
+      const sx = Math.floor(target + Math.cos(angle) * r);
+      const sy = Math.floor(ty + Math.sin(angle) * r);
+      if (sx >= 0 && sx < W && sy >= 0 && sy < H) {
+        px(ctx, sx, sy, 2, 2, i % 2 ? "#FFE080" : "#FFFFFF");
+      }
+    }
+    drawText(ctx, state.phase === "player-attack" ? "POW!" : "OUCH!", target, ty - 8, "#FFE080", 0.75);
+  }
+
+  // Center banner overlay for transition phases
+  if (state.phase === "intro") {
+    const alpha = Math.min(1, state.phaseTick / 10);
+    ctx.globalAlpha = alpha;
+    drawText(ctx, "BOSS FIGHT!", W / 2, H / 2 - 4, "#FFFFFF", 1.4);
+    drawText(ctx, state.bossName, W / 2, H / 2 + 8, "#FF4040", 0.8);
+    ctx.globalAlpha = 1;
+  } else if (state.phase === "round-start") {
+    drawText(ctx, `ROUND ${state.round}`, W / 2, H / 2 - 2, "#FFFFFF", 1.2);
+    drawText(ctx, "GET READY!", W / 2, H / 2 + 10, "#FFE080", 0.6);
+  } else if (state.phase === "won") {
+    const blink = Math.floor(state.phaseTick / 4) % 2 === 0;
+    drawText(ctx, blink ? "VICTORY!" : "YOU WIN!", W / 2, H / 2, "#80FF80", 1.4);
+  } else if (state.phase === "lost") {
+    drawText(ctx, "DEFEATED...", W / 2, H / 2, "#FF4040", 1.1);
+  }
+}
+
+// Small segmented HP bar: W wide, rounded rect, shows `hp` of `max` filled blocks
+function drawHealthBar(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, hp: number, max: number,
+  fillColor: string, borderColor: string,
+) {
+  // Frame
+  for (let dx = 0; dx < w; dx++) {
+    px(ctx, x + dx, y, 1, 1, borderColor);
+    px(ctx, x + dx, y + 6, 1, 1, borderColor);
+  }
+  for (let dy = 0; dy < 7; dy++) {
+    px(ctx, x, y + dy, 1, 1, borderColor);
+    px(ctx, x + w - 1, y + dy, 1, 1, borderColor);
+  }
+  // Interior background
+  for (let dy = 1; dy < 6; dy++) for (let dx = 1; dx < w - 1; dx++) {
+    px(ctx, x + dx, y + dy, 1, 1, "#301010");
+  }
+  // Segments
+  const segW = Math.floor((w - 4) / max);
+  for (let s = 0; s < hp; s++) {
+    for (let dy = 2; dy < 5; dy++) for (let dx = 0; dx < segW - 1; dx++) {
+      px(ctx, x + 2 + s * segW + dx, y + dy, 1, 1, fillColor);
+    }
+  }
 }
 
 function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, heldItemId: string | null = null) {
@@ -2900,9 +2999,9 @@ export default function IceCreamGame() {
   const lastBossAtRef = useRef(0);
   const pendingBossRef = useRef(false);
 
-  // Boss combat: periodic attacks the player must DEFEND (single object for
-  // atomic transitions inside the tick updater)
-  const [bossCombat, setBossCombat] = useState<{phase: BossAttackPhase; attack: BossAttackType | null; tick: number}>({ phase: "idle", attack: null, tick: 0 });
+  // Boss fight — classic Nintendo tap-to-fill minigame.
+  const [bossFight, setBossFight] = useState<BossFightState | null>(null);
+  const bossEncounterRef = useRef(0);
   const [bossHitTick, setBossHitTick] = useState(0); // drives the hit flash overlay
 
   // Chase phase state (post-minion-escape)
@@ -2937,7 +3036,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -2954,19 +3053,12 @@ export default function IceCreamGame() {
       drawGoldCoin(ctx, 52, 12, 2);
       drawText(ctx, `${totalGold}`, 62, 13, themeCoin, 0.65);
 
-      // Hearts: show boss lives during boss fight, otherwise decorative trio
+      // Decorative hearts on the HUD
       const heartX = 105;
-      const bossActive = customer?.isBoss;
-      const bossHearts = customer?.bossHearts ?? 3;
       for (let i = 0; i < 3; i++) {
-        const filled = bossActive ? i < bossHearts : true;
-        const color = filled ? (bossActive ? "#FF1040" : "#FF4444") : "#4A1820";
-        px(ctx, heartX + i * 6, 10, 2, 2, color);
-        px(ctx, heartX + i * 6 + 2, 10, 2, 2, color);
-        px(ctx, heartX + i * 6 + 1, 12, 2, 2, color);
-      }
-      if (bossActive && customer?.state === "waiting") {
-        drawText(ctx, "BOSS", W / 2, 13, "#FF4040", 0.7);
+        px(ctx, heartX + i * 6, 10, 2, 2, "#FF4444");
+        px(ctx, heartX + i * 6 + 2, 10, 2, 2, "#FF4444");
+        px(ctx, heartX + i * 6 + 1, 12, 2, 2, "#FF4444");
       }
     }
 
@@ -2985,15 +3077,7 @@ export default function IceCreamGame() {
 
       const cust = customer;
       if (cust) {
-        if (cust.isBoss) {
-          drawBossSprite(
-            ctx,
-            Math.round(cust.x),
-            74,
-            cust.state === "walking-in" || cust.state === "walking-out",
-            cutsceneTick,
-          );
-        } else if (cust.isAlien || cust.isAlienVIP) {
+        if (cust.isAlien || cust.isAlienVIP) {
           drawAlienSprite(
             ctx,
             Math.round(cust.x),
@@ -3200,6 +3284,14 @@ export default function IceCreamGame() {
       drawChaseScene(ctx, chaseTick, chaseMinions);
     }
 
+    function drawBossFightView() {
+      if (!ctx || !bossFight) return;
+      drawBossFightScene(ctx, bossFight, bossFight.phaseTick + cutsceneTick);
+      if (bossHitTick > 0) {
+        drawBossAttackHit(ctx, bossHitTick, bossFight.attackType);
+      }
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -3217,43 +3309,18 @@ export default function IceCreamGame() {
         drawShop();
       } else if (phase === "chase") {
         drawChase();
+      } else if (phase === "boss-fight") {
+        drawBossFightView();
       } else {
         drawShopScene();
-        // Boss combat overlays: charge aura + hit flash
-        if (customer?.isBoss && bossCombat.phase === "charging" && bossCombat.attack) {
-          drawBossChargeAura(ctx, Math.round(customer.x), 66, bossCombat.tick, bossCombat.attack);
-        }
-        if (bossHitTick > 0 && bossCombat.attack) {
-          drawBossAttackHit(ctx, bossHitTick, bossCombat.attack);
-        }
-        // Minions next to boss
-        if (customer?.isBoss && customer.minions) {
-          customer.minions.forEach((m, i) => {
-            const mx = Math.round(customer.x) + (i === 0 ? -16 : 16);
-            drawMinion(ctx, mx, 82, streetTick + i * 5, m.spriteIdx);
-            // Small speech bubble with their quote cycling every ~3s
-            if (customer.state === "waiting") {
-              const cycle = Math.floor(streetTick / 80 + i) % MINION_QUOTES.length;
-              const q = MINION_QUOTES[cycle];
-              const bw = Math.min(W - 2, q.length * 3 + 8);
-              const bx = Math.max(1, Math.min(W - bw - 1, mx - Math.floor(bw / 2)));
-              const by = 66;
-              for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < bw; dx++) {
-                const edge = dx === 0 || dx === bw - 1 || dy === 0 || dy === 7;
-                px(ctx, bx + dx, by + dy, 1, 1, edge ? "#333" : "#FFFDE8");
-              }
-              drawText(ctx, q, bx + bw / 2, by + 4, "#A02010", 0.38);
-            }
-          });
-        }
       }
-      if (phase !== "pilot") drawHud();
+      if (phase !== "pilot" && phase !== "boss-fight") drawHud();
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossCombat, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -3327,21 +3394,42 @@ export default function IceCreamGame() {
       return () => clearTimeout(timer);
     }
     const timer = setTimeout(() => {
-      customerIdRef.current += 1;
-      // Boss every 7 served customers (Earth or alien planet home shop)
+      // Boss every 7 served customers (at the home shop). Instead of walking a
+      // customer in, we snap into the standalone boss-fight phase.
       const bossDue = customersServed > 0
         && customersServed % 7 === 0
         && customersServed > lastBossAtRef.current;
-      let c: Customer;
       if (bossDue) {
-        c = createBossCustomer(customerIdRef.current, location);
         lastBossAtRef.current = customersServed;
         pendingBossRef.current = true;
-      } else {
-        c = location === "alien-planet"
-          ? createAlienCustomer(customerIdRef.current, level)
-          : createCustomer(customerIdRef.current, level);
+        bossEncounterRef.current += 1;
+        const encounterIdx = bossEncounterRef.current;
+        const bossOnAlien = location === "alien-planet";
+        const tapTargetRound1 = 18 + (encounterIdx - 1) * 4;
+        const roundTimeMs = Math.max(3000, 5000 - (encounterIdx - 1) * 400);
+        setBossFight({
+          phase: "intro",
+          round: 1,
+          playerHP: 3,
+          bossHP: 3,
+          tapCount: 0,
+          tapTarget: tapTargetRound1,
+          timeLeft: roundTimeMs,
+          roundTime: roundTimeMs,
+          attackType: "slam",
+          phaseTick: 0,
+          bossName: bossOnAlien ? "VOID WARLORD" : "FROZEN FURY",
+          bossOnAlien,
+          minionCount: Math.random() < 0.4 ? 2 : 0,
+          encounterIdx,
+        });
+        setPhase("boss-fight");
+        return;
       }
+      customerIdRef.current += 1;
+      const c = location === "alien-planet"
+        ? createAlienCustomer(customerIdRef.current, level)
+        : createCustomer(customerIdRef.current, level);
       setScoopsDone(0);
       setConeScoops([]);
       setToppingsDone(0);
@@ -3368,9 +3456,8 @@ export default function IceCreamGame() {
   const completeOrder = useCallback(() => {
     if (!customer) return;
     const isVIP = !!customer.isAlienVIP;
-    const isBoss = !!customer.isBoss;
-    const bonusMult = isBoss ? 5 : isVIP ? 3 : 1;
-    const coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult + (isBoss ? 100 : 0);
+    const bonusMult = isVIP ? 3 : 1;
+    const coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult;
     const pointsEarned = (100 + customer.toppings.length * 25) * bonusMult;
     const nextScore = score + pointsEarned;
     setScore(nextScore);
@@ -3413,7 +3500,6 @@ export default function IceCreamGame() {
     setTimeout(() => {
       setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS) } : prev);
     }, 600);
-    if (isBoss) pendingBossRef.current = false;
     // VIP alien: trigger offer dialogue instead of walking out
     if (isVIP) {
       setTimeout(() => {
@@ -3428,85 +3514,6 @@ export default function IceCreamGame() {
       }, 1400);
     }
   }, [customer, highScore, score, location, alienEncountered]);
-
-  // Trigger a chase phase (police car vs. fleeing minions). Used when the boss's
-  // minions bolt after a mistake.
-  const startChase = useCallback((minionCount: number) => {
-    playDing();
-    const mins: ChaseMinion[] = Array.from({ length: Math.max(2, minionCount) }, (_, i) => ({
-      id: i,
-      x: 50 + i * 24 + Math.random() * 10,
-      y: 80 + (i % 2) * 2,
-      vx: 0.35 + Math.random() * 0.25, // heading right, away from police
-      caught: false,
-      spriteIdx: Math.floor(Math.random() * 4),
-    }));
-    setChaseMinions(mins);
-    setChaseTick(0);
-    
-    chaseResumeRef.current = "playing";
-    // Clear current customer (boss disappears with them)
-    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
-    setCustomer(null);
-    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
-    setBossCombat({ phase: "idle", attack: null, tick: 0 });
-    pendingBossRef.current = false;
-    setPhase("chase");
-  }, []);
-
-  // Boss strike-back: screen shake + coin penalty + heart tick. Returns true if
-  // the boss depleted and walked out.
-  const bossStrikeBack = useCallback(() => {
-    playWrong();
-    setShakeTick(10);
-    // -5G penalty
-    if (location === "alien-planet") {
-      setAlienCoins((g) => {
-        const n = Math.max(0, g - 5);
-        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
-        return n;
-      });
-    } else {
-      setEarthCoins((g) => {
-        const n = Math.max(0, g - 5);
-        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
-        return n;
-      });
-    }
-    let defeated = false;
-    setCustomer((prev) => {
-      if (!prev || !prev.isBoss) return prev;
-      const hearts = Math.max(0, (prev.bossHearts ?? 3) - 1);
-      if (hearts === 0) {
-        defeated = true;
-        // Bigger coin penalty when boss wins
-        if (location === "alien-planet") {
-          setAlienCoins((g) => {
-            const n = Math.max(0, g - 30);
-            window.localStorage.setItem("scoopstack-alien-coins", n.toString());
-            return n;
-          });
-        } else {
-          setEarthCoins((g) => {
-            const n = Math.max(0, g - 30);
-            window.localStorage.setItem("scoopstack-earth-coins", n.toString());
-            return n;
-          });
-        }
-        return { ...prev, bossHearts: 0, reaction: "BOSS WINS!", state: "walking-out" };
-      }
-      return { ...prev, bossHearts: hearts, reaction: "STRIKE!" };
-    });
-    setTimeout(() => {
-      setCustomer((prev) => prev && prev.state === "waiting" ? { ...prev, reaction: "" } : prev);
-    }, 600);
-    if (defeated) pendingBossRef.current = false;
-    // If the boss has minions with them, 45% chance they bolt and trigger a chase
-    if (!defeated && customer?.minions && customer.minions.length > 0 && Math.random() < 0.45) {
-      setTimeout(() => startChase(customer.minions?.length ?? 2), 900);
-    }
-    return defeated;
-  }, [location, customer, startChase]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -3528,8 +3535,6 @@ export default function IceCreamGame() {
             completeOrder();
           }
         }
-      } else if (customer.isBoss) {
-        bossStrikeBack();
       } else {
         playWrong();
         setCustomer((prev) => prev ? { ...prev, reaction: "Nope!" } : prev);
@@ -3538,7 +3543,7 @@ export default function IceCreamGame() {
         }, 600);
       }
     },
-    [customer, scoopsDone, coneScoops, toppingsPhase, completeOrder, bossStrikeBack]
+    [customer, scoopsDone, coneScoops, toppingsPhase, completeOrder]
   );
 
   // Tap a topping
@@ -3552,8 +3557,6 @@ export default function IceCreamGame() {
         const newDone = toppingsDone + 1;
         setToppingsDone(newDone);
         if (newDone === customer.toppings.length) completeOrder();
-      } else if (customer.isBoss) {
-        bossStrikeBack();
       } else {
         playWrong();
         setCustomer((prev) => prev ? { ...prev, reaction: "Nope!" } : prev);
@@ -3562,7 +3565,7 @@ export default function IceCreamGame() {
         }, 600);
       }
     },
-    [customer, toppingsPhase, toppingsDone, completeOrder, bossStrikeBack]
+    [customer, toppingsPhase, toppingsDone, completeOrder]
   );
 
   const startGame = useCallback(async () => {
@@ -3587,8 +3590,8 @@ export default function IceCreamGame() {
     setShakeTick(0);
     lastBossAtRef.current = 0;
     pendingBossRef.current = false;
-    setBossCombat({ phase: "idle", attack: null, tick: 0 }); setBossHitTick(0);
-    setChaseMinions([]); setChaseTick(0); 
+    setBossFight(null); setBossHitTick(0); bossEncounterRef.current = 0;
+    setChaseMinions([]); setChaseTick(0);
     chaseResumeRef.current = null;
     setWarpActive(false); setWarpTick(0);
     setPendingAlien(false);
@@ -3603,7 +3606,7 @@ export default function IceCreamGame() {
 
   // Derive music mode from current context (no state — avoids cascade).
   const musicMode: MusicMode = useMemo(() => {
-    if (customer?.isBoss && phase === "playing") return "boss";
+    if (phase === "boss-fight") return "boss";
     if (phase === "blackhole" && (blackholeScene === "dino-intro" || blackholeScene === "dino-encounter" || blackholeScene === "dino-monolith")) return "dino";
     if (phase === "blackhole") return "space";
     if (phase === "cutscene" || phase === "pilot") return "space";
@@ -3614,7 +3617,7 @@ export default function IceCreamGame() {
     }
     if (location === "alien-planet") return "alien-shop";
     return "earth-shop";
-  }, [customer, phase, location, currentShopId, blackholeScene]);
+  }, [phase, location, currentShopId, blackholeScene]);
 
   const toggleMusic = useCallback(() => {
     if (musicRef.current) { musicRef.current.stop(); musicRef.current = null; setMusicOn(false); }
@@ -3635,33 +3638,137 @@ export default function IceCreamGame() {
     return () => clearTimeout(t);
   }, [shakeTick]);
 
-  // Boss combat driver — all transitions happen inside the setInterval callback.
+  // Boss fight driver — all transitions happen inside the setInterval callback
+  // so they stay atomic and don't trip the set-state-in-effect lint.
   useEffect(() => {
-    if (phase !== "playing") return;
-    if (!customer?.isBoss || customer.state !== "waiting") return;
-    const idleDur = 180;       // ~7.2s between attacks
-    const chargeDur = 50;      // ~2s window to DEFEND
-    const staggerDur = 100;    // ~4s stunned after block
+    if (phase !== "boss-fight" || !bossFight) return;
+    const attackTypes: BossAttackType[] = ["ice", "fire", "slam"];
     const interval = setInterval(() => {
-      setBossCombat((cur) => {
-        const next = cur.tick + 1;
-        if (cur.phase === "idle" && next >= idleDur) {
-          const types: BossAttackType[] = ["ice", "fire", "slam"];
-          return { phase: "charging", attack: pick(types), tick: 0 };
+      setBossFight((cur) => {
+        if (!cur) return cur;
+        const nextTick = cur.phaseTick + 1;
+        const elapsedMs = nextTick * 40;
+        switch (cur.phase) {
+          case "intro": {
+            if (nextTick >= 35) return { ...cur, phase: "round-start", phaseTick: 0 };
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "round-start": {
+            if (nextTick >= 28) {
+              return { ...cur, phase: "tap", phaseTick: 0, tapCount: 0, timeLeft: cur.roundTime };
+            }
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "tap": {
+            const timeLeft = Math.max(0, cur.roundTime - elapsedMs);
+            if (cur.tapCount >= cur.tapTarget) {
+              return { ...cur, phase: "player-attack", phaseTick: 0 };
+            }
+            if (timeLeft <= 0) {
+              return { ...cur, phase: "boss-attack", phaseTick: 0, attackType: pick(attackTypes) };
+            }
+            return { ...cur, phaseTick: nextTick, timeLeft };
+          }
+          case "player-attack": {
+            if (nextTick >= 50) {
+              playCoinSound();
+              const newBossHP = cur.bossHP - 1;
+              if (newBossHP <= 0) return { ...cur, phase: "won", phaseTick: 0, bossHP: 0 };
+              const nextRound = cur.round + 1;
+              const newTarget = cur.tapTarget + 3;
+              const newRoundTime = Math.max(2500, cur.roundTime - 300);
+              return {
+                ...cur,
+                phase: "round-start",
+                round: nextRound,
+                bossHP: newBossHP,
+                phaseTick: 0,
+                tapCount: 0,
+                tapTarget: newTarget,
+                roundTime: newRoundTime,
+                timeLeft: newRoundTime,
+              };
+            }
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "boss-attack": {
+            if (nextTick === 10) {
+              setBossHitTick(1);
+              setShakeTick(12);
+              playWrong();
+            }
+            if (nextTick >= 50) {
+              const newPlayerHP = cur.playerHP - 1;
+              if (newPlayerHP <= 0) return { ...cur, phase: "lost", phaseTick: 0, playerHP: 0 };
+              const nextRound = cur.round + 1;
+              const newTarget = cur.tapTarget + 3;
+              const newRoundTime = Math.max(2500, cur.roundTime - 300);
+              return {
+                ...cur,
+                phase: "round-start",
+                round: nextRound,
+                playerHP: newPlayerHP,
+                phaseTick: 0,
+                tapCount: 0,
+                tapTarget: newTarget,
+                roundTime: newRoundTime,
+                timeLeft: newRoundTime,
+              };
+            }
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "won": {
+            if (nextTick >= 70) {
+              const reward = 250 + cur.encounterIdx * 50;
+              playCoinSound();
+              if (cur.bossOnAlien) {
+                setAlienCoins((g) => {
+                  const n = g + reward;
+                  window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+                  return n;
+                });
+              } else {
+                setEarthCoins((g) => {
+                  const n = g + reward;
+                  window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                  return n;
+                });
+              }
+              // Boss counts as a served customer for level progression
+              setCustomersServed((c) => c + 1);
+              pendingBossRef.current = false;
+              setPhase("playing");
+              return null;
+            }
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "lost": {
+            if (nextTick >= 70) {
+              const penalty = 40 + cur.encounterIdx * 10;
+              if (cur.bossOnAlien) {
+                setAlienCoins((g) => {
+                  const n = Math.max(0, g - penalty);
+                  window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+                  return n;
+                });
+              } else {
+                setEarthCoins((g) => {
+                  const n = Math.max(0, g - penalty);
+                  window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                  return n;
+                });
+              }
+              pendingBossRef.current = false;
+              setPhase("playing");
+              return null;
+            }
+            return { ...cur, phaseTick: nextTick };
+          }
         }
-        if (cur.phase === "charging" && next >= chargeDur) {
-          setBossHitTick(1);
-          bossStrikeBack();
-          return { phase: "idle", attack: cur.attack, tick: 0 };
-        }
-        if (cur.phase === "staggered" && next >= staggerDur) {
-          return { phase: "idle", attack: null, tick: 0 };
-        }
-        return { ...cur, tick: next };
       });
     }, 40);
     return () => clearInterval(interval);
-  }, [phase, customer?.id, customer?.state, customer?.isBoss, bossStrikeBack]);
+  }, [phase, bossFight]);
 
   // Boss attack hit-flash decay
   useEffect(() => {
@@ -3670,16 +3777,14 @@ export default function IceCreamGame() {
     return () => clearTimeout(t);
   }, [bossHitTick]);
 
-  // Player presses DEFEND during the charging window
-  const handleDefend = useCallback(() => {
-    if (bossCombat.phase !== "charging") return;
-    playBoop();
-    setBossCombat((c) => ({ ...c, phase: "staggered", tick: 0 }));
-    setCustomer((prev) => prev && prev.isBoss ? { ...prev, reaction: "BLOCKED!" } : prev);
-    setTimeout(() => {
-      setCustomer((prev) => prev && prev.state === "waiting" ? { ...prev, reaction: "" } : prev);
-    }, 700);
-  }, [bossCombat.phase]);
+  // Player tap during a boss fight — only counts during the "tap" phase.
+  const handleBossTap = useCallback(() => {
+    setBossFight((cur) => {
+      if (!cur || cur.phase !== "tap") return cur;
+      playBoop();
+      return { ...cur, tapCount: cur.tapCount + 1 };
+    });
+  }, []);
 
   // Chase driver — move minions and check end condition (all caught or timer
   // expires) from inside the setInterval callback (not in effect body).
@@ -5263,31 +5368,94 @@ export default function IceCreamGame() {
         );
       })()}
 
-      {/* Boss DEFEND overlay — appears while the boss is charging a special */}
-      {phase === "playing" && customer?.isBoss && bossCombat.phase === "charging" && bossCombat.attack && (
-        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4 text-center"
+      {/* Boss fight overlay — the entire interaction is the big TAP button + thermometer */}
+      {phase === "boss-fight" && bossFight && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
           style={{
             fontFamily: "monospace",
-            background: `linear-gradient(180deg, #200008, ${BOSS_ATTACKS[bossCombat.attack].color})`,
-            borderColor: BOSS_ATTACKS[bossCombat.attack].color,
+            background: bossFight.bossOnAlien
+              ? "linear-gradient(180deg, #100028, #2A0848)"
+              : "linear-gradient(180deg, #2A0808, #4A1010)",
+            borderColor: "#FF4040",
             color: "#FFF",
-            animation: "pulse 0.4s ease-in-out infinite alternate",
           }}>
-          <p className="font-bold text-lg mb-2">
-            {BOSS_ATTACKS[bossCombat.attack].text} incoming!
-          </p>
-          <button onClick={handleDefend}
-            className="w-full py-3 rounded-xl font-bold text-xl transition-all active:scale-95 border-b-4"
+          {/* Top row: round + timer */}
+          <div className="flex items-center justify-between mb-2 text-sm">
+            <span><strong>ROUND {bossFight.round}</strong></span>
+            <span style={{ color: "#FFE080" }}>
+              {bossFight.phase === "tap"
+                ? `${(bossFight.timeLeft / 1000).toFixed(1)}s`
+                : bossFight.phase === "round-start"
+                  ? "get ready!"
+                  : bossFight.phase === "player-attack"
+                    ? "HIT!"
+                    : bossFight.phase === "boss-attack"
+                      ? "incoming!"
+                      : bossFight.phase === "won"
+                        ? "+" + (250 + bossFight.encounterIdx * 50) + "G"
+                        : bossFight.phase === "lost"
+                          ? "-" + (40 + bossFight.encounterIdx * 10) + "G"
+                          : ""
+              }
+            </span>
+          </div>
+
+          {/* Thermometer / progress bar */}
+          <div className="relative h-5 rounded-full border-2 overflow-hidden mb-3"
+            style={{ borderColor: "#FFFFFF", background: "#300A14" }}>
+            <div className="h-full transition-all duration-50"
+              style={{
+                width: `${Math.min(100, (bossFight.tapCount / bossFight.tapTarget) * 100)}%`,
+                background: "linear-gradient(90deg, #FFE080, #FF4040)",
+              }} />
+            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+              style={{ color: "#FFFFFF", textShadow: "1px 1px 0 #000" }}>
+              {bossFight.tapCount} / {bossFight.tapTarget} taps
+            </div>
+          </div>
+
+          {/* Time bar */}
+          {bossFight.phase === "tap" && (
+            <div className="h-2 rounded-full border overflow-hidden mb-3"
+              style={{ borderColor: "#FFFFFF", background: "#200", opacity: 0.8 }}>
+              <div className="h-full"
+                style={{
+                  width: `${Math.max(0, (bossFight.timeLeft / bossFight.roundTime) * 100)}%`,
+                  background: bossFight.timeLeft < 1500 ? "#FF4040" : "#80E0FF",
+                  transition: "width 40ms linear",
+                }} />
+            </div>
+          )}
+
+          {/* The one and only big TAP button */}
+          <button onClick={handleBossTap}
+            disabled={bossFight.phase !== "tap"}
+            onTouchStart={(e) => { e.preventDefault(); handleBossTap(); }}
+            className="w-full py-6 rounded-2xl font-bold text-3xl transition-all active:scale-95 border-b-8 select-none"
             style={{
-              background: "linear-gradient(180deg, #FFD080, #FF8040)",
-              borderBottomColor: "#803010", color: "#FFF",
-              textShadow: "1px 1px 0 #802010",
+              background: bossFight.phase === "tap"
+                ? "radial-gradient(circle at 30% 30%, #FFE080, #FF4040 60%, #A01010)"
+                : "linear-gradient(180deg, #555, #222)",
+              borderBottomColor: bossFight.phase === "tap" ? "#601010" : "#111",
+              color: "#FFF",
+              textShadow: "2px 2px 0 #400",
+              cursor: bossFight.phase === "tap" ? "pointer" : "default",
+              opacity: bossFight.phase === "tap" ? 1 : 0.6,
             }}>
-            DEFEND! {"\u{1F6E1}\uFE0F"}
+            {bossFight.phase === "tap"
+              ? "TAP! TAP! TAP!"
+              : bossFight.phase === "intro"
+                ? "BOSS FIGHT!"
+                : bossFight.phase === "round-start"
+                  ? `ROUND ${bossFight.round}`
+                  : bossFight.phase === "player-attack"
+                    ? "POW!"
+                    : bossFight.phase === "boss-attack"
+                      ? "OUCH!"
+                      : bossFight.phase === "won"
+                        ? "VICTORY!"
+                        : "DEFEATED..."}
           </button>
-          <p className="text-xs mt-1" style={{ opacity: 0.8 }}>
-            tap before the charge lands or eat the hit
-          </p>
         </div>
       )}
 
@@ -5705,7 +5873,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
