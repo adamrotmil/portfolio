@@ -28,28 +28,25 @@ type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size
 type Laser = { id: number; x: number; y: number; };
 type PilotInputs = { left: boolean; right: boolean; up: boolean; down: boolean; fire: boolean };
 
-type BossAttackType = "ice" | "fire" | "slam";
-
 type Minion = { id: number; quote: string; spriteIdx: number };
 type ChaseMinion = { id: number; x: number; y: number; vx: number; caught: boolean; spriteIdx: number };
 
-type BossFightPhase = "intro" | "round-start" | "tap" | "player-attack" | "boss-attack" | "won" | "lost";
+type BossFightPhase = "intro" | "simon-show" | "simon-play" | "simon-fail" | "chase-tap" | "caught" | "escaped";
 
 type BossFightState = {
   phase: BossFightPhase;
-  round: number;
-  playerHP: number;
-  bossHP: number;
-  tapCount: number;
-  tapTarget: number;
-  timeLeft: number;       // ms remaining in current tap round
-  roundTime: number;      // total ms for the current tap round (for UI bar)
-  attackType: BossAttackType;   // which animation to play on boss-attack
-  phaseTick: number;      // ticks within current sub-phase
+  phaseTick: number;        // ticks inside the current sub-phase
+  order: string[];          // flavor names in the order the boss demands them
+  showIdx: number;          // index currently being pulsed during simon-show
+  playIdx: number;          // next index the player must tap
+  chaseProgress: number;    // taps collected in chase-tap
+  chaseTarget: number;      // taps needed to catch the boss
+  chaseTimeLeft: number;    // ms remaining in chase-tap
+  chaseTotalTime: number;   // total chase-tap time (for UI bar)
   bossName: string;
   bossOnAlien: boolean;
-  minionCount: number;
-  encounterIdx: number;   // 1-based boss encounter # (difficulty)
+  encounterIdx: number;     // 1-based boss encounter # (difficulty)
+  orderMoney: number;       // the unpaid bill, added to the reward on capture
 };
 
 type ShopItem = {
@@ -113,25 +110,6 @@ type Customer = {
   isBoss?: boolean;      // boss encounter — complex order, hits back on mistakes
   bossHearts?: number;   // lives remaining during a boss fight
   minions?: Minion[];    // trashy sidekicks flanking the boss
-};
-
-const MINION_QUOTES = [
-  "your scoops stink!",
-  "my grandma scoops faster!",
-  "that's not a CIRCLE!",
-  "hahaha nice try",
-  "pay up or else",
-  "coins coins coins",
-  "we're TAKING these!",
-  "hurry up scooper!",
-  "boss! smash him!",
-  "give us your gold!",
-];
-
-const BOSS_ATTACKS: Record<BossAttackType, { name: string; color: string; text: string }> = {
-  "ice":  { name: "ICE BLAST",  color: "#80E0FF", text: "ICE BLAST!" },
-  "fire": { name: "FIRE STORM", color: "#FF6040", text: "FIRE STORM!" },
-  "slam": { name: "GROUND SLAM", color: "#FFD040", text: "GROUND SLAM!" },
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -1059,25 +1037,6 @@ function drawMinion(ctx: CanvasRenderingContext2D, x: number, y: number, tick: n
   px(ctx, x + 1, y + 3 + bob, 1, 1, "#FFF");
 }
 
-// Quick 8-frame hit flash — overlays a colored wash and a shock ring
-function drawBossAttackHit(ctx: CanvasRenderingContext2D, tick: number, attack: BossAttackType) {
-  const color = BOSS_ATTACKS[attack].color;
-  // Tinted full-screen flash
-  ctx.fillStyle = color;
-  ctx.globalAlpha = Math.max(0, 0.35 - tick * 0.04);
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-  ctx.globalAlpha = 1;
-  // Shock ring expanding from shopkeeper
-  const radius = 8 + tick * 4;
-  for (let a = 0; a < 48; a++) {
-    const angle = (a / 48) * Math.PI * 2;
-    const rx = Math.floor(64 + Math.cos(angle) * radius);
-    const ry = Math.floor(60 + Math.sin(angle) * radius * 0.8);
-    if (rx < 0 || rx >= W || ry < 0 || ry >= H) continue;
-    px(ctx, rx, ry, 1, 1, color);
-  }
-}
-
 // Horizontal chase scene — city road scrolls left, police car chases fleeing minions
 function drawChaseScene(ctx: CanvasRenderingContext2D, tick: number, minions: ChaseMinion[]) {
   // Sky
@@ -1201,135 +1160,180 @@ function drawBossFightScene(
   ctx: CanvasRenderingContext2D,
   state: BossFightState,
   tick: number,
+  flavorColor: (name: string) => string,
 ) {
-  // Backdrop: gradient arena with action lines. Alien planet bosses get a
-  // darker purple arena; earth bosses get a red sky.
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
+  // Backdrop: arena for simon/intro/fail; horizontal scrolling street for chase/escape; jail cell for caught.
+  const isChase = state.phase === "chase-tap" || state.phase === "escaped";
+  const isJail = state.phase === "caught";
+
+  if (isChase) {
+    // Night street — similar to the chase scene
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       let c;
-      if (state.bossOnAlien) {
-        if (y < 24) c = "#160030";
-        else if (y < 56) c = "#2E0848";
-        else if (y < 76) c = "#40104A";
-        else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#1A0828" : "#0E0420";
-      } else {
-        if (y < 24) c = "#3A0010";
-        else if (y < 56) c = "#7A1020";
-        else if (y < 76) c = "#A04030";
-        else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#301010" : "#1E0808";
-      }
+      if (y < 20) c = "#0E2540";
+      else if (y < 40) c = "#3060A0";
+      else if (y < 56) c = "#80C0D0";
+      else if (y < 72) c = "#4A4A4A";
+      else c = (Math.floor(x / 4) + Math.floor(y / 2)) % 6 === 0 ? "#606060" : "#3A3A3A";
       px(ctx, x, y, 1, 1, c);
     }
-  }
-
-  // Speed-lines rushing outward during tap phase
-  if (state.phase === "tap") {
-    for (let i = 0; i < 18; i++) {
-      const yy = (i * 7 + tick * 3) % H;
-      px(ctx, 2, yy, 6, 1, "#FFE080");
-      px(ctx, W - 8, (yy + 20) % H, 6, 1, "#FFE080");
-    }
-  }
-
-  // HP bars
-  drawHealthBar(ctx, 4, 22, 50, state.playerHP, 3, "#20E040", "#FFF");
-  drawText(ctx, "YOU", 30, 18, "#FFFFFF", 0.5);
-  drawHealthBar(ctx, W - 54, 22, 50, state.bossHP, 3, "#E02040", "#FFF");
-  drawText(ctx, state.bossName, W - 28, 18, "#FFFFFF", 0.48);
-
-  // Hero / boss positions — animate toward each other during attacks
-  let heroX = 32;
-  let bossX = W - 36;
-  if (state.phase === "player-attack") {
-    const t = state.phaseTick / 50;
-    const ease = t < 0.4 ? t / 0.4 : t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
-    heroX = 32 + Math.floor(ease * 44);
-  } else if (state.phase === "boss-attack") {
-    const t = state.phaseTick / 50;
-    const ease = t < 0.4 ? t / 0.4 : t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
-    bossX = W - 36 - Math.floor(ease * 44);
-  }
-
-  // Minions flanking the boss, with rotating rude quote bubbles
-  for (let i = 0; i < state.minionCount; i++) {
-    const mx = W - 50 - i * 14;
-    drawMinion(ctx, mx, 78, tick + i * 7, i);
-    if (state.phase === "tap" || state.phase === "round-start") {
-      const q = MINION_QUOTES[(Math.floor(tick / 90) + i) % MINION_QUOTES.length];
-      const bw = Math.min(W - 2, q.length * 3 + 8);
-      const bx = Math.max(1, Math.min(W - bw - 1, mx - Math.floor(bw / 2)));
-      const by = 66;
-      for (let dy = 0; dy < 7; dy++) for (let dx = 0; dx < bw; dx++) {
-        const edge = dx === 0 || dx === bw - 1 || dy === 0 || dy === 6;
-        px(ctx, bx + dx, by + dy, 1, 1, edge ? "#333" : "#FFFDE8");
-      }
-      drawText(ctx, q, bx + bw / 2, by + 3, "#A02010", 0.35);
-    }
-  }
-
-  drawHero(ctx, heroX, 74, state.phase === "tap" || state.phase === "player-attack", state.bossOnAlien, null);
-  drawBossSprite(ctx, bossX, 70, state.phase === "boss-attack", tick);
-
-  // Impact particles on contact frames
-  if ((state.phase === "player-attack" || state.phase === "boss-attack")
-      && state.phaseTick >= 20 && state.phaseTick <= 30) {
-    const target = state.phase === "player-attack" ? bossX : heroX;
-    const ty = state.phase === "player-attack" ? 70 : 74;
+    // Parallax building silhouettes
     for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const r = (state.phaseTick - 20) * 1.8 + 4;
-      const sx = Math.floor(target + Math.cos(angle) * r);
-      const sy = Math.floor(ty + Math.sin(angle) * r);
-      if (sx >= 0 && sx < W && sy >= 0 && sy < H) {
-        px(ctx, sx, sy, 2, 2, i % 2 ? "#FFE080" : "#FFFFFF");
+      const bx = ((i * 22 - Math.floor(tick * 1.8)) % (W + 30) + W + 30) % (W + 30) - 20;
+      const bh = 20 + (i * 7) % 18;
+      for (let dy = 0; dy < bh; dy++) for (let dx = 0; dx < 18; dx++) {
+        const edge = dx === 0 || dx === 17 || dy === 0;
+        if (bx + dx >= 0 && bx + dx < W) {
+          px(ctx, bx + dx, 56 - dy, 1, 1, edge ? "#101822" : "#1A2636");
+        }
+      }
+      for (let wy = 4; wy < bh - 2; wy += 4) for (let wx = 3; wx < 15; wx += 4) {
+        if (bx + wx >= 0 && bx + wx < W && ((i + wy + wx) % 3 !== 0)) {
+          px(ctx, bx + wx, 56 - wy, 2, 2, "#FFE080");
+        }
       }
     }
-    drawText(ctx, state.phase === "player-attack" ? "POW!" : "OUCH!", target, ty - 8, "#FFE080", 0.75);
+    // Road stripes
+    for (let i = 0; i < 12; i++) {
+      const mx = ((i * 14 - Math.floor(tick * 3.5)) % (W + 14) + W + 14) % (W + 14) - 8;
+      px(ctx, mx, 78, 6, 1, "#FFE040");
+    }
+    // Relative positions: as chaseProgress / chaseTarget rises, hero closes on boss.
+    const closeness = state.phase === "chase-tap"
+      ? Math.min(1, state.chaseProgress / state.chaseTarget)
+      : 0;
+    const bossX = state.phase === "escaped"
+      ? Math.min(W + 20, 70 + state.phaseTick * 2)
+      : W - 20;
+    const heroX = state.phase === "escaped"
+      ? 28
+      : 10 + Math.floor(closeness * (bossX - 42));
+    drawBossSprite(ctx, bossX, 68, true, tick);
+    // Money bag in the boss's hand
+    drawGoldCoin(ctx, bossX - 10, 68, 3);
+    drawHero(ctx, heroX, 74, true, state.bossOnAlien, null);
+    // Dust trail
+    for (let i = 0; i < 4; i++) {
+      const dx = heroX - 8 - i * 3;
+      px(ctx, dx, 86 + (i % 2), 2, 1, "rgba(255,255,255,0.4)");
+    }
+    if (state.phase === "escaped") {
+      drawText(ctx, "ESCAPED!", W / 2, H / 2, "#FFAA40", 1.1);
+    } else {
+      drawText(ctx, "CATCH HIM!", W / 2, 12, "#FFE080", 0.85);
+    }
+    return;
   }
 
-  // Center banner overlay for transition phases
+  if (isJail) {
+    // Jail cell backdrop
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const c = y < 72 ? "#3A2A40" : (Math.floor(x / 4) + Math.floor(y / 2)) % 2 ? "#2A1E30" : "#201626";
+      px(ctx, x, y, 1, 1, c);
+    }
+    // Cell bars (vertical)
+    for (let i = 0; i < 5; i++) {
+      const bx = 52 + i * 8;
+      for (let y = 16; y < 80; y++) {
+        px(ctx, bx, y, 2, 1, "#AAAACC");
+      }
+    }
+    // Top and bottom rail
+    for (let x = 48; x < 96; x++) {
+      px(ctx, x, 16, 1, 2, "#AAAACC");
+      px(ctx, x, 78, 1, 2, "#AAAACC");
+    }
+    // Sad boss behind bars
+    drawBossSprite(ctx, 72, 70, false, tick);
+    // Hero outside with coins
+    drawHero(ctx, 24, 74, false, state.bossOnAlien, null);
+    for (let i = 0; i < 3; i++) {
+      drawGoldCoin(ctx, 18 + i * 7, 60 - (i % 2) * 4, 2);
+    }
+    // Blink banner
+    const blink = Math.floor(state.phaseTick / 4) % 2 === 0;
+    drawText(ctx, blink ? "BOSS JAILED!" : "GOTCHA!", W / 2, 12, "#80FF80", 0.95);
+    drawText(ctx, `+${state.orderMoney + 100}G`, W / 2, H - 10, "#FFE080", 0.75);
+    return;
+  }
+
+  // Simon-phase arena
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let c;
+    if (state.bossOnAlien) {
+      if (y < 24) c = "#160030";
+      else if (y < 56) c = "#2E0848";
+      else if (y < 76) c = "#40104A";
+      else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#1A0828" : "#0E0420";
+    } else {
+      if (y < 24) c = "#3A0010";
+      else if (y < 56) c = "#7A1020";
+      else if (y < 76) c = "#A04030";
+      else c = (Math.floor(x / 6) + Math.floor(y / 2)) % 2 ? "#301010" : "#1E0808";
+    }
+    px(ctx, x, y, 1, 1, c);
+  }
+
+  // Order dots at top: one per flavor in the sequence
+  const orderLen = state.order.length;
+  const dotW = 10;
+  const gap = 2;
+  const totalW = orderLen * dotW + (orderLen - 1) * gap;
+  const ox = Math.floor((W - totalW) / 2);
+  const oy = 20;
+  for (let i = 0; i < orderLen; i++) {
+    const bx = ox + i * (dotW + gap);
+    const color = flavorColor(state.order[i]);
+    // Which dot is "active":
+    // - simon-show: the one currently being pulsed
+    // - simon-play: all done ones are solid green-bordered, current one pulses, future ones gray
+    let showActive = false;
+    let done = false;
+    if (state.phase === "simon-show") {
+      showActive = i === state.showIdx;
+    } else if (state.phase === "simon-play") {
+      done = i < state.playIdx;
+      showActive = i === state.playIdx;
+    }
+    for (let dy = 0; dy < dotW; dy++) for (let dx = 0; dx < dotW; dx++) {
+      const d = Math.sqrt((dx - dotW / 2) ** 2 + (dy - dotW / 2) ** 2);
+      if (d > dotW / 2) continue;
+      const edge = d > dotW / 2 - 1;
+      let c = edge ? "#FFFFFF" : color;
+      if (!showActive && !done && state.phase === "simon-show") c = edge ? "#333" : "#20202A";
+      if (showActive && state.phase === "simon-show") {
+        const pulse = Math.floor(tick / 2) % 2 === 0;
+        c = edge ? "#FFFFFF" : pulse ? "#FFFFFF" : color;
+      }
+      if (done) {
+        c = edge ? "#20A050" : color;
+      }
+      px(ctx, bx + dx, oy + dy, 1, 1, c);
+    }
+  }
+  drawText(ctx, state.phase === "simon-show" ? "WATCH THE ORDER" : "REPEAT!", W / 2, 14, "#FFFFFF", 0.6);
+
+  // Combatants
+  const heroX = 32;
+  const bossX = W - 36;
+  drawHero(ctx, heroX, 74, false, state.bossOnAlien, null);
+  drawBossSprite(ctx, bossX, 70, false, tick);
+  // Thought bubble tail from boss toward dots during show
+  if (state.phase === "simon-show") {
+    px(ctx, bossX - 2, 62, 2, 2, "#FFFDE8");
+    px(ctx, bossX - 6, 56, 2, 2, "#FFFDE8");
+  }
+
+  // Phase banners
   if (state.phase === "intro") {
     const alpha = Math.min(1, state.phaseTick / 10);
     ctx.globalAlpha = alpha;
-    drawText(ctx, "BOSS FIGHT!", W / 2, H / 2 - 4, "#FFFFFF", 1.4);
-    drawText(ctx, state.bossName, W / 2, H / 2 + 8, "#FF4040", 0.8);
+    drawText(ctx, "BOSS!", W / 2, H / 2 - 4, "#FFFFFF", 1.5);
+    drawText(ctx, state.bossName, W / 2, H / 2 + 10, "#FF4040", 0.8);
     ctx.globalAlpha = 1;
-  } else if (state.phase === "round-start") {
-    drawText(ctx, `ROUND ${state.round}`, W / 2, H / 2 - 2, "#FFFFFF", 1.2);
-    drawText(ctx, "GET READY!", W / 2, H / 2 + 10, "#FFE080", 0.6);
-  } else if (state.phase === "won") {
-    const blink = Math.floor(state.phaseTick / 4) % 2 === 0;
-    drawText(ctx, blink ? "VICTORY!" : "YOU WIN!", W / 2, H / 2, "#80FF80", 1.4);
-  } else if (state.phase === "lost") {
-    drawText(ctx, "DEFEATED...", W / 2, H / 2, "#FF4040", 1.1);
-  }
-}
-
-// Small segmented HP bar: W wide, rounded rect, shows `hp` of `max` filled blocks
-function drawHealthBar(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, hp: number, max: number,
-  fillColor: string, borderColor: string,
-) {
-  // Frame
-  for (let dx = 0; dx < w; dx++) {
-    px(ctx, x + dx, y, 1, 1, borderColor);
-    px(ctx, x + dx, y + 6, 1, 1, borderColor);
-  }
-  for (let dy = 0; dy < 7; dy++) {
-    px(ctx, x, y + dy, 1, 1, borderColor);
-    px(ctx, x + w - 1, y + dy, 1, 1, borderColor);
-  }
-  // Interior background
-  for (let dy = 1; dy < 6; dy++) for (let dx = 1; dx < w - 1; dx++) {
-    px(ctx, x + dx, y + dy, 1, 1, "#301010");
-  }
-  // Segments
-  const segW = Math.floor((w - 4) / max);
-  for (let s = 0; s < hp; s++) {
-    for (let dy = 2; dy < 5; dy++) for (let dx = 0; dx < segW - 1; dx++) {
-      px(ctx, x + 2 + s * segW + dx, y + dy, 1, 1, fillColor);
-    }
+  } else if (state.phase === "simon-fail") {
+    drawText(ctx, "WRONG ORDER!", W / 2, H / 2 - 4, "#FF4040", 1.1);
+    drawText(ctx, "boss stomps off...", W / 2, H / 2 + 10, "#FFAA80", 0.5);
   }
 }
 
@@ -3199,10 +3203,9 @@ export default function IceCreamGame() {
   const lastBossAtRef = useRef(0);
   const pendingBossRef = useRef(false);
 
-  // Boss fight — classic Nintendo tap-to-fill minigame.
+  // Boss fight — Simon-says order then chase-tap.
   const [bossFight, setBossFight] = useState<BossFightState | null>(null);
   const bossEncounterRef = useRef(0);
-  const [bossHitTick, setBossHitTick] = useState(0); // drives the hit flash overlay
 
   // Chase phase state (post-minion-escape)
   const [chaseMinions, setChaseMinions] = useState<ChaseMinion[]>([]);
@@ -3499,10 +3502,12 @@ export default function IceCreamGame() {
 
     function drawBossFightView() {
       if (!ctx || !bossFight) return;
-      drawBossFightScene(ctx, bossFight, bossFight.phaseTick + cutsceneTick);
-      if (bossHitTick > 0) {
-        drawBossAttackHit(ctx, bossHitTick, bossFight.attackType);
-      }
+      const pool = bossFight.bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+      const flavorColor = (name: string) => {
+        const f = pool.find((ff) => ff.name === name);
+        return f ? f.colors[1] : "#CCCCCC";
+      };
+      drawBossFightScene(ctx, bossFight, bossFight.phaseTick + cutsceneTick, flavorColor);
     }
 
     function drawSarahsWorldView() {
@@ -3558,7 +3563,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -3643,23 +3648,24 @@ export default function IceCreamGame() {
         bossEncounterRef.current += 1;
         const encounterIdx = bossEncounterRef.current;
         const bossOnAlien = location === "alien-planet";
-        const tapTargetRound1 = 18 + (encounterIdx - 1) * 4;
-        const roundTimeMs = Math.max(3000, 5000 - (encounterIdx - 1) * 400);
+        const orderLen = Math.min(6, 4 + (encounterIdx - 1));
+        const pool = bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+        const order = Array.from({ length: orderLen }, () => pick(pool).name);
+        const chaseTotalTime = Math.max(3000, 5500 - (encounterIdx - 1) * 400);
         setBossFight({
           phase: "intro",
-          round: 1,
-          playerHP: 3,
-          bossHP: 3,
-          tapCount: 0,
-          tapTarget: tapTargetRound1,
-          timeLeft: roundTimeMs,
-          roundTime: roundTimeMs,
-          attackType: "slam",
           phaseTick: 0,
+          order,
+          showIdx: 0,
+          playIdx: 0,
+          chaseProgress: 0,
+          chaseTarget: 20 + (encounterIdx - 1) * 3,
+          chaseTimeLeft: chaseTotalTime,
+          chaseTotalTime,
           bossName: bossOnAlien ? "VOID WARLORD" : "FROZEN FURY",
           bossOnAlien,
-          minionCount: Math.random() < 0.4 ? 2 : 0,
           encounterIdx,
+          orderMoney: 100 + encounterIdx * 50,
         });
         setPhase("boss-fight");
         return;
@@ -3828,7 +3834,7 @@ export default function IceCreamGame() {
     setShakeTick(0);
     lastBossAtRef.current = 0;
     pendingBossRef.current = false;
-    setBossFight(null); setBossHitTick(0); bossEncounterRef.current = 0;
+    setBossFight(null); bossEncounterRef.current = 0;
     setSarahsWorld(null);
     setChaseMinions([]); setChaseTick(0);
     chaseResumeRef.current = null;
@@ -3877,88 +3883,70 @@ export default function IceCreamGame() {
     return () => clearTimeout(t);
   }, [shakeTick]);
 
-  // Boss fight driver — all transitions happen inside the setInterval callback
-  // so they stay atomic and don't trip the set-state-in-effect lint.
+  // Boss fight driver — Simon order -> chase -> caught/escaped. All transitions
+  // happen inside the setInterval callback to stay atomic.
   useEffect(() => {
     if (phase !== "boss-fight" || !bossFight) return;
-    const attackTypes: BossAttackType[] = ["ice", "fire", "slam"];
     const interval = setInterval(() => {
       setBossFight((cur) => {
         if (!cur) return cur;
         const nextTick = cur.phaseTick + 1;
-        const elapsedMs = nextTick * 40;
         switch (cur.phase) {
           case "intro": {
-            if (nextTick >= 35) return { ...cur, phase: "round-start", phaseTick: 0 };
+            if (nextTick >= 35) return { ...cur, phase: "simon-show", phaseTick: 0, showIdx: 0 };
             return { ...cur, phaseTick: nextTick };
           }
-          case "round-start": {
-            if (nextTick >= 28) {
-              return { ...cur, phase: "tap", phaseTick: 0, tapCount: 0, timeLeft: cur.roundTime };
+          case "simon-show": {
+            // Each flavor is pulsed for 12 ticks on + 6 ticks off (~0.72s total).
+            const step = 18;
+            const advance = Math.floor(nextTick / step);
+            const showIdx = advance;
+            if (showIdx >= cur.order.length) {
+              return { ...cur, phase: "simon-play", phaseTick: 0, showIdx: 0, playIdx: 0 };
+            }
+            // Ding on each new flavor pulse
+            if (nextTick % step === 1) playBoop();
+            return { ...cur, phaseTick: nextTick, showIdx };
+          }
+          case "simon-play": {
+            // Player-driven; ticker just counts up for UI animation
+            return { ...cur, phaseTick: nextTick };
+          }
+          case "simon-fail": {
+            if (nextTick >= 60) {
+              const penalty = 20;
+              if (cur.bossOnAlien) {
+                setAlienCoins((g) => {
+                  const n = Math.max(0, g - penalty);
+                  window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+                  return n;
+                });
+              } else {
+                setEarthCoins((g) => {
+                  const n = Math.max(0, g - penalty);
+                  window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                  return n;
+                });
+              }
+              pendingBossRef.current = false;
+              setPhase("playing");
+              return null;
             }
             return { ...cur, phaseTick: nextTick };
           }
-          case "tap": {
-            const timeLeft = Math.max(0, cur.roundTime - elapsedMs);
-            if (cur.tapCount >= cur.tapTarget) {
-              return { ...cur, phase: "player-attack", phaseTick: 0 };
+          case "chase-tap": {
+            const timeLeft = Math.max(0, cur.chaseTimeLeft - 40);
+            if (cur.chaseProgress >= cur.chaseTarget) {
+              return { ...cur, phase: "caught", phaseTick: 0, chaseTimeLeft: timeLeft };
             }
             if (timeLeft <= 0) {
-              return { ...cur, phase: "boss-attack", phaseTick: 0, attackType: pick(attackTypes) };
+              return { ...cur, phase: "escaped", phaseTick: 0, chaseTimeLeft: 0 };
             }
-            return { ...cur, phaseTick: nextTick, timeLeft };
+            return { ...cur, phaseTick: nextTick, chaseTimeLeft: timeLeft };
           }
-          case "player-attack": {
-            if (nextTick >= 50) {
-              playCoinSound();
-              const newBossHP = cur.bossHP - 1;
-              if (newBossHP <= 0) return { ...cur, phase: "won", phaseTick: 0, bossHP: 0 };
-              const nextRound = cur.round + 1;
-              const newTarget = cur.tapTarget + 3;
-              const newRoundTime = Math.max(2500, cur.roundTime - 300);
-              return {
-                ...cur,
-                phase: "round-start",
-                round: nextRound,
-                bossHP: newBossHP,
-                phaseTick: 0,
-                tapCount: 0,
-                tapTarget: newTarget,
-                roundTime: newRoundTime,
-                timeLeft: newRoundTime,
-              };
-            }
-            return { ...cur, phaseTick: nextTick };
-          }
-          case "boss-attack": {
-            if (nextTick === 10) {
-              setBossHitTick(1);
-              setShakeTick(12);
-              playWrong();
-            }
-            if (nextTick >= 50) {
-              const newPlayerHP = cur.playerHP - 1;
-              if (newPlayerHP <= 0) return { ...cur, phase: "lost", phaseTick: 0, playerHP: 0 };
-              const nextRound = cur.round + 1;
-              const newTarget = cur.tapTarget + 3;
-              const newRoundTime = Math.max(2500, cur.roundTime - 300);
-              return {
-                ...cur,
-                phase: "round-start",
-                round: nextRound,
-                playerHP: newPlayerHP,
-                phaseTick: 0,
-                tapCount: 0,
-                tapTarget: newTarget,
-                roundTime: newRoundTime,
-                timeLeft: newRoundTime,
-              };
-            }
-            return { ...cur, phaseTick: nextTick };
-          }
-          case "won": {
+          case "caught": {
             if (nextTick >= 70) {
-              const reward = 250 + cur.encounterIdx * 50;
+              const reward = cur.orderMoney + 100; // unpaid bill + bounty
               playCoinSound();
               if (cur.bossOnAlien) {
                 setAlienCoins((g) => {
@@ -3973,7 +3961,6 @@ export default function IceCreamGame() {
                   return n;
                 });
               }
-              // Boss counts as a served customer for level progression
               setCustomersServed((c) => c + 1);
               pendingBossRef.current = false;
               setPhase("playing");
@@ -3981,9 +3968,9 @@ export default function IceCreamGame() {
             }
             return { ...cur, phaseTick: nextTick };
           }
-          case "lost": {
+          case "escaped": {
             if (nextTick >= 70) {
-              const penalty = 40 + cur.encounterIdx * 10;
+              const penalty = 40;
               if (cur.bossOnAlien) {
                 setAlienCoins((g) => {
                   const n = Math.max(0, g - penalty);
@@ -4008,13 +3995,6 @@ export default function IceCreamGame() {
     }, 40);
     return () => clearInterval(interval);
   }, [phase, bossFight]);
-
-  // Boss attack hit-flash decay
-  useEffect(() => {
-    if (bossHitTick <= 0) return;
-    const t = setTimeout(() => setBossHitTick((v) => (v >= 8 ? 0 : v + 1)), 40);
-    return () => clearTimeout(t);
-  }, [bossHitTick]);
 
   // Sarah's World driver — Julia advances, timer ticks, win/lose transitions.
   useEffect(() => {
@@ -4069,11 +4049,40 @@ export default function IceCreamGame() {
   }, [phase, sarahsWorld]);
 
   // Player tap during a boss fight — only counts during the "tap" phase.
+  // During simon-play, each flavor tap must match order[playIdx].
+  // Correct = advance; if that was the last one, serve + chase. Wrong = simon-fail.
+  const handleSimonFlavor = useCallback((flavorName: string) => {
+    setBossFight((cur) => {
+      if (!cur || cur.phase !== "simon-play") return cur;
+      if (flavorName === cur.order[cur.playIdx]) {
+        playBoop();
+        const nextIdx = cur.playIdx + 1;
+        if (nextIdx >= cur.order.length) {
+          // Order complete -> boss bolts; snap into chase-tap
+          playCoinSound();
+          return {
+            ...cur,
+            phase: "chase-tap",
+            phaseTick: 0,
+            chaseProgress: 0,
+            chaseTimeLeft: cur.chaseTotalTime,
+            playIdx: nextIdx,
+          };
+        }
+        return { ...cur, playIdx: nextIdx };
+      }
+      playWrong();
+      setShakeTick(10);
+      return { ...cur, phase: "simon-fail", phaseTick: 0 };
+    });
+  }, []);
+
+  // Player mashes the CHASE button — advance the progress bar by one tap.
   const handleBossTap = useCallback(() => {
     setBossFight((cur) => {
-      if (!cur || cur.phase !== "tap") return cur;
+      if (!cur || cur.phase !== "chase-tap") return cur;
       playBoop();
-      return { ...cur, tapCount: cur.tapCount + 1 };
+      return { ...cur, chaseProgress: cur.chaseProgress + 1 };
     });
   }, []);
 
@@ -5816,96 +5825,128 @@ export default function IceCreamGame() {
         );
       })()}
 
-      {/* Boss fight overlay — the entire interaction is the big TAP button + thermometer */}
-      {phase === "boss-fight" && bossFight && (
-        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
-          style={{
-            fontFamily: "monospace",
-            background: bossFight.bossOnAlien
-              ? "linear-gradient(180deg, #100028, #2A0848)"
-              : "linear-gradient(180deg, #2A0808, #4A1010)",
-            borderColor: "#FF4040",
-            color: "#FFF",
-          }}>
-          {/* Top row: round + timer */}
-          <div className="flex items-center justify-between mb-2 text-sm">
-            <span><strong>ROUND {bossFight.round}</strong></span>
-            <span style={{ color: "#FFE080" }}>
-              {bossFight.phase === "tap"
-                ? `${(bossFight.timeLeft / 1000).toFixed(1)}s`
-                : bossFight.phase === "round-start"
-                  ? "get ready!"
-                  : bossFight.phase === "player-attack"
-                    ? "HIT!"
-                    : bossFight.phase === "boss-attack"
-                      ? "incoming!"
-                      : bossFight.phase === "won"
-                        ? "+" + (250 + bossFight.encounterIdx * 50) + "G"
-                        : bossFight.phase === "lost"
-                          ? "-" + (40 + bossFight.encounterIdx * 10) + "G"
-                          : ""
-              }
-            </span>
-          </div>
-
-          {/* Thermometer / progress bar */}
-          <div className="relative h-5 rounded-full border-2 overflow-hidden mb-3"
-            style={{ borderColor: "#FFFFFF", background: "#300A14" }}>
-            <div className="h-full transition-all duration-50"
-              style={{
-                width: `${Math.min(100, (bossFight.tapCount / bossFight.tapTarget) * 100)}%`,
-                background: "linear-gradient(90deg, #FFE080, #FF4040)",
-              }} />
-            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold"
-              style={{ color: "#FFFFFF", textShadow: "1px 1px 0 #000" }}>
-              {bossFight.tapCount} / {bossFight.tapTarget} taps
-            </div>
-          </div>
-
-          {/* Time bar */}
-          {bossFight.phase === "tap" && (
-            <div className="h-2 rounded-full border overflow-hidden mb-3"
-              style={{ borderColor: "#FFFFFF", background: "#200", opacity: 0.8 }}>
-              <div className="h-full"
-                style={{
-                  width: `${Math.max(0, (bossFight.timeLeft / bossFight.roundTime) * 100)}%`,
-                  background: bossFight.timeLeft < 1500 ? "#FF4040" : "#80E0FF",
-                  transition: "width 40ms linear",
-                }} />
-            </div>
-          )}
-
-          {/* The one and only big TAP button */}
-          <button onClick={handleBossTap}
-            disabled={bossFight.phase !== "tap"}
-            onTouchStart={(e) => { e.preventDefault(); handleBossTap(); }}
-            className="w-full py-6 rounded-2xl font-bold text-3xl transition-all active:scale-95 border-b-8 select-none"
+      {/* Boss fight overlay — Simon order flavors then chase-tap button */}
+      {phase === "boss-fight" && bossFight && (() => {
+        const pool = bossFight.bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
             style={{
-              background: bossFight.phase === "tap"
-                ? "radial-gradient(circle at 30% 30%, #FFE080, #FF4040 60%, #A01010)"
-                : "linear-gradient(180deg, #555, #222)",
-              borderBottomColor: bossFight.phase === "tap" ? "#601010" : "#111",
+              fontFamily: "monospace",
+              background: bossFight.bossOnAlien
+                ? "linear-gradient(180deg, #100028, #2A0848)"
+                : "linear-gradient(180deg, #2A0808, #4A1010)",
+              borderColor: "#FF4040",
               color: "#FFF",
-              textShadow: "2px 2px 0 #400",
-              cursor: bossFight.phase === "tap" ? "pointer" : "default",
-              opacity: bossFight.phase === "tap" ? 1 : 0.6,
             }}>
-            {bossFight.phase === "tap"
-              ? "TAP! TAP! TAP!"
-              : bossFight.phase === "intro"
-                ? "BOSS FIGHT!"
-                : bossFight.phase === "round-start"
-                  ? `ROUND ${bossFight.round}`
-                  : bossFight.phase === "player-attack"
-                    ? "POW!"
-                    : bossFight.phase === "boss-attack"
-                      ? "OUCH!"
-                      : bossFight.phase === "won"
-                        ? "VICTORY!"
-                        : "DEFEATED..."}
-          </button>
-        </div>
-      )}
+            <div className="flex items-center justify-between mb-2 text-sm">
+              <strong style={{ color: "#FFE080" }}>{bossFight.bossName}</strong>
+              <span style={{ color: "#FFE080" }}>
+                {bossFight.phase === "intro" && "..."}
+                {bossFight.phase === "simon-show" && "WATCH"}
+                {bossFight.phase === "simon-play" && `${bossFight.playIdx} / ${bossFight.order.length}`}
+                {bossFight.phase === "simon-fail" && "WRONG!"}
+                {bossFight.phase === "chase-tap" && `${(bossFight.chaseTimeLeft / 1000).toFixed(1)}s`}
+                {bossFight.phase === "caught" && "+" + (bossFight.orderMoney + 100) + "G"}
+                {bossFight.phase === "escaped" && "-40G"}
+              </span>
+            </div>
+
+            {/* Simon play — flavor grid (only input during simon-play) */}
+            {(bossFight.phase === "simon-show" || bossFight.phase === "simon-play") && (
+              <>
+                <p className="text-center text-sm mb-2" style={{ color: "#FFE080" }}>
+                  {bossFight.phase === "simon-show"
+                    ? "\"GIVE ME...\" — memorize the order!"
+                    : "repeat the order in order"}
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {pool.map((f) => {
+                    const disabled = bossFight.phase !== "simon-play";
+                    const darkLabel = ["Chocolate", "Blueberry", "Void", "Cosmic Swirl"].includes(f.name);
+                    return (
+                      <button key={f.name}
+                        onClick={() => handleSimonFlavor(f.name)}
+                        disabled={disabled}
+                        className="py-3 px-2 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "14px",
+                          background: `linear-gradient(180deg, ${f.colors[0]}, ${f.colors[1]})`,
+                          borderBottomColor: f.colors[2],
+                          color: darkLabel ? "#FFF" : "#444",
+                          opacity: disabled ? 0.7 : 1,
+                          cursor: disabled ? "default" : "pointer",
+                        }}>
+                        <span className="text-lg block">{f.emoji}</span>
+                        {f.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Chase-tap — big button + progress bar + timer */}
+            {bossFight.phase === "chase-tap" && (
+              <>
+                <p className="text-center text-sm mb-2" style={{ color: "#FFE080" }}>
+                  he ran off without paying! TAP FAST to catch him!
+                </p>
+                <div className="relative h-5 rounded-full border-2 overflow-hidden mb-2"
+                  style={{ borderColor: "#FFFFFF", background: "#300A14" }}>
+                  <div className="h-full"
+                    style={{
+                      width: `${Math.min(100, (bossFight.chaseProgress / bossFight.chaseTarget) * 100)}%`,
+                      background: "linear-gradient(90deg, #FFE080, #FF4040)",
+                      transition: "width 40ms linear",
+                    }} />
+                  <div className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+                    style={{ color: "#FFFFFF", textShadow: "1px 1px 0 #000" }}>
+                    {bossFight.chaseProgress} / {bossFight.chaseTarget}
+                  </div>
+                </div>
+                <div className="h-2 rounded-full border overflow-hidden mb-3"
+                  style={{ borderColor: "#FFFFFF", background: "#200", opacity: 0.8 }}>
+                  <div className="h-full"
+                    style={{
+                      width: `${Math.max(0, (bossFight.chaseTimeLeft / bossFight.chaseTotalTime) * 100)}%`,
+                      background: bossFight.chaseTimeLeft < 1200 ? "#FF4040" : "#80E0FF",
+                      transition: "width 40ms linear",
+                    }} />
+                </div>
+                <button onClick={handleBossTap}
+                  onTouchStart={(e) => { e.preventDefault(); handleBossTap(); }}
+                  className="w-full py-6 rounded-2xl font-bold text-3xl transition-all active:scale-95 border-b-8 select-none"
+                  style={{
+                    background: "radial-gradient(circle at 30% 30%, #FFE080, #FF4040 60%, #A01010)",
+                    borderBottomColor: "#601010",
+                    color: "#FFF",
+                    textShadow: "2px 2px 0 #400",
+                  }}>
+                  CHASE! TAP! TAP!
+                </button>
+              </>
+            )}
+
+            {/* Static banners for intro / simon-fail / caught / escaped */}
+            {(bossFight.phase === "intro" || bossFight.phase === "simon-fail"
+              || bossFight.phase === "caught" || bossFight.phase === "escaped") && (
+              <div className="py-6 text-center font-bold text-xl"
+                style={{
+                  color: bossFight.phase === "caught" ? "#80FF80"
+                    : bossFight.phase === "escaped" ? "#FFAA40"
+                    : bossFight.phase === "simon-fail" ? "#FF4040"
+                    : "#FFE080",
+                }}>
+                {bossFight.phase === "intro" && "BOSS INCOMING..."}
+                {bossFight.phase === "simon-fail" && "WRONG ORDER!"}
+                {bossFight.phase === "caught" && `GOTCHA! +${bossFight.orderMoney + 100}G`}
+                {bossFight.phase === "escaped" && "BOSS ESCAPED!"}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Warp drive button (only during journey cutscenes, not already warping) */}
       {phase === "cutscene" && (cutsceneType === "journey-out" || cutsceneType === "journey-back") && !warpActive && !pilotOfferActive && (
