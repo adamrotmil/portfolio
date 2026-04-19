@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Primitives — motion vocabulary">
+  <defs>
+    <linearGradient id="primBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151823"/>
+      <stop offset="1" stop-color="#0a0b12"/>
+    </linearGradient>
+    <radialGradient id="primGlow" cx="30%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="primCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22273a"/>
+      <stop offset="1" stop-color="#0f1220"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="360" fill="url(#primBg)"/>
+  <rect width="480" height="360" fill="url(#primGlow)"/>
+
+  <!-- Overshoot spring trail: successive ghost dots converging to a solid pill -->
+  <g opacity="0.9">
+    <circle cx="78" cy="92" r="5" fill="#6366f1" opacity="0.15"/>
+    <circle cx="96" cy="92" r="6" fill="#6366f1" opacity="0.28"/>
+    <circle cx="116" cy="92" r="7" fill="#6366f1" opacity="0.45"/>
+    <rect x="130" y="80" width="100" height="26" rx="13" fill="#6366f1" opacity="0.95"/>
+    <circle cx="144" cy="93" r="4" fill="#a5b4fc"/>
+  </g>
+
+  <!-- Mask reveal: three lines of serif-feeling text with progressive reveal widths -->
+  <g transform="translate(60 150)">
+    <rect x="0" y="0" width="260" height="16" rx="2" fill="#f5f5f5" opacity="0.95"/>
+    <rect x="0" y="28" width="200" height="16" rx="2" fill="#f5f5f5" opacity="0.7"/>
+    <rect x="0" y="56" width="140" height="16" rx="2" fill="#f5f5f5" opacity="0.45"/>
+  </g>
+
+  <!-- Reactive tilt card: 3D-perspective rectangle with specular highlight -->
+  <g transform="translate(305 150)">
+    <g transform="matrix(0.97 -0.15 0.1 0.98 0 0)">
+      <rect x="0" y="0" width="140" height="180" rx="18" fill="url(#primCard)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+      <!-- Specular highlight -->
+      <ellipse cx="48" cy="58" rx="42" ry="36" fill="#ffffff" opacity="0.18"/>
+      <!-- Chip label -->
+      <text x="14" y="164" font-family="system-ui, -apple-system, Helvetica, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing="2" fill="rgba(255,255,255,0.75)">TILT</text>
+    </g>
+  </g>
+
+  <!-- Title plate -->
+  <g transform="translate(60 294)">
+    <text font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="26" fill="#f5f5f5">Primitives</text>
+    <text y="22" font-family="system-ui, -apple-system, Helvetica, Arial, sans-serif" font-size="10" letter-spacing="2" fill="rgba(255,255,255,0.5)">A MOTION VOCABULARY</text>
+  </g>
+</svg>

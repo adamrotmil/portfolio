@@ -62,6 +62,7 @@ export type LabItem = {
   description: string;
   tech: string;
   url?: string;
+  href?: string;
   action?: "foothills" | "watchrc" | "ticker" | "table";
   /** Thumbnail image (path under /public).  Every Lab tile gets one —
    *  either a real captured view of the demo (sandboxes) or a
@@ -102,6 +103,14 @@ export const LAB_ITEMS: LabItem[] = [
     action: "foothills",
     tech: "TypeScript · React · game engine",
     thumbnail: "/images/lab/foothills.svg",
+  },
+  {
+    title: "Primitives",
+    description:
+      "A growing vocabulary of motion and interaction techniques — spring physics, mask reveals, pointer-reactive transforms. Reusable building blocks for every lab that follows.",
+    href: "/primitives",
+    tech: "Motion · GSAP · React",
+    thumbnail: "/images/lab/primitives.svg",
   },
   {
     title: "Maryland Playgrounds",

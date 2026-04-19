@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Reveal from "@/components/Reveal";
 import { LAB_ITEMS } from "@/data/about";
 import { assetPath } from "@/lib/basePath";
@@ -10,6 +11,7 @@ import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
 import TableModal from "@/components/table/TableModal";
 
 export default function Lab() {
+  const router = useRouter();
   const [foothillsOpen, setFoothillsOpen] = useState(false);
   const [watchrcOpen, setWatchrcOpen] = useState(false);
   const [tickerOpen, setTickerOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function Lab() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
         {LAB_ITEMS.map((item, i) => {
-          const clickable = Boolean(item.url || item.action);
+          const clickable = Boolean(item.url || item.action || item.href);
           return (
             <Reveal key={i} delay={i * 0.08} className="h-full">
               <div
@@ -72,6 +74,8 @@ export default function Lab() {
                     setTickerOpen(true);
                   } else if (item.action === "table") {
                     setTableOpen(true);
+                  } else if (item.href) {
+                    router.push(item.href);
                   } else if (item.url) {
                     window.open(item.url, "_blank");
                   }

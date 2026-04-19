@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@use-gesture/react": "^10.3.1",
+    "gsap": "^3.15.0",
     "liveline": "^0.0.7",
     "maplibre-gl": "^5.23.0",
     "motion": "^12.38.0",
