@@ -9,7 +9,7 @@ import FoothillsModal from "@/components/foothills/FoothillsModal";
 import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
 import TableModal from "@/components/table/TableModal";
-import NativeFeedLabTeaser from "@/components/primitives/demos/NativeFeedLabTeaser";
+import SvgMorph from "@/components/primitives/demos/SvgMorph";
 
 export default function Lab() {
   const router = useRouter();
@@ -102,7 +102,7 @@ export default function Lab() {
                   }}
                 >
                   {item.liveThumbnail === "primitives" ? (
-                    <NativeFeedLabTeaser />
+                    <SvgMorph />
                   ) : item.thumbnail ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
