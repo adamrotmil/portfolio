@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { assetPath } from "@/lib/basePath";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -14,12 +16,18 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  // On the homepage, bare fragments (#work) scroll in place. On any other
+  // route, those fragments point at elements that don't exist — so we
+  // route home with the fragment (/#work) to load the section target.
+  const onHome = pathname === "/";
+  const sectionHref = (id: string) => (onHome ? `#${id}` : `/#${id}`);
+
   const links = [
-    { label: "Work", href: "#work" },
-    { label: "Lab", href: "#lab" },
-    { label: "Play", href: "#play" },
-    { label: "About", href: "#about" },
-    { label: "Contact", href: "#contact" },
+    { label: "Work", href: sectionHref("work") },
+    { label: "Lab", href: sectionHref("lab") },
+    { label: "Play", href: sectionHref("play") },
+    { label: "About", href: sectionHref("about") },
+    { label: "Contact", href: sectionHref("contact") },
   ];
 
   const resumeHref = assetPath("/resume/Adam-Rotmil-Resume.pdf");

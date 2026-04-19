@@ -9,6 +9,7 @@ import FoothillsModal from "@/components/foothills/FoothillsModal";
 import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
 import TableModal from "@/components/table/TableModal";
+import NativeFeedLabTeaser from "@/components/primitives/demos/NativeFeedLabTeaser";
 
 export default function Lab() {
   const router = useRouter();
@@ -83,22 +84,26 @@ export default function Lab() {
               >
                 {/* Thumbnail.  4:3 lockup on every card — real captured
                     views for the sandboxes, gradient+glyph compositions
-                    for the link-out tiles.  All SVG so they stay crisp. */}
+                    for the link-out tiles, or a live animated component
+                    for motion primitives.  All SVG/CSS so they stay crisp. */}
                 <div
                   className="relative w-full overflow-hidden shrink-0"
                   style={{
                     aspectRatio: "4 / 3",
-                    background: item.thumbnail
-                      ? "#0A0B0D"
-                      : clickable
-                        ? "#e5e5e5"
-                        : "#1e1e1f",
+                    background:
+                      item.liveThumbnail || item.thumbnail
+                        ? "#0A0B0D"
+                        : clickable
+                          ? "#e5e5e5"
+                          : "#1e1e1f",
                     borderBottom: clickable
                       ? "1px solid rgba(0,0,0,0.06)"
                       : "1px solid rgba(255,255,255,0.04)",
                   }}
                 >
-                  {item.thumbnail ? (
+                  {item.liveThumbnail === "primitives" ? (
+                    <NativeFeedLabTeaser />
+                  ) : item.thumbnail ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={assetPath(item.thumbnail)}

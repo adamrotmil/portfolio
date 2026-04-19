@@ -69,6 +69,11 @@ export type LabItem = {
    *  hand-drawn illustrative SVG that communicates the thing the tile
    *  links to (link-outs).  No generic shader placeholders. */
   thumbnail?: string;
+  /** Identifier for a live/animated thumbnail component, rendered by
+   *  Lab.tsx when present instead of the static thumbnail image. Used
+   *  for tiles where a small moving preview communicates the primitive
+   *  better than a still. */
+  liveThumbnail?: "primitives";
 };
 
 export const LAB_ITEMS: LabItem[] = [
@@ -103,6 +108,14 @@ export const LAB_ITEMS: LabItem[] = [
     action: "foothills",
     tech: "TypeScript · React · game engine",
     thumbnail: "/images/lab/foothills.svg",
+  },
+  {
+    title: "Primitives",
+    description:
+      "A growing vocabulary of web motion techniques — springs, scrubs, masks, material bursts, a composable native-feel feed — each a reusable building block I can compose into future labs.",
+    href: "/primitives",
+    tech: "Motion · GSAP · Canvas · CSS",
+    liveThumbnail: "primitives",
   },
   {
     title: "Maryland Playgrounds",
