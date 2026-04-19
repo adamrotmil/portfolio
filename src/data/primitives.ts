@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import OvershootSpring from "@/components/primitives/demos/OvershootSpring";
 import MaskReveal from "@/components/primitives/demos/MaskReveal";
 import ReactiveTilt from "@/components/primitives/demos/ReactiveTilt";
+import TurbulenceBurst from "@/components/primitives/demos/TurbulenceBurst";
 
 export type Primitive = {
   id: string;
@@ -39,5 +40,14 @@ export const PRIMITIVES: Primitive[] = [
       "A surface that rotates in response to pointer position, with springs smoothing the motion.",
     why: "Binds continuous user input to continuous output — the foundational pattern for hero elements, 3D cards, cursor-following dots, and Vision Pro-style glass. Once you have this hook, you have every cursor-reactive effect.",
     Component: ReactiveTilt,
+  },
+  {
+    id: "turbulence-burst",
+    title: "Turbulence Burst",
+    tag: "Material",
+    description:
+      "A particle cloud treated as a material — press and drag to perturb it, releasing impulses that also shift its color temperature.",
+    why: "Particle systems are the language behind Apple's Titanium marketing, iOS haptic visuals, and Meta's reaction effects. The recipe: many cheap entities under a shared noise field, rendered with additive blending. Once you have the simulation loop, you can re-skin it as smoke, water, sand, or metal — the math doesn't change.",
+    Component: TurbulenceBurst,
   },
 ];

@@ -105,14 +105,6 @@ export const LAB_ITEMS: LabItem[] = [
     thumbnail: "/images/lab/foothills.svg",
   },
   {
-    title: "Primitives",
-    description:
-      "A growing vocabulary of motion and interaction techniques — spring physics, mask reveals, pointer-reactive transforms. Reusable building blocks for every lab that follows.",
-    href: "/primitives",
-    tech: "Motion · GSAP · React",
-    thumbnail: "/images/lab/primitives.svg",
-  },
-  {
     title: "Maryland Playgrounds",
     description:
       "Maps and ranks kids' playgrounds across Maryland. Pipeline fetches OpenStreetMap, enriches features by proximity (restrooms, splash pads, picnic tables), and has a Claude-API seam for classifying review text.",
