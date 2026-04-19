@@ -22,11 +22,17 @@ type DialogueNode = {
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "result";
+type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "result";
 
 type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
 type Laser = { id: number; x: number; y: number; };
 type PilotInputs = { left: boolean; right: boolean; up: boolean; down: boolean; fire: boolean };
+
+type BossAttackType = "ice" | "fire" | "slam";
+type BossAttackPhase = "idle" | "charging" | "staggered";
+
+type Minion = { id: number; quote: string; spriteIdx: number };
+type ChaseMinion = { id: number; x: number; y: number; vx: number; caught: boolean; spriteIdx: number };
 
 type ShopItem = {
   id: string;        // stable id used as inventory key
@@ -88,6 +94,26 @@ type Customer = {
   isAlien?: boolean;     // regular alien customer on alien planet
   isBoss?: boolean;      // boss encounter — complex order, hits back on mistakes
   bossHearts?: number;   // lives remaining during a boss fight
+  minions?: Minion[];    // trashy sidekicks flanking the boss
+};
+
+const MINION_QUOTES = [
+  "your scoops stink!",
+  "my grandma scoops faster!",
+  "that's not a CIRCLE!",
+  "hahaha nice try",
+  "pay up or else",
+  "coins coins coins",
+  "we're TAKING these!",
+  "hurry up scooper!",
+  "boss! smash him!",
+  "give us your gold!",
+];
+
+const BOSS_ATTACKS: Record<BossAttackType, { name: string; color: string; text: string }> = {
+  "ice":  { name: "ICE BLAST",  color: "#80E0FF", text: "ICE BLAST!" },
+  "fire": { name: "FIRE STORM", color: "#FF6040", text: "FIRE STORM!" },
+  "slam": { name: "GROUND SLAM", color: "#FFD040", text: "GROUND SLAM!" },
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -575,6 +601,14 @@ function createAlienVIP(id: number): Customer {
 function createBossCustomer(id: number, location: Location): Customer {
   const pool = location === "alien-planet" ? ALIEN_FLAVORS : FLAVORS;
   const tpool = location === "alien-planet" ? ALIEN_TOPPINGS : TOPPINGS;
+  const withMinions = Math.random() < 0.4;
+  const minions: Minion[] | undefined = withMinions
+    ? Array.from({ length: 2 }, (_, i) => ({
+        id: i,
+        quote: pick(MINION_QUOTES),
+        spriteIdx: Math.floor(Math.random() * 4),
+      }))
+    : undefined;
   return {
     id,
     name: location === "alien-planet" ? "VOID WARLORD" : "FROZEN FURY",
@@ -588,6 +622,7 @@ function createBossCustomer(id: number, location: Location): Customer {
     waitTicks: 0,
     isBoss: true,
     bossHearts: 3,
+    minions,
   };
 }
 
@@ -993,6 +1028,198 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, x: number, y: number, wal
   const flame = Math.floor(Math.sin(tick / 4) * 1);
   px(ctx, x - 1, y - 10 + flame + bobY, 3, 2, "#FFB020");
   px(ctx, x, y - 12 + flame + bobY, 1, 1, "#FFE060");
+}
+
+// Mini boss — smaller sinister blob, draws alongside the main boss
+function drawMinion(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number, spriteIdx: number) {
+  const pal = { body: "#803035", accent: "#401014", eyes: "#FFE040" };
+  const bob = Math.floor(Math.sin((tick + spriteIdx * 9) / 12) * 1);
+  px(ctx, x - 3, y + 8, 7, 2, "rgba(0,0,0,0.25)");
+  // tiny body
+  for (let dy = -6; dy <= 5; dy++) {
+    const p = (dy + 6) / 11;
+    const halfW = Math.round(4 * Math.sin(p * Math.PI));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const edge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + bob, 1, 1, edge ? pal.accent : pal.body);
+    }
+  }
+  // horns
+  px(ctx, x - 3, y - 6 + bob, 1, 2, pal.accent);
+  px(ctx, x + 3, y - 6 + bob, 1, 2, pal.accent);
+  // eyes
+  px(ctx, x - 2, y - 2 + bob, 2, 2, pal.eyes);
+  px(ctx, x + 1, y - 2 + bob, 2, 2, pal.eyes);
+  // grin
+  px(ctx, x - 1, y + 2 + bob, 3, 1, "#200");
+  px(ctx, x - 1, y + 3 + bob, 1, 1, "#FFF");
+  px(ctx, x + 1, y + 3 + bob, 1, 1, "#FFF");
+}
+
+// Telegraph ring that pulses around the boss while they charge a special attack
+function drawBossChargeAura(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number, attack: BossAttackType) {
+  const color = BOSS_ATTACKS[attack].color;
+  const radius = 14 + Math.floor(Math.sin(tick / 3) * 2);
+  for (let a = 0; a < 40; a++) {
+    const angle = (a / 40) * Math.PI * 2 + tick / 6;
+    const rx = Math.floor(x + Math.cos(angle) * radius);
+    const ry = Math.floor(y + Math.sin(angle) * radius * 0.9);
+    if (rx < 0 || rx >= W || ry < 0 || ry >= H) continue;
+    px(ctx, rx, ry, 1, 1, a % 3 === 0 ? color : "#FFFFFF");
+  }
+  // Floating attack glyph above boss
+  if (attack === "ice") {
+    px(ctx, x - 1, y - 22, 3, 3, color);
+    px(ctx, x, y - 24, 1, 7, color);
+    px(ctx, x - 3, y - 21, 7, 1, color);
+  } else if (attack === "fire") {
+    for (let dy = 0; dy < 6; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (Math.abs(dx) <= 2 - Math.floor(dy / 2)) px(ctx, x + dx, y - 24 + dy, 1, 1, color);
+    }
+    px(ctx, x, y - 26, 1, 2, "#FFE080");
+  } else {
+    // slam — shockwave chevrons
+    for (let i = 0; i < 3; i++) {
+      px(ctx, x - 4 + i * 2, y - 22, 2, 1, color);
+      px(ctx, x + 2 - i * 2, y - 22, 2, 1, color);
+    }
+  }
+}
+
+// Quick 8-frame hit flash — overlays a colored wash and a shock ring
+function drawBossAttackHit(ctx: CanvasRenderingContext2D, tick: number, attack: BossAttackType) {
+  const color = BOSS_ATTACKS[attack].color;
+  // Tinted full-screen flash
+  ctx.fillStyle = color;
+  ctx.globalAlpha = Math.max(0, 0.35 - tick * 0.04);
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.globalAlpha = 1;
+  // Shock ring expanding from shopkeeper
+  const radius = 8 + tick * 4;
+  for (let a = 0; a < 48; a++) {
+    const angle = (a / 48) * Math.PI * 2;
+    const rx = Math.floor(64 + Math.cos(angle) * radius);
+    const ry = Math.floor(60 + Math.sin(angle) * radius * 0.8);
+    if (rx < 0 || rx >= W || ry < 0 || ry >= H) continue;
+    px(ctx, rx, ry, 1, 1, color);
+  }
+}
+
+// Horizontal chase scene — city road scrolls left, police car chases fleeing minions
+function drawChaseScene(ctx: CanvasRenderingContext2D, tick: number, minions: ChaseMinion[]) {
+  // Sky
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let c;
+      if (y < 20) c = "#0E2540";
+      else if (y < 40) c = "#3060A0";
+      else if (y < 56) c = "#80C0D0";
+      else if (y < 72) c = "#4A4A4A";
+      else c = (Math.floor(x / 4) + Math.floor(y / 2)) % 6 === 0 ? "#606060" : "#3A3A3A";
+      px(ctx, x, y, 1, 1, c);
+    }
+  }
+  // Buildings silhouettes scrolling
+  for (let i = 0; i < 8; i++) {
+    const bx = ((i * 22 - Math.floor(tick * 1.5)) % (W + 30) + W + 30) % (W + 30) - 20;
+    const bh = 20 + (i * 7) % 18;
+    for (let dy = 0; dy < bh; dy++) for (let dx = 0; dx < 18; dx++) {
+      const edge = dx === 0 || dx === 17 || dy === 0;
+      if (bx + dx >= 0 && bx + dx < W) {
+        px(ctx, bx + dx, 56 - dy, 1, 1, edge ? "#101822" : "#1A2636");
+      }
+    }
+    // Lit windows
+    for (let wy = 4; wy < bh - 2; wy += 4) for (let wx = 3; wx < 15; wx += 4) {
+      if (bx + wx >= 0 && bx + wx < W && ((i + wy + wx) % 3 !== 0)) {
+        px(ctx, bx + wx, 56 - wy, 2, 2, "#FFE080");
+      }
+    }
+  }
+  // Road markings scrolling
+  for (let i = 0; i < 12; i++) {
+    const mx = ((i * 14 - Math.floor(tick * 3)) % (W + 14) + W + 14) % (W + 14) - 8;
+    px(ctx, mx, 78, 6, 1, "#FFE040");
+  }
+  // Minions running
+  minions.forEach((m) => {
+    if (m.caught) {
+      // caught marker — tiny CAUGHT tag
+      drawText(ctx, "ARRESTED!", Math.floor(m.x), Math.floor(m.y) - 10, "#FF4040", 0.5);
+      return;
+    }
+    drawMinion(ctx, Math.floor(m.x), Math.floor(m.y), tick + m.id * 4, m.spriteIdx);
+  });
+  // Police car on the left
+  drawPoliceCar(ctx, 16 + Math.floor(Math.sin(tick / 8) * 1), 74, tick);
+  drawText(ctx, "TAP THE MINIONS!", W / 2, 12, "#FF4040", 0.75);
+}
+
+function drawPoliceCar(ctx: CanvasRenderingContext2D, x: number, y: number, tick: number) {
+  // Body
+  for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < 20; dx++) {
+    const edge = dx === 0 || dx === 19 || dy === 0 || dy === 7;
+    const bottomHalf = dy >= 4;
+    px(ctx, x + dx, y + dy, 1, 1, edge ? "#101010" : bottomHalf ? "#1030A0" : "#FFFFFF");
+  }
+  // Windows
+  for (let dy = 2; dy < 4; dy++) for (let dx = 4; dx < 16; dx++) {
+    px(ctx, x + dx, y + dy, 1, 1, "#80C0E0");
+  }
+  // Siren lights (alternating)
+  const red = Math.floor(tick / 4) % 2 === 0;
+  px(ctx, x + 5, y - 2, 4, 2, red ? "#FF4040" : "#300");
+  px(ctx, x + 11, y - 2, 4, 2, red ? "#300" : "#4060FF");
+  // Wheels
+  px(ctx, x + 2, y + 7, 4, 3, "#101010");
+  px(ctx, x + 14, y + 7, 4, 3, "#101010");
+  px(ctx, x + 3, y + 8, 1, 1, "#808080");
+  px(ctx, x + 15, y + 8, 1, 1, "#808080");
+}
+
+// Warp starfield — stars stretch into streaks along travel direction
+function drawWarpStars(ctx: CanvasRenderingContext2D, tick: number) {
+  // Base dark space
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      px(ctx, x, y, 1, 1, "#040014");
+    }
+  }
+  // Center highlight glow
+  const cx = W / 2;
+  const cy = H / 2;
+  for (let r = 6; r < 30; r++) {
+    const a = Math.max(0, (30 - r) / 30) * 0.3;
+    if (Math.random() > 0.85) continue;
+    const angle = Math.random() * Math.PI * 2;
+    const rx = Math.floor(cx + Math.cos(angle) * r);
+    const ry = Math.floor(cy + Math.sin(angle) * r);
+    ctx.fillStyle = `rgba(180,200,255,${a})`;
+    ctx.fillRect(rx * PX, ry * PX, PX, PX);
+  }
+  // Streaks flowing from center out
+  for (let i = 0; i < 60; i++) {
+    const angle = (i / 60) * Math.PI * 2;
+    const speed = 3 + (i % 5);
+    const r = ((tick * speed + i * 9) % 70);
+    const startR = r;
+    const endR = r + 8 + Math.floor(tick / 4) % 8;
+    const steps = Math.max(1, endR - startR);
+    for (let s = 0; s < steps; s++) {
+      const rr = startR + s;
+      const sx = Math.floor(cx + Math.cos(angle) * rr);
+      const sy = Math.floor(cy + Math.sin(angle) * rr * 0.85);
+      if (sx < 0 || sx >= W || sy < 0 || sy >= H) continue;
+      const brightness = 40 + (s / steps) * 215;
+      ctx.fillStyle = `rgb(${brightness},${brightness},255)`;
+      ctx.fillRect(sx * PX, sy * PX, PX, PX);
+    }
+  }
+  // Saucer in the center, slightly vibrating
+  const jx = Math.floor(Math.sin(tick / 2) * 1);
+  drawFlyingSaucer(ctx, 64 + jx, 56 + jx, tick);
+  drawText(ctx, "WARP DRIVE", W / 2, 14, "#80E0FF", 0.85);
 }
 
 function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, heldItemId: string | null = null) {
@@ -2673,6 +2900,20 @@ export default function IceCreamGame() {
   const lastBossAtRef = useRef(0);
   const pendingBossRef = useRef(false);
 
+  // Boss combat: periodic attacks the player must DEFEND (single object for
+  // atomic transitions inside the tick updater)
+  const [bossCombat, setBossCombat] = useState<{phase: BossAttackPhase; attack: BossAttackType | null; tick: number}>({ phase: "idle", attack: null, tick: 0 });
+  const [bossHitTick, setBossHitTick] = useState(0); // drives the hit flash overlay
+
+  // Chase phase state (post-minion-escape)
+  const [chaseMinions, setChaseMinions] = useState<ChaseMinion[]>([]);
+  const [chaseTick, setChaseTick] = useState(0);
+  const chaseResumeRef = useRef<"playing" | null>(null);
+
+  // Warp drive (journey cutscenes)
+  const [warpActive, setWarpActive] = useState(false);
+  const [warpTick, setWarpTick] = useState(0);
+
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
   const [pilotOfferActive, setPilotOfferActive] = useState(false);
@@ -2696,7 +2937,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -2954,11 +3195,18 @@ export default function IceCreamGame() {
       drawShopInterior(ctx, shop, streetTick);
     }
 
+    function drawChase() {
+      if (!ctx) return;
+      drawChaseScene(ctx, chaseTick, chaseMinions);
+    }
+
     function draw() {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
       if (phase === "cutscene") {
         drawCutscene();
+        // Warp overlay takes over during warp
+        if (warpActive) drawWarpStars(ctx, warpTick);
       } else if (phase === "blackhole") {
         drawBlackhole();
       } else if (phase === "pilot") {
@@ -2967,8 +3215,37 @@ export default function IceCreamGame() {
         drawStreet();
       } else if (phase === "shop") {
         drawShop();
+      } else if (phase === "chase") {
+        drawChase();
       } else {
         drawShopScene();
+        // Boss combat overlays: charge aura + hit flash
+        if (customer?.isBoss && bossCombat.phase === "charging" && bossCombat.attack) {
+          drawBossChargeAura(ctx, Math.round(customer.x), 66, bossCombat.tick, bossCombat.attack);
+        }
+        if (bossHitTick > 0 && bossCombat.attack) {
+          drawBossAttackHit(ctx, bossHitTick, bossCombat.attack);
+        }
+        // Minions next to boss
+        if (customer?.isBoss && customer.minions) {
+          customer.minions.forEach((m, i) => {
+            const mx = Math.round(customer.x) + (i === 0 ? -16 : 16);
+            drawMinion(ctx, mx, 82, streetTick + i * 5, m.spriteIdx);
+            // Small speech bubble with their quote cycling every ~3s
+            if (customer.state === "waiting") {
+              const cycle = Math.floor(streetTick / 80 + i) % MINION_QUOTES.length;
+              const q = MINION_QUOTES[cycle];
+              const bw = Math.min(W - 2, q.length * 3 + 8);
+              const bx = Math.max(1, Math.min(W - bw - 1, mx - Math.floor(bw / 2)));
+              const by = 66;
+              for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < bw; dx++) {
+                const edge = dx === 0 || dx === bw - 1 || dy === 0 || dy === 7;
+                px(ctx, bx + dx, by + dy, 1, 1, edge ? "#333" : "#FFFDE8");
+              }
+              drawText(ctx, q, bx + bw / 2, by + 4, "#A02010", 0.38);
+            }
+          });
+        }
       }
       if (phase !== "pilot") drawHud();
       animFrameRef.current = requestAnimationFrame(draw);
@@ -2976,7 +3253,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossCombat, bossHitTick, chaseMinions, chaseTick, warpActive, warpTick]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -3152,6 +3429,31 @@ export default function IceCreamGame() {
     }
   }, [customer, highScore, score, location, alienEncountered]);
 
+  // Trigger a chase phase (police car vs. fleeing minions). Used when the boss's
+  // minions bolt after a mistake.
+  const startChase = useCallback((minionCount: number) => {
+    playDing();
+    const mins: ChaseMinion[] = Array.from({ length: Math.max(2, minionCount) }, (_, i) => ({
+      id: i,
+      x: 50 + i * 24 + Math.random() * 10,
+      y: 80 + (i % 2) * 2,
+      vx: 0.35 + Math.random() * 0.25, // heading right, away from police
+      caught: false,
+      spriteIdx: Math.floor(Math.random() * 4),
+    }));
+    setChaseMinions(mins);
+    setChaseTick(0);
+    
+    chaseResumeRef.current = "playing";
+    // Clear current customer (boss disappears with them)
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    setBossCombat({ phase: "idle", attack: null, tick: 0 });
+    pendingBossRef.current = false;
+    setPhase("chase");
+  }, []);
+
   // Boss strike-back: screen shake + coin penalty + heart tick. Returns true if
   // the boss depleted and walked out.
   const bossStrikeBack = useCallback(() => {
@@ -3199,8 +3501,12 @@ export default function IceCreamGame() {
       setCustomer((prev) => prev && prev.state === "waiting" ? { ...prev, reaction: "" } : prev);
     }, 600);
     if (defeated) pendingBossRef.current = false;
+    // If the boss has minions with them, 45% chance they bolt and trigger a chase
+    if (!defeated && customer?.minions && customer.minions.length > 0 && Math.random() < 0.45) {
+      setTimeout(() => startChase(customer.minions?.length ?? 2), 900);
+    }
     return defeated;
-  }, [location]);
+  }, [location, customer, startChase]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -3281,6 +3587,10 @@ export default function IceCreamGame() {
     setShakeTick(0);
     lastBossAtRef.current = 0;
     pendingBossRef.current = false;
+    setBossCombat({ phase: "idle", attack: null, tick: 0 }); setBossHitTick(0);
+    setChaseMinions([]); setChaseTick(0); 
+    chaseResumeRef.current = null;
+    setWarpActive(false); setWarpTick(0);
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -3324,6 +3634,175 @@ export default function IceCreamGame() {
     const t = setTimeout(() => setShakeTick((s) => Math.max(0, s - 1)), 40);
     return () => clearTimeout(t);
   }, [shakeTick]);
+
+  // Boss combat driver — all transitions happen inside the setInterval callback.
+  useEffect(() => {
+    if (phase !== "playing") return;
+    if (!customer?.isBoss || customer.state !== "waiting") return;
+    const idleDur = 180;       // ~7.2s between attacks
+    const chargeDur = 50;      // ~2s window to DEFEND
+    const staggerDur = 100;    // ~4s stunned after block
+    const interval = setInterval(() => {
+      setBossCombat((cur) => {
+        const next = cur.tick + 1;
+        if (cur.phase === "idle" && next >= idleDur) {
+          const types: BossAttackType[] = ["ice", "fire", "slam"];
+          return { phase: "charging", attack: pick(types), tick: 0 };
+        }
+        if (cur.phase === "charging" && next >= chargeDur) {
+          setBossHitTick(1);
+          bossStrikeBack();
+          return { phase: "idle", attack: cur.attack, tick: 0 };
+        }
+        if (cur.phase === "staggered" && next >= staggerDur) {
+          return { phase: "idle", attack: null, tick: 0 };
+        }
+        return { ...cur, tick: next };
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase, customer?.id, customer?.state, customer?.isBoss, bossStrikeBack]);
+
+  // Boss attack hit-flash decay
+  useEffect(() => {
+    if (bossHitTick <= 0) return;
+    const t = setTimeout(() => setBossHitTick((v) => (v >= 8 ? 0 : v + 1)), 40);
+    return () => clearTimeout(t);
+  }, [bossHitTick]);
+
+  // Player presses DEFEND during the charging window
+  const handleDefend = useCallback(() => {
+    if (bossCombat.phase !== "charging") return;
+    playBoop();
+    setBossCombat((c) => ({ ...c, phase: "staggered", tick: 0 }));
+    setCustomer((prev) => prev && prev.isBoss ? { ...prev, reaction: "BLOCKED!" } : prev);
+    setTimeout(() => {
+      setCustomer((prev) => prev && prev.state === "waiting" ? { ...prev, reaction: "" } : prev);
+    }, 700);
+  }, [bossCombat.phase]);
+
+  // Chase driver — move minions and check end condition (all caught or timer
+  // expires) from inside the setInterval callback (not in effect body).
+  useEffect(() => {
+    if (phase !== "chase") return;
+    const interval = setInterval(() => {
+      setChaseTick((t) => t + 1);
+      setChaseMinions((prev) => {
+        const moved = prev.map((m) => {
+          if (m.caught) return m;
+          let nx = m.x + m.vx;
+          if (nx > W + 10) nx = -10;
+          return { ...m, x: nx };
+        });
+        const allCaught = moved.length > 0 && moved.every((m) => m.caught);
+        // Read the latest tick via a setter callback to avoid stale closure
+        setChaseTick((t) => {
+          const timerExpired = t >= 300;
+          if (allCaught || timerExpired) {
+            const caughtCount = moved.filter((m) => m.caught).length;
+            const reward = caughtCount * 25;
+            if (reward > 0) {
+              playCoinSound();
+              if (location === "alien-planet") {
+                setAlienCoins((g) => {
+                  const n = g + reward;
+                  window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+                  return n;
+                });
+              } else {
+                setEarthCoins((g) => {
+                  const n = g + reward;
+                  window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+                  return n;
+                });
+              }
+            }
+            clearInterval(interval);
+            setChaseMinions([]);
+            
+            chaseResumeRef.current = null;
+            setPhase("playing");
+            return 0;
+          }
+          return t;
+        });
+        return moved;
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase, location]);
+
+  // Chase canvas tap handler — catch a minion
+  const handleChaseTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      setChaseMinions((prev) => {
+        let caughtAny = false;
+        const next = prev.map((m) => {
+          if (m.caught) return m;
+          if (Math.abs(m.x - gx) < 7 && Math.abs(m.y - gy) < 10) {
+            caughtAny = true;
+            return { ...m, caught: true };
+          }
+          return m;
+        });
+        if (caughtAny) playCoinSound();
+        return next;
+      });
+    },
+    []
+  );
+
+  // Warp drive — triggered from the UI during a journey cutscene.
+  const handleWarp = useCallback(() => {
+    if (phase !== "cutscene") return;
+    if (cutsceneType !== "journey-out" && cutsceneType !== "journey-back") return;
+    if (warpActive) return;
+    playDing();
+    setWarpActive(true);
+    setWarpTick(0);
+  }, [phase, cutsceneType, warpActive]);
+
+  // Warp animation driver — stretched-star animation then transitions to landing
+  // (with a 25% chance to detour into the dinosaur timeline instead).
+  useEffect(() => {
+    if (!warpActive) return;
+    const interval = setInterval(() => {
+      setWarpTick((t) => {
+        const next = t + 1;
+        if (next >= 80) {
+          // End warp
+          setWarpActive(false);
+          const isOut = cutsceneType === "journey-out";
+          if (Math.random() < 0.25) {
+            // surprise! dinosaur timeline detour
+            setBlackholeReturnTo(isOut ? "alien" : "earth");
+            setBlackholeBonus(0);
+            setBlackholeMessage(null);
+            setCutsceneType(null);
+            setBlackholeScene("dino-intro");
+            setBlackholeTick(0);
+            setPhase("blackhole");
+          } else {
+            setCutsceneType(isOut ? "landing-alien" : "landing-earth");
+            setCutsceneTick(0);
+          }
+          return 0;
+        }
+        return next;
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [warpActive, cutsceneType]);
 
   // Pick a dialogue that hasn't been seen recently
   const pickDialogue = useCallback((target: "customer" | "scoopy") => {
@@ -4346,11 +4825,13 @@ export default function IceCreamGame() {
           onClick={
             phase === "street" ? handleStreetTap
             : phase === "shop" ? handleShopTap
+            : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
           onTouchStart={
             phase === "street" ? handleStreetTap
             : phase === "shop" ? handleShopTap
+            : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
           style={{
@@ -4782,6 +5263,66 @@ export default function IceCreamGame() {
         );
       })()}
 
+      {/* Boss DEFEND overlay — appears while the boss is charging a special */}
+      {phase === "playing" && customer?.isBoss && bossCombat.phase === "charging" && bossCombat.attack && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4 text-center"
+          style={{
+            fontFamily: "monospace",
+            background: `linear-gradient(180deg, #200008, ${BOSS_ATTACKS[bossCombat.attack].color})`,
+            borderColor: BOSS_ATTACKS[bossCombat.attack].color,
+            color: "#FFF",
+            animation: "pulse 0.4s ease-in-out infinite alternate",
+          }}>
+          <p className="font-bold text-lg mb-2">
+            {BOSS_ATTACKS[bossCombat.attack].text} incoming!
+          </p>
+          <button onClick={handleDefend}
+            className="w-full py-3 rounded-xl font-bold text-xl transition-all active:scale-95 border-b-4"
+            style={{
+              background: "linear-gradient(180deg, #FFD080, #FF8040)",
+              borderBottomColor: "#803010", color: "#FFF",
+              textShadow: "1px 1px 0 #802010",
+            }}>
+            DEFEND! {"\u{1F6E1}\uFE0F"}
+          </button>
+          <p className="text-xs mt-1" style={{ opacity: 0.8 }}>
+            tap before the charge lands or eat the hit
+          </p>
+        </div>
+      )}
+
+      {/* Warp drive button (only during journey cutscenes, not already warping) */}
+      {phase === "cutscene" && (cutsceneType === "journey-out" || cutsceneType === "journey-back") && !warpActive && !pilotOfferActive && (
+        <div className="w-full max-w-lg flex justify-end mb-2">
+          <button onClick={handleWarp}
+            className="rounded-xl border-b-4 font-bold py-2 px-4 text-sm"
+            style={{
+              fontFamily: "monospace",
+              background: "linear-gradient(180deg, #80E0FF, #4060C0)",
+              borderBottomColor: "#103060", color: "#FFF",
+              textShadow: "1px 1px 0 #102040",
+            }}>
+            {"\u26A1"} WARP DRIVE
+          </button>
+        </div>
+      )}
+
+      {/* Chase phase HUD */}
+      {phase === "chase" && (
+        <div className="w-full max-w-lg rounded-xl p-3 mb-3 text-center border-2"
+          style={{ fontFamily: "monospace", background: "#FFF", borderColor: "#FF4040", color: "#333" }}>
+          <p className="font-bold text-base">
+            CHASE! {chaseMinions.filter((m) => m.caught).length}/{chaseMinions.length} arrested
+            <span className="ml-3" style={{ color: "#888" }}>
+              {Math.max(0, 12 - Math.floor(chaseTick / 25))}s
+            </span>
+          </p>
+          <p className="text-xs" style={{ color: "#666" }}>
+            tap each fleeing minion to arrest. reward: 25G each.
+          </p>
+        </div>
+      )}
+
       {/* Pilot offer overlay (mid-journey) */}
       {pilotOfferActive && (
         <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
@@ -5164,7 +5705,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
