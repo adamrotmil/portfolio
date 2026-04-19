@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Flavor = {
@@ -68,7 +68,10 @@ type BlackholeScene =
   | "clockwork"          // time clocks dialogue
   | "library"            // infinite library dialogue
   | "exit"               // exit portal prompt
-  | "burst-out";         // white-hole burst, auto -> landing
+  | "burst-out"          // white-hole burst, auto -> landing
+  | "dino-intro"         // stepped off saucer into prehistoric Earth
+  | "dino-encounter"     // choice-driven battle scene
+  | "dino-monolith";     // monolith prompt -> burst-out
 
 type Customer = {
   id: number;
@@ -83,6 +86,8 @@ type Customer = {
   waitTicks: number;
   isAlienVIP?: boolean;  // the special alien that arrives via saucer
   isAlien?: boolean;     // regular alien customer on alien planet
+  isBoss?: boolean;      // boss encounter — complex order, hits back on mistakes
+  bossHearts?: number;   // lives remaining during a boss fight
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -566,6 +571,26 @@ function createAlienVIP(id: number): Customer {
   };
 }
 
+// Boss customer — complex order, 3 hearts. Wrong taps cost a heart and coins.
+function createBossCustomer(id: number, location: Location): Customer {
+  const pool = location === "alien-planet" ? ALIEN_FLAVORS : FLAVORS;
+  const tpool = location === "alien-planet" ? ALIEN_TOPPINGS : TOPPINGS;
+  return {
+    id,
+    name: location === "alien-planet" ? "VOID WARLORD" : "FROZEN FURY",
+    spriteIdx: 0,
+    order: Array.from({ length: 5 }, () => pick(pool)),
+    toppings: [pick(tpool), pick(tpool)],
+    x: W + 10,
+    targetX: 28,
+    state: "walking-in",
+    reaction: "",
+    waitTicks: 0,
+    isBoss: true,
+    bossHearts: 3,
+  };
+}
+
 // ── Sound helpers (shared AudioContext for mobile compatibility) ──────────────
 // Mobile browsers require AudioContext to be created/resumed during a user gesture.
 // We create ONE shared context on first interaction and reuse it for all sounds.
@@ -672,37 +697,93 @@ function playCoinSound() {
   } catch { /* */ }
 }
 
-function createMusicContext(): { stop: () => void } | null {
-  const audioCtx = getAudioCtx();
-  if (!audioCtx) return null;
-  const ctx = audioCtx;
-  try {
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.06, ctx.currentTime);
-    masterGain.connect(ctx.destination);
-    const notes = [
+type MusicMode = "earth-shop" | "alien-shop" | "space" | "casino" | "boss" | "dino";
+
+const MUSIC_TRACKS: Record<MusicMode, { notes: number[]; dur: number; wave: OscillatorType; vol: number }> = {
+  "earth-shop": {
+    notes: [
       523, 587, 659, 698, 784, 698, 659, 587,
       523, 659, 784, 880, 784, 659, 523, 440,
       523, 523, 587, 587, 659, 659, 698, 784,
       880, 784, 698, 659, 587, 523, 440, 523,
-    ];
-    const dur = 0.22;
-    const loopLen = notes.length * dur;
+    ],
+    dur: 0.22, wave: "square", vol: 0.06,
+  },
+  "alien-shop": {
+    notes: [
+      392, 466, 554, 587, 659, 554, 466, 392,
+      330, 392, 466, 587, 698, 587, 466, 392,
+      349, 415, 494, 554, 622, 554, 494, 415,
+      330, 392, 466, 554, 622, 554, 466, 392,
+    ],
+    dur: 0.26, wave: "triangle", vol: 0.05,
+  },
+  "space": {
+    notes: [
+      220, 0, 277, 0, 330, 0, 392, 0,
+      440, 0, 392, 0, 330, 0, 277, 0,
+      220, 0, 247, 0, 294, 0, 370, 0,
+      440, 0, 370, 0, 294, 0, 247, 0,
+    ],
+    dur: 0.3, wave: "sine", vol: 0.05,
+  },
+  "casino": {
+    notes: [
+      659, 659, 784, 659, 523, 659, 784, 880,
+      784, 659, 523, 440, 523, 659, 784, 880,
+      988, 880, 784, 659, 784, 880, 988, 784,
+      659, 523, 440, 523, 659, 784, 659, 523,
+    ],
+    dur: 0.18, wave: "square", vol: 0.055,
+  },
+  "boss": {
+    notes: [
+      147, 147, 175, 165, 147, 175, 220, 196,
+      147, 147, 175, 165, 147, 196, 220, 247,
+      165, 165, 196, 185, 165, 196, 247, 220,
+      165, 165, 196, 185, 165, 220, 247, 294,
+    ],
+    dur: 0.2, wave: "sawtooth", vol: 0.05,
+  },
+  "dino": {
+    notes: [
+      110, 0, 147, 165, 110, 0, 147, 165,
+      131, 0, 165, 196, 131, 0, 165, 196,
+      165, 147, 131, 110, 165, 147, 131, 110,
+      110, 110, 131, 131, 147, 147, 110, 82,
+    ],
+    dur: 0.24, wave: "sawtooth", vol: 0.05,
+  },
+};
+
+// Starts a looped track of the given mode. Returns a stop() handle that
+// smoothly fades out the master gain.
+function createMusicContext(mode: MusicMode = "earth-shop"): { stop: () => void } | null {
+  const audioCtx = getAudioCtx();
+  if (!audioCtx) return null;
+  const ctx = audioCtx;
+  try {
+    const cfg = MUSIC_TRACKS[mode];
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(cfg.vol, ctx.currentTime);
+    masterGain.connect(ctx.destination);
+    const loopLen = cfg.notes.length * cfg.dur;
     let stopped = false;
     function scheduleLoop(t: number) {
       if (stopped) return;
-      notes.forEach((freq, i) => {
+      cfg.notes.forEach((freq, i) => {
+        if (freq <= 0) return; // rest
         const osc = ctx.createOscillator();
         const g = ctx.createGain();
         osc.connect(g); g.connect(masterGain);
-        osc.type = "square";
-        const nt = t + i * dur;
+        osc.type = cfg.wave;
+        const nt = t + i * cfg.dur;
         osc.frequency.setValueAtTime(freq, nt);
         g.gain.setValueAtTime(0, nt);
         g.gain.linearRampToValueAtTime(0.4, nt + 0.02);
-        g.gain.linearRampToValueAtTime(0.2, nt + dur * 0.5);
-        g.gain.linearRampToValueAtTime(0, nt + dur * 0.95);
-        osc.start(nt); osc.stop(nt + dur);
+        g.gain.linearRampToValueAtTime(0.2, nt + cfg.dur * 0.5);
+        g.gain.linearRampToValueAtTime(0, nt + cfg.dur * 0.95);
+        osc.start(nt); osc.stop(nt + cfg.dur);
       });
       setTimeout(() => scheduleLoop(t + loopLen), (loopLen - 1) * 1000);
     }
@@ -861,6 +942,57 @@ function drawCustomerSprite(ctx: CanvasRenderingContext2D, x: number, y: number,
   // Cheek blush
   px(ctx, x - 6, y + bobY, 2, 2, "#FFB0B0");
   px(ctx, x + 5, y + bobY, 2, 2, "#FFB0B0");
+}
+
+// Boss — larger, darker palette with horns + glowing eyes. Still readable
+// at pixel scale so it slots into the existing scene.
+function drawBossSprite(ctx: CanvasRenderingContext2D, x: number, y: number, walking: boolean, tick: number) {
+  const pal = { body: "#A0202A", accent: "#5E1014", eyes: "#FFE040" };
+  const bobY = walking ? Math.floor(Math.sin(Date.now() / 200) * 2) : 0;
+  const legAnim = walking ? Math.floor(Math.sin(Date.now() / 150)) : 0;
+  // Bigger shadow
+  px(ctx, x - 7, y + 14, 15, 2, "rgba(0,0,0,0.3)");
+  // Feet
+  px(ctx, x - 4, y + 11 + bobY + legAnim, 3, 3, pal.accent);
+  px(ctx, x + 2, y + 11 + bobY - legAnim, 3, 3, pal.accent);
+  // Body — bigger ellipse
+  for (let dy = -12; dy <= 10; dy++) {
+    const progress = (dy + 12) / 22;
+    const halfW = Math.round(9 * Math.sin(progress * Math.PI));
+    if (halfW <= 0) continue;
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const edge = Math.abs(dx) === halfW;
+      px(ctx, x + dx, y + dy + bobY, 1, 1, edge ? pal.accent : pal.body);
+    }
+  }
+  // Smoldering highlight stripe
+  for (let dy = -9; dy <= -4; dy++) {
+    px(ctx, x - 4, y + dy + bobY, 2, 1, "#E04040");
+  }
+  // Arms (with claws)
+  px(ctx, x - 9, y + 1 + bobY, 2, 3, pal.accent);
+  px(ctx, x - 10, y + 4 + bobY, 1, 1, "#FFF");
+  px(ctx, x + 8, y + 1 + bobY, 2, 3, pal.accent);
+  px(ctx, x + 10, y + 4 + bobY, 1, 1, "#FFF");
+  // Glowing eyes — pulse
+  const glow = (Math.floor(tick / 8) % 2) ? 1 : 0;
+  px(ctx, x - 4, y - 4 + bobY, 3, 3, pal.eyes);
+  px(ctx, x - 4, y - 4 + bobY, 1, 1, glow ? "#FFFFFF" : "#FFE040");
+  px(ctx, x + 2, y - 4 + bobY, 3, 3, pal.eyes);
+  px(ctx, x + 2, y - 4 + bobY, 1, 1, glow ? "#FFFFFF" : "#FFE040");
+  // Sinister mouth with fangs
+  px(ctx, x - 2, y + 2 + bobY, 5, 1, "#200");
+  px(ctx, x - 2, y + 3 + bobY, 1, 1, "#FFFFFF");
+  px(ctx, x + 2, y + 3 + bobY, 1, 1, "#FFFFFF");
+  // Horns
+  px(ctx, x - 6, y - 10 + bobY, 2, 3, pal.accent);
+  px(ctx, x - 6, y - 11 + bobY, 1, 1, pal.accent);
+  px(ctx, x + 5, y - 10 + bobY, 2, 3, pal.accent);
+  px(ctx, x + 6, y - 11 + bobY, 1, 1, pal.accent);
+  // Flame tufts between horns
+  const flame = Math.floor(Math.sin(tick / 4) * 1);
+  px(ctx, x - 1, y - 10 + flame + bobY, 3, 2, "#FFB020");
+  px(ctx, x, y - 12 + flame + bobY, 1, 1, "#FFE060");
 }
 
 function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, heldItemId: string | null = null) {
@@ -2206,6 +2338,176 @@ function drawExitPortal(ctx: CanvasRenderingContext2D, tick: number) {
   drawText(ctx, "dive in?", W / 2, H - 12, "#FFFFE0", 0.7);
 }
 
+// Prehistoric Earth backdrop — orange sky, volcanic silhouette, jungle ground
+function drawDinoBackdrop(ctx: CanvasRenderingContext2D, tick: number) {
+  // Sky — orange/red gradient with sun
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (y < 14) {
+        px(ctx, x, y, 1, 1, "#5A1820");
+      } else if (y < 30) {
+        px(ctx, x, y, 1, 1, "#A03020");
+      } else if (y < 56) {
+        px(ctx, x, y, 1, 1, "#E06020");
+      } else if (y < 70) {
+        px(ctx, x, y, 1, 1, "#B08030");
+      } else {
+        const stripe = (Math.floor(x / 5) + Math.floor(y / 3)) % 2;
+        px(ctx, x, y, 1, 1, stripe ? "#4A6018" : "#2E3E10");
+      }
+    }
+  }
+  // Distant sun (large, bleary)
+  for (let dy = -5; dy <= 5; dy++) {
+    for (let dx = -5; dx <= 5; dx++) {
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= 5) px(ctx, 100 + dx, 28 + dy, 1, 1, d > 4 ? "#FFD060" : "#FFFFA0");
+    }
+  }
+  // Volcano silhouette
+  for (let x = 10; x < 50; x++) {
+    const h = Math.max(0, 18 - Math.abs(x - 30));
+    for (let y = 0; y < h; y++) {
+      px(ctx, x, 56 - y, 1, 1, y < 3 ? "#FF8030" : "#2A1008");
+    }
+  }
+  // Ash plume
+  for (let i = 0; i < 6; i++) {
+    const ax = 30 + Math.floor(Math.sin((tick + i * 4) / 8) * 3);
+    const ay = 34 - i * 2;
+    px(ctx, ax, ay, 2, 2, i < 3 ? "#604030" : "#404040");
+  }
+  // Palm trees
+  [18, 78, 112].forEach((tx, i) => {
+    // Trunk
+    for (let dy = 0; dy < 14; dy++) px(ctx, tx, 70 - dy, 1, 1, "#4A2810");
+    px(ctx, tx + 1, 64, 1, 1, "#4A2810");
+    // Fronds
+    const sway = Math.floor(Math.sin((tick + i * 10) / 14) * 1);
+    for (let a = 0; a < 5; a++) {
+      const fx = tx + Math.floor(Math.cos(a) * 4) + sway;
+      const fy = 58 + Math.floor(Math.sin(a) * 2);
+      px(ctx, fx, fy, 2, 2, "#2E8030");
+      px(ctx, fx - 1, fy + 1, 4, 1, "#2E8030");
+    }
+  });
+  // Low grass / fern tufts on ground
+  for (let i = 0; i < 14; i++) {
+    const gx = (i * 11 + Math.floor(tick / 10)) % W;
+    const gy = 75 + (i % 3);
+    px(ctx, gx, gy, 1, 1, "#5E8020");
+    px(ctx, gx + 1, gy - 1, 1, 1, "#5E8020");
+  }
+}
+
+// Cute-scary pixel T-Rex facing the hero
+function drawDinoTRex(ctx: CanvasRenderingContext2D, cx: number, cy: number, tick: number) {
+  const bob = Math.floor(Math.sin(tick / 10) * 1);
+  const pal = { body: "#3E7020", accent: "#1E3810", belly: "#BBD080", eye: "#FFE040" };
+  // Tail
+  for (let dx = -18; dx <= -8; dx++) {
+    const w = Math.max(1, 4 - Math.abs(dx + 13));
+    for (let dy = -w; dy <= w; dy++) px(ctx, cx + dx, cy + dy + bob, 1, 1, pal.body);
+  }
+  // Body
+  for (let dy = -6; dy <= 6; dy++) {
+    const progress = (dy + 6) / 12;
+    const halfW = Math.round(7 * Math.sin(progress * Math.PI));
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const edge = Math.abs(dx) === halfW;
+      const belly = dy > 0 && Math.abs(dx) < halfW - 2;
+      px(ctx, cx + dx, cy + dy + bob, 1, 1, edge ? pal.accent : belly ? pal.belly : pal.body);
+    }
+  }
+  // Head (forward-facing, slightly left)
+  for (let dy = -4; dy <= 3; dy++) {
+    for (let dx = 4; dx <= 13; dx++) {
+      const halfH = 4 - Math.abs(dx - 8) / 2;
+      if (Math.abs(dy) <= halfH) {
+        const edge = Math.abs(dy) === Math.floor(halfH);
+        px(ctx, cx + dx, cy + dy + bob, 1, 1, edge ? pal.accent : pal.body);
+      }
+    }
+  }
+  // Jaw teeth
+  for (let dx = 8; dx <= 12; dx++) {
+    if (dx % 2 === 0) px(ctx, cx + dx, cy + 3 + bob, 1, 1, "#FFFFFF");
+  }
+  // Eye
+  px(ctx, cx + 9, cy - 2 + bob, 2, 2, pal.eye);
+  px(ctx, cx + 9, cy - 2 + bob, 1, 1, "#000");
+  // Tiny arms
+  px(ctx, cx + 3, cy + 1 + bob, 2, 3, pal.accent);
+  px(ctx, cx + 3, cy + 4 + bob, 1, 1, "#FFFFFF");
+  // Legs
+  px(ctx, cx - 3, cy + 6 + bob, 3, 5, pal.body);
+  px(ctx, cx + 1, cy + 6 + bob, 3, 5, pal.body);
+  // Ground shadow
+  px(ctx, cx - 12, cy + 12, 22, 2, "rgba(0,0,0,0.25)");
+}
+
+// Obsidian monolith, tall and humming
+function drawMonolith(ctx: CanvasRenderingContext2D, cx: number, cy: number, tick: number) {
+  // Base
+  for (let dy = 0; dy < 40; dy++) {
+    for (let dx = -5; dx <= 5; dx++) {
+      const edge = Math.abs(dx) === 5 || dy === 0 || dy === 39;
+      px(ctx, cx + dx, cy + dy, 1, 1, edge ? "#080010" : "#101028");
+    }
+  }
+  // Etched glyph
+  const glyphPulse = Math.floor(tick / 8) % 4;
+  const glyphY = cy + 18;
+  if (glyphPulse === 0) {
+    px(ctx, cx - 1, glyphY, 3, 1, "#80FFE0");
+    px(ctx, cx, glyphY - 2, 1, 5, "#80FFE0");
+  } else if (glyphPulse === 1) {
+    for (let i = -2; i <= 2; i++) px(ctx, cx + i, glyphY + Math.abs(i) - 2, 1, 1, "#80E0FF");
+  } else if (glyphPulse === 2) {
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (Math.abs(dx) + Math.abs(dy) === 2) px(ctx, cx + dx, glyphY + dy, 1, 1, "#FFE080");
+    }
+  }
+  // Glow outline
+  for (let dy = 0; dy < 40; dy++) {
+    if ((dy + tick) % 5 === 0) {
+      px(ctx, cx - 6, cy + dy, 1, 1, "#6080FF");
+      px(ctx, cx + 6, cy + dy, 1, 1, "#6080FF");
+    }
+  }
+  // Floating particles
+  for (let i = 0; i < 5; i++) {
+    const px0 = cx + Math.floor(Math.sin((tick + i * 6) / 6) * 8);
+    const py0 = cy + ((tick + i * 11) % 44) - 2;
+    px(ctx, px0, py0, 1, 1, "#FFFFFF");
+  }
+}
+
+function drawDinoIntro(ctx: CanvasRenderingContext2D, tick: number) {
+  drawDinoBackdrop(ctx, tick);
+  // Hero on the left looking right
+  drawHero(ctx, 30, 82, false, false, null);
+  // Distant T-Rex
+  drawDinoTRex(ctx, 96, 70, tick);
+  drawText(ctx, "PREHISTORIC EARTH", W / 2, 13, "#FFE080", 0.7);
+}
+
+function drawDinoEncounter(ctx: CanvasRenderingContext2D, tick: number) {
+  drawDinoBackdrop(ctx, tick);
+  drawHero(ctx, 26, 82, true, false, null);
+  drawDinoTRex(ctx, 80, 72, tick);
+  // Second dino, smaller (raptor-ish), closer
+  drawDinoTRex(ctx, 108, 76, tick + 40);
+  drawText(ctx, "ENCOUNTER", W / 2, 13, "#FF8040", 0.75);
+}
+
+function drawDinoMonolithScene(ctx: CanvasRenderingContext2D, tick: number) {
+  drawDinoBackdrop(ctx, tick);
+  drawHero(ctx, 40, 82, false, false, null);
+  drawMonolith(ctx, 90, 42, tick);
+  drawText(ctx, "MONOLITH", W / 2, 13, "#80E0FF", 0.75);
+}
+
 function drawBurstOut(ctx: CanvasRenderingContext2D, tick: number) {
   // White flash giving way to space
   if (tick < 25) {
@@ -2366,6 +2668,11 @@ export default function IceCreamGame() {
   const [slotMessage, setSlotMessage] = useState<string | null>(null);
   const slotIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Boss state
+  const [shakeTick, setShakeTick] = useState(0);
+  const lastBossAtRef = useRef(0);
+  const pendingBossRef = useRef(false);
+
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
   const [pilotOfferActive, setPilotOfferActive] = useState(false);
@@ -2406,11 +2713,19 @@ export default function IceCreamGame() {
       drawGoldCoin(ctx, 52, 12, 2);
       drawText(ctx, `${totalGold}`, 62, 13, themeCoin, 0.65);
 
+      // Hearts: show boss lives during boss fight, otherwise decorative trio
       const heartX = 105;
+      const bossActive = customer?.isBoss;
+      const bossHearts = customer?.bossHearts ?? 3;
       for (let i = 0; i < 3; i++) {
-        px(ctx, heartX + i * 6, 10, 2, 2, "#FF4444");
-        px(ctx, heartX + i * 6 + 2, 10, 2, 2, "#FF4444");
-        px(ctx, heartX + i * 6 + 1, 12, 2, 2, "#FF4444");
+        const filled = bossActive ? i < bossHearts : true;
+        const color = filled ? (bossActive ? "#FF1040" : "#FF4444") : "#4A1820";
+        px(ctx, heartX + i * 6, 10, 2, 2, color);
+        px(ctx, heartX + i * 6 + 2, 10, 2, 2, color);
+        px(ctx, heartX + i * 6 + 1, 12, 2, 2, color);
+      }
+      if (bossActive && customer?.state === "waiting") {
+        drawText(ctx, "BOSS", W / 2, 13, "#FF4040", 0.7);
       }
     }
 
@@ -2429,7 +2744,15 @@ export default function IceCreamGame() {
 
       const cust = customer;
       if (cust) {
-        if (cust.isAlien || cust.isAlienVIP) {
+        if (cust.isBoss) {
+          drawBossSprite(
+            ctx,
+            Math.round(cust.x),
+            74,
+            cust.state === "walking-in" || cust.state === "walking-out",
+            cutsceneTick,
+          );
+        } else if (cust.isAlien || cust.isAlienVIP) {
           drawAlienSprite(
             ctx,
             Math.round(cust.x),
@@ -2582,13 +2905,16 @@ export default function IceCreamGame() {
       if (!ctx) return;
       const t = blackholeTick;
       switch (blackholeScene) {
-        case "pull-in":     drawBlackHolePullIn(ctx, t); break;
-        case "fork":        drawDimensionFork(ctx, t); break;
-        case "mirrors":     drawMirrorYou(ctx, t); break;
-        case "clockwork":   drawClockNebula(ctx, t); break;
-        case "library":     drawInfiniteLibrary(ctx, t); break;
-        case "exit":        drawExitPortal(ctx, t); break;
-        case "burst-out":   drawBurstOut(ctx, t); break;
+        case "pull-in":         drawBlackHolePullIn(ctx, t); break;
+        case "fork":            drawDimensionFork(ctx, t); break;
+        case "mirrors":         drawMirrorYou(ctx, t); break;
+        case "clockwork":       drawClockNebula(ctx, t); break;
+        case "library":         drawInfiniteLibrary(ctx, t); break;
+        case "exit":            drawExitPortal(ctx, t); break;
+        case "burst-out":       drawBurstOut(ctx, t); break;
+        case "dino-intro":      drawDinoIntro(ctx, t); break;
+        case "dino-encounter":  drawDinoEncounter(ctx, t); break;
+        case "dino-monolith":   drawDinoMonolithScene(ctx, t); break;
       }
     }
 
@@ -2725,9 +3051,20 @@ export default function IceCreamGame() {
     }
     const timer = setTimeout(() => {
       customerIdRef.current += 1;
-      const c = location === "alien-planet"
-        ? createAlienCustomer(customerIdRef.current, level)
-        : createCustomer(customerIdRef.current, level);
+      // Boss every 7 served customers (Earth or alien planet home shop)
+      const bossDue = customersServed > 0
+        && customersServed % 7 === 0
+        && customersServed > lastBossAtRef.current;
+      let c: Customer;
+      if (bossDue) {
+        c = createBossCustomer(customerIdRef.current, location);
+        lastBossAtRef.current = customersServed;
+        pendingBossRef.current = true;
+      } else {
+        c = location === "alien-planet"
+          ? createAlienCustomer(customerIdRef.current, level)
+          : createCustomer(customerIdRef.current, level);
+      }
       setScoopsDone(0);
       setConeScoops([]);
       setToppingsDone(0);
@@ -2735,7 +3072,7 @@ export default function IceCreamGame() {
       walkCustomerIn(c);
     }, 800);
     return () => clearTimeout(timer);
-  }, [customer, phase, level, walkCustomerIn, location, pendingAlien]);
+  }, [customer, phase, level, walkCustomerIn, location, pendingAlien, customersServed]);
 
   // Level up every 3 customers
   // Gold coin animation aging
@@ -2754,8 +3091,10 @@ export default function IceCreamGame() {
   const completeOrder = useCallback(() => {
     if (!customer) return;
     const isVIP = !!customer.isAlienVIP;
-    const coinCount = (1 + customer.order.length + customer.toppings.length) * (isVIP ? 3 : 1);
-    const pointsEarned = (100 + customer.toppings.length * 25) * (isVIP ? 3 : 1);
+    const isBoss = !!customer.isBoss;
+    const bonusMult = isBoss ? 5 : isVIP ? 3 : 1;
+    const coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult + (isBoss ? 100 : 0);
+    const pointsEarned = (100 + customer.toppings.length * 25) * bonusMult;
     const nextScore = score + pointsEarned;
     setScore(nextScore);
     if (nextScore > highScore) {
@@ -2797,6 +3136,7 @@ export default function IceCreamGame() {
     setTimeout(() => {
       setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS) } : prev);
     }, 600);
+    if (isBoss) pendingBossRef.current = false;
     // VIP alien: trigger offer dialogue instead of walking out
     if (isVIP) {
       setTimeout(() => {
@@ -2811,6 +3151,56 @@ export default function IceCreamGame() {
       }, 1400);
     }
   }, [customer, highScore, score, location, alienEncountered]);
+
+  // Boss strike-back: screen shake + coin penalty + heart tick. Returns true if
+  // the boss depleted and walked out.
+  const bossStrikeBack = useCallback(() => {
+    playWrong();
+    setShakeTick(10);
+    // -5G penalty
+    if (location === "alien-planet") {
+      setAlienCoins((g) => {
+        const n = Math.max(0, g - 5);
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+    } else {
+      setEarthCoins((g) => {
+        const n = Math.max(0, g - 5);
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+    }
+    let defeated = false;
+    setCustomer((prev) => {
+      if (!prev || !prev.isBoss) return prev;
+      const hearts = Math.max(0, (prev.bossHearts ?? 3) - 1);
+      if (hearts === 0) {
+        defeated = true;
+        // Bigger coin penalty when boss wins
+        if (location === "alien-planet") {
+          setAlienCoins((g) => {
+            const n = Math.max(0, g - 30);
+            window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+            return n;
+          });
+        } else {
+          setEarthCoins((g) => {
+            const n = Math.max(0, g - 30);
+            window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+            return n;
+          });
+        }
+        return { ...prev, bossHearts: 0, reaction: "BOSS WINS!", state: "walking-out" };
+      }
+      return { ...prev, bossHearts: hearts, reaction: "STRIKE!" };
+    });
+    setTimeout(() => {
+      setCustomer((prev) => prev && prev.state === "waiting" ? { ...prev, reaction: "" } : prev);
+    }, 600);
+    if (defeated) pendingBossRef.current = false;
+    return defeated;
+  }, [location]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -2832,6 +3222,8 @@ export default function IceCreamGame() {
             completeOrder();
           }
         }
+      } else if (customer.isBoss) {
+        bossStrikeBack();
       } else {
         playWrong();
         setCustomer((prev) => prev ? { ...prev, reaction: "Nope!" } : prev);
@@ -2840,7 +3232,7 @@ export default function IceCreamGame() {
         }, 600);
       }
     },
-    [customer, scoopsDone, coneScoops, toppingsPhase, completeOrder]
+    [customer, scoopsDone, coneScoops, toppingsPhase, completeOrder, bossStrikeBack]
   );
 
   // Tap a topping
@@ -2854,6 +3246,8 @@ export default function IceCreamGame() {
         const newDone = toppingsDone + 1;
         setToppingsDone(newDone);
         if (newDone === customer.toppings.length) completeOrder();
+      } else if (customer.isBoss) {
+        bossStrikeBack();
       } else {
         playWrong();
         setCustomer((prev) => prev ? { ...prev, reaction: "Nope!" } : prev);
@@ -2862,7 +3256,7 @@ export default function IceCreamGame() {
         }, 600);
       }
     },
-    [customer, toppingsPhase, toppingsDone, completeOrder]
+    [customer, toppingsPhase, toppingsDone, completeOrder, bossStrikeBack]
   );
 
   const startGame = useCallback(async () => {
@@ -2884,6 +3278,9 @@ export default function IceCreamGame() {
     setHeroX(30); heroDirRef.current = 0; setStreetTick(0); setStreetNpcs([]);
     setSlotReels(["\u{1F352}", "\u{1F34B}", "\u{1F514}"]); setSlotSpinning(false); setSlotMessage(null);
     if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
+    setShakeTick(0);
+    lastBossAtRef.current = 0;
+    pendingBossRef.current = false;
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -2894,10 +3291,39 @@ export default function IceCreamGame() {
     setMusicOn(true);
   }, []);
 
+  // Derive music mode from current context (no state — avoids cascade).
+  const musicMode: MusicMode = useMemo(() => {
+    if (customer?.isBoss && phase === "playing") return "boss";
+    if (phase === "blackhole" && (blackholeScene === "dino-intro" || blackholeScene === "dino-encounter" || blackholeScene === "dino-monolith")) return "dino";
+    if (phase === "blackhole") return "space";
+    if (phase === "cutscene" || phase === "pilot") return "space";
+    if (phase === "shop" && currentShopId) {
+      const s = shopById(currentShopId);
+      if (s?.type === "casino") return "casino";
+      return location === "alien-planet" ? "alien-shop" : "earth-shop";
+    }
+    if (location === "alien-planet") return "alien-shop";
+    return "earth-shop";
+  }, [customer, phase, location, currentShopId, blackholeScene]);
+
   const toggleMusic = useCallback(() => {
     if (musicRef.current) { musicRef.current.stop(); musicRef.current = null; setMusicOn(false); }
-    else { musicRef.current = createMusicContext(); setMusicOn(true); }
-  }, []);
+    else { musicRef.current = createMusicContext(musicMode); setMusicOn(true); }
+  }, [musicMode]);
+
+  // When mode changes and music is on, swap the track.
+  useEffect(() => {
+    if (!musicOn) return;
+    if (musicRef.current) { musicRef.current.stop(); }
+    musicRef.current = createMusicContext(musicMode);
+  }, [musicMode, musicOn]);
+
+  // Screen-shake tick-down during boss strikes
+  useEffect(() => {
+    if (shakeTick <= 0) return;
+    const t = setTimeout(() => setShakeTick((s) => Math.max(0, s - 1)), 40);
+    return () => clearTimeout(t);
+  }, [shakeTick]);
 
   // Pick a dialogue that hasn't been seen recently
   const pickDialogue = useCallback((target: "customer" | "scoopy") => {
@@ -3485,7 +3911,8 @@ export default function IceCreamGame() {
       setBlackholeTick((t) => {
         const next = t + 1;
         if (blackholeScene === "pull-in" && next >= 110) {
-          setBlackholeScene("fork");
+          // 30% chance to get flung to prehistoric Earth instead of the fork
+          setBlackholeScene(Math.random() < 0.3 ? "dino-intro" : "fork");
           return 0;
         }
         if (blackholeScene === "burst-out" && next >= 80) {
@@ -3723,6 +4150,33 @@ export default function IceCreamGame() {
     setBlackholeTick(0);
   }, []);
 
+  // Dino timeline choices. Each adjusts the coin bonus (can be negative for
+  // risky choices) then advances to the next scene.
+  const handleDinoChoice = useCallback((bonus: number, msg: string, next: BlackholeScene) => {
+    if (bonus > 0) { playCoinSound(); setBlackholeBonus((b) => b + bonus); }
+    else if (bonus < 0) {
+      playWrong();
+      setBlackholeBonus((b) => Math.max(0, b + bonus));
+      setShakeTick(10);
+    } else {
+      playBoop();
+    }
+    setBlackholeMessage(msg);
+    // Advance after a short beat so the player can read the outcome
+    setTimeout(() => {
+      setBlackholeMessage(null);
+      setBlackholeScene(next);
+      setBlackholeTick(0);
+    }, 1200);
+  }, []);
+
+  const handleMonolithTouch = useCallback(() => {
+    playDing();
+    setBlackholeMessage(null);
+    setBlackholeScene("burst-out");
+    setBlackholeTick(0);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
@@ -3881,6 +4335,9 @@ export default function IceCreamGame() {
           boxShadow: "0 6px 0 #C44569, 0 8px 20px rgba(196,69,105,0.2)",
           width: CANVAS_W,
           maxWidth: "100%",
+          transform: shakeTick > 0
+            ? `translate(${(shakeTick % 2 === 0 ? -1 : 1) * (shakeTick * 0.7)}px, ${((shakeTick * 3) % 2 === 0 ? -1 : 1) * (shakeTick * 0.4)}px)`
+            : "none",
         }}>
         <canvas
           ref={canvasRef}
@@ -4598,6 +5055,81 @@ export default function IceCreamGame() {
             <p className="text-lg font-bold" style={{ color: "#80FFA0", letterSpacing: 2 }}>
               BURSTING BACK TO OUR UNIVERSE...
             </p>
+          )}
+
+          {blackholeScene === "dino-intro" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                {blackholeMessage ?? (
+                  <>You stagger off a saucer-shaped crater. The air is <em>hot</em>. A volcano smolders in the distance. Something large is roaring.</>
+                )}
+              </p>
+              {!blackholeMessage && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button onClick={() => handleDinoChoice(0, "You sprint for cover. A fern tickles your antenna.", "dino-encounter")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FFE080, #C0A040)", borderBottomColor: "#806020", color: "#333" }}>
+                    RUN
+                  </button>
+                  <button onClick={() => handleDinoChoice(0, "You grab a rock. Primitive, but it'll do.", "dino-encounter")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FF9060, #C04020)", borderBottomColor: "#601010", color: "#FFF" }}>
+                    FIGHT
+                  </button>
+                  <button onClick={() => handleDinoChoice(0, "You crouch behind the fern. They'll never see you. Probably.", "dino-encounter")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #80E080, #408040)", borderBottomColor: "#204020", color: "#FFF" }}>
+                    HIDE
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {blackholeScene === "dino-encounter" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                {blackholeMessage ?? (
+                  <>A T-REX stomps closer. It sniffs. Its eye is the size of a scoop. It looks <em>hungry</em>.</>
+                )}
+              </p>
+              {!blackholeMessage && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button onClick={() => handleDinoChoice(40, "You throw a cold scoop. It sticks to his forehead. He blinks. Confused. You slip away. +40G", "dino-monolith")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #B0E0FF, #5070D0)", borderBottomColor: "#2060A0", color: "#FFF" }}>
+                    THROW SCOOP
+                  </button>
+                  <button onClick={() => handleDinoChoice(-15, "You grab his tiny arm. He notices. You flee. Bruises: yes. -15G, but still alive.", "dino-monolith")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FF9060, #C04020)", borderBottomColor: "#601010", color: "#FFF" }}>
+                    GRAB TAIL
+                  </button>
+                  <button onClick={() => handleDinoChoice(25, "You sprinkle sprinkles as a trail. He follows them. A small victory. +25G", "dino-monolith")}
+                    className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{ background: "linear-gradient(180deg, #FFB0E8, #C070B0)", borderBottomColor: "#603060", color: "#FFF" }}>
+                    SPRINKLE TRAIL
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {blackholeScene === "dino-monolith" && (
+            <>
+              <p className="mb-3 leading-relaxed">
+                A smooth black <strong>MONOLITH</strong> hums in a clearing. Glyphs pulse across its face.
+                It knows your ship. It knows your timeline.
+              </p>
+              <p className="mb-3 text-sm" style={{ color: "#C0E0FF" }}>
+                You carry <strong>+{blackholeBonus}G</strong> in time-coins.
+              </p>
+              <button onClick={handleMonolithTouch}
+                className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #80E0FF, #4060B0)", borderBottomColor: "#103060", color: "#FFF" }}>
+                TOUCH THE MONOLITH {"\u{1F300}"}
+              </button>
+            </>
           )}
         </div>
       )}
