@@ -2,13 +2,30 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export function useReveal(threshold = 0.12) {
+// rootMargin pre-triggers the reveal well before the element enters the
+// viewport, so by the time the user scrolls to it the fade has already
+// finished. Threshold stays low because rootMargin is doing the work.
+const REVEAL_ROOT_MARGIN = "240px 0px";
+const REVEAL_THRESHOLD = 0.01;
+
+export function useReveal(threshold = REVEAL_THRESHOLD) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Users who have reduced motion get instant visibility — no staged
+    // fade at all.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
+
     const obs = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) {
@@ -16,7 +33,7 @@ export function useReveal(threshold = 0.12) {
           obs.unobserve(el);
         }
       },
-      { threshold }
+      { threshold, rootMargin: REVEAL_ROOT_MARGIN },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -42,8 +59,8 @@ export default function Reveal({
       className={className}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(28px)",
-        transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+        transform: visible ? "translateY(0)" : "translateY(14px)",
+        transition: `opacity 0.45s cubic-bezier(0.2,0.8,0.2,1) ${delay}s, transform 0.45s cubic-bezier(0.2,0.8,0.2,1) ${delay}s`,
       }}
     >
       {children}

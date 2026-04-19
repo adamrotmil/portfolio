@@ -109,7 +109,8 @@ export default function Lab() {
                       src={assetPath(item.thumbnail)}
                       alt=""
                       className="w-full h-full block object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                      loading="lazy"
+                      loading="eager"
+                      decoding="async"
                     />
                   ) : (
                     <div
