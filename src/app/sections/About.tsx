@@ -9,7 +9,7 @@ export default function About() {
       className="py-[clamp(4rem,8vh,7rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto"
     >
       <Reveal>
-        <div className="border-t border-border pt-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           {/* Profile photo */}
           <div className="w-full aspect-[4/5] bg-bg-card rounded-[10px] overflow-hidden">
             <img

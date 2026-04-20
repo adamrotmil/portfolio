@@ -18,20 +18,19 @@ export default function Contact() {
       <div className="py-[clamp(5rem,10vh,8rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto">
         <Reveal>
           <div className="text-center">
-            <p
-              className="mb-6 font-mono text-[0.72rem]"
-              style={{ color: "#0a0a0a" }}
-            >
-              Let&rsquo;s work together
-            </p>
             <h2
               className="mb-8 text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.92]"
               style={{ color: "#0a0a0a" }}
             >
-              <KranaMix
-                text={"LET\u2019S BUILD SOMETHING"}
-                pattern="BAABB ABBAA BABAABBAA"
-              />
+              {/* Split into three KranaMix calls so we can wrap just the
+                  middle word in .wave-black for the callback to the hero
+                  "craft" motif. Patterns are tuned per word, same idea
+                  as the hero wordmark. */}
+              <KranaMix text={"LET\u2019S"} pattern="BAABB" />{" "}
+              <span className="wave-black">
+                <KranaMix text="BUILD" pattern="ABBAA" />
+              </span>{" "}
+              <KranaMix text="SOMETHING" pattern="BABAABBAA" />
             </h2>
             <p
               className="mb-10 font-mono text-[0.85rem] leading-[1.6] max-w-[56ch] mx-auto"
