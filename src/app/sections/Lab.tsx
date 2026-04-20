@@ -54,7 +54,7 @@ export default function Lab() {
 
         <Reveal>
           <p
-            className="font-mono text-[0.82rem] leading-[1.7] max-w-[54ch] mb-8"
+            className="font-mono text-[0.82rem] leading-[1.7] max-w-[66%] mb-8"
             style={{ color: "#0a0a0a" }}
           >
             Experiments in code, design, and AI. Small tools, native interaction

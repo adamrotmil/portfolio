@@ -19,7 +19,7 @@ export default function Contact() {
         <Reveal>
           <div className="text-center">
             <h2
-              className="mb-8 text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.92]"
+              className="mb-16 text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.92]"
               style={{ color: "#0a0a0a" }}
             >
               {/* Split into three KranaMix calls so we can wrap just the
