@@ -83,7 +83,7 @@ export const LAB_ITEMS: LabItem[] = [
       "A real-time crypto chart playground built on Benji Taylor's Liveline — live BTC/ETH/SOL feeds, order book, CVD, and a wild-swings mock market.",
     action: "ticker",
     tech: "Liveline · React · Motion",
-    thumbnail: "/images/lab/ticker-sandbox.svg",
+    thumbnail: "/images/lab/ticker-sandbox.png",
   },
   {
     title: "Table",
