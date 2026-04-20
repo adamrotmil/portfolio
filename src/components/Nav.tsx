@@ -103,27 +103,28 @@ export default function Nav() {
           )}
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — shorter lines + tighter gap so the rotated
+            X fits comfortably inside the pill's rounded right edge. */}
         <button
-          className="md:hidden flex flex-col gap-1.5 p-1.5 ml-1"
+          className="md:hidden flex flex-col gap-1 p-2"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
           aria-expanded={menuOpen}
         >
           <span
-            className="block w-5 h-px bg-text-primary transition-transform"
+            className="block w-[14px] h-px bg-text-primary transition-transform"
             style={{
-              transform: menuOpen ? "rotate(45deg) translateY(4px)" : "none",
+              transform: menuOpen ? "rotate(45deg) translateY(3px)" : "none",
             }}
           />
           <span
-            className="block w-5 h-px bg-text-primary transition-opacity"
+            className="block w-[14px] h-px bg-text-primary transition-opacity"
             style={{ opacity: menuOpen ? 0 : 1 }}
           />
           <span
-            className="block w-5 h-px bg-text-primary transition-transform"
+            className="block w-[14px] h-px bg-text-primary transition-transform"
             style={{
-              transform: menuOpen ? "rotate(-45deg) translateY(-4px)" : "none",
+              transform: menuOpen ? "rotate(-45deg) translateY(-3px)" : "none",
             }}
           />
         </button>

@@ -28,7 +28,7 @@ export default function About() {
             {BIO.map((paragraph, i) => (
               <p
                 key={i}
-                className="font-sans text-[1.02rem] leading-[1.7] text-text-secondary mb-5"
+                className="font-sans text-[1.02rem] leading-[1.7] text-text-primary mb-5"
               >
                 {paragraph}
               </p>
@@ -80,11 +80,13 @@ export default function About() {
                 <span className="font-sans text-[0.92rem] text-text-primary">
                   {TEACHING.role}
                 </span>
+                <br />
                 <a
                   href="https://www.mica.edu/academics/graduate-programs/ux-design-mps/adam-rotmil/"
                   target="_blank"
                   rel="noopener"
-                  className="font-sans text-[0.85rem] text-text-muted ml-2 underline decoration-border hover:text-text-primary transition-colors"
+                  className="font-sans text-[0.9rem] underline decoration-[#FFCB05]/60 underline-offset-[3px] hover:decoration-[#FFCB05] transition-colors"
+                  style={{ color: "#FFCB05" }}
                 >
                   {TEACHING.institution}
                 </a>

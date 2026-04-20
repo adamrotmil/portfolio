@@ -43,7 +43,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "clarvos",
     title: "Clarvos",
-    subtitle: "Agentic AI Ad Platform",
+    subtitle: "Agents for Advertising",
     description:
       "Designed the product vision for an agentic AI platform — from initial MVP through a strategic pivot I proposed, to a rebrand and launch out of stealth.",
     tags: ["AI / Agents", "SaaS", "Video Editor", "Campaign Management"],
@@ -415,7 +415,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "ai-training",
     title: "AI Model Training",
-    subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
+    subtitle: "Evaluating Frontier LLMs",
     description:
       "Improved frontier model behavior through multi-axis LLM evaluation for OpenAI, Google, and others.",
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
@@ -841,7 +841,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "miami",
     title: "My Wellness Research — University of Miami",
-    subtitle: "Clinical Cancer Research Platform",
+    subtitle: "Clinical Cancer Research",
     description:
       "Sole designer of a multi-sided clinical research platform — patient mobile app, health coach dashboard, and research ops system — now used in NIH-funded trials and published in peer-reviewed journals.",
     tags: ["Health Tech", "Research", "Mobile"],
@@ -1227,7 +1227,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "wild-brains",
     title: "Wild Brains",
-    subtitle: "Brain Wearable & Optimization App",
+    subtitle: "Brain Wearable + App",
     description:
       "Helped secure continued investment through end-to-end design of a brain training wearable app.",
     tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback"],
@@ -1489,7 +1489,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "content-studio",
     title: "Content Studio",
-    subtitle: "Cyber Security Training Environment",
+    subtitle: "Cyber Security Lab",
     description:
       "Accelerated cyber training authoring with a modular lab and learning platform.",
     tags: ["Defense", "Enterprise", "Canvas UI", "Design Systems"],
@@ -1587,7 +1587,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "collab-match",
     title: "CollabMatch",
-    subtitle: "Doctor–Pharmacist Collaboration Platform",
+    subtitle: "Networking",
     description:
       "A platform that matches doctors and pharmacists to facilitate collaboration, improving patient outcomes through better coordination between prescribers and dispensers.",
     tags: ["Healthcare", "Platform", "Matching", "Collaboration"],
@@ -1685,7 +1685,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "uscis",
     title: "USCIS",
-    subtitle: "U.S. Citizenship & Immigration Services",
+    subtitle: "U.S. Citizenship & Immigration",
     description:
       "Streamlined identity verification for 5,000+ adjudicators by redesigning USCIS core identity platform.",
     tags: ["GovTech", "DHS", "Enterprise", "Identity & Access"],
@@ -1973,7 +1973,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "t-rowe-price",
     title: "T. Rowe Price",
-    subtitle: "Retail Investment 401(k) Platform",
+    subtitle: "Retail Investment 401(k)",
     description:
       "Reduced support calls by 40% by redesigning 401(k) self-serve and guidance flows.",
     tags: ["Finance", "Enterprise", "Design Leadership"],
@@ -2121,7 +2121,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "benchling",
     title: "Benchling",
-    subtitle: "Life Sciences Marketing Site & Component System",
+    subtitle: "Life Sciences Marketing",
     description:
       "Redesigned the marketing site for a $6B life sciences R&D platform — structuring content strategy, zone diagrams, and a scalable component system built for CMS.",
     tags: ["SaaS", "Biotech", "Component System", "Marketing"],
@@ -2255,7 +2255,7 @@ export const PROJECTS: Project[] = [
   {
     slug: "goldman-sachs",
     title: "Goldman Sachs",
-    subtitle: "Equities & Fixed Income Advisory Platform",
+    subtitle: "Equities + Fixed Income",
     description:
       "Replaced a homegrown spreadsheet system with a scalable strategy advisory platform used by Goldman Sachs financial advisors and registered franchise partners.",
     tags: ["Finance", "Enterprise", "Internal Tools"],
