@@ -20,6 +20,15 @@ function CaseStudyCard({
   const cardTitle =
     study.slug === "miami" ? "My Wellness Research" : study.title;
 
+  // Derive a pastel footer background from each project's brand color.
+  // Mixing ~16% of the brand into warm off-white gives a legible light
+  // tint that distinguishes each card against the dark page bg while
+  // keeping dark text readable inside.
+  const cardBg = `color-mix(in srgb, ${study.color} 16%, #f7f4ec)`;
+  const titleColor = "#0a0a0a";
+  const bodyColor = "rgba(0, 0, 0, 0.62)";
+  const borderColor = "rgba(0, 0, 0, 0.18)";
+
   return (
     <Reveal
       delay={index * 0.08}
@@ -31,7 +40,7 @@ function CaseStudyCard({
         onMouseLeave={() => setHovered(false)}
         className="block no-underline rounded-xl overflow-hidden transition-all duration-400"
         style={{
-          background: "#141415",
+          background: cardBg,
           transform: hovered ? "translateY(-4px)" : "translateY(0)",
           boxShadow: hovered
             ? "0 12px 40px rgba(0,0,0,0.3)"
@@ -83,24 +92,37 @@ function CaseStudyCard({
           )}
         </div>
 
-        {/* Content */}
+        {/* Content — dark text on the pastel footer bg */}
         <div className="p-6 pb-7">
           <div className="flex justify-between items-baseline mb-3 gap-4">
-            <h3 className="text-[1.35rem] leading-[1.05] text-text-primary">
+            <h3
+              className="text-[1.35rem] leading-[1.05]"
+              style={{ color: titleColor }}
+            >
               <KranaMix text={cardTitle} className="uppercase" />
             </h3>
-            <span className="font-mono text-[0.72rem] text-text-primary hidden sm:inline shrink-0">
+            <span
+              className="font-mono text-[0.72rem] hidden sm:inline shrink-0"
+              style={{ color: titleColor }}
+            >
               {study.subtitle}
             </span>
           </div>
-          <p className="font-mono text-[0.82rem] leading-[1.7] text-text-secondary max-w-[54ch] mt-5 mb-6">
+          <p
+            className={`font-mono text-[0.82rem] leading-[1.7] mt-5 mb-6 ${study.featured ? "max-w-[84ch]" : "max-w-[54ch]"}`}
+            style={{ color: bodyColor }}
+          >
             {study.description}
           </p>
           <div className="flex gap-1.5 flex-wrap">
             {study.tags.map((tag) => (
               <span
                 key={tag}
-                className="font-mono text-[0.68rem] text-text-primary px-2 py-1 border border-border rounded-[3px]"
+                className="font-mono text-[0.68rem] px-2 py-1 rounded-[3px]"
+                style={{
+                  color: titleColor,
+                  border: `1px solid ${borderColor}`,
+                }}
               >
                 {tag}
               </span>
