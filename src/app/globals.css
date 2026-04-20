@@ -59,6 +59,58 @@ body {
   font-family: var(--font-krana-b), Impact, sans-serif;
 }
 
+/* ---- Hero word effects ---- */
+/* "intelligence" — a soft dim-to-bright-to-dim gradient swept across
+   the glyphs via background-clip: text. Matches the "LLM is thinking"
+   aesthetic ChatGPT and Claude use to signal inference in progress.
+   Continuous here because it's decorative, not a loading state. */
+.hero-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.38) 0%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.38) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: hero-shimmer 2.6s ease-in-out infinite;
+}
+@keyframes hero-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* "craft" — a zigzag underline in the Basel / MICA tradition, scrolling
+   right-to-left to evoke hand-drawn motion under the word. Built as a
+   repeating SVG background, animated via background-position. */
+.hero-wave {
+  padding-bottom: 0.08em;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='5' viewBox='0 0 20 5'><path d='M0,4 L5,1 L10,4 L15,1 L20,4' fill='none' stroke='%23FFCB05' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: 20px 5px;
+  animation: hero-wave 2.4s linear infinite;
+}
+@keyframes hero-wave {
+  from { background-position: 0 100%; }
+  to { background-position: -20px 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-shimmer {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+    animation: none;
+  }
+  .hero-wave {
+    animation: none;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

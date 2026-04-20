@@ -16,7 +16,9 @@ export default function Hero() {
       <div className="py-[clamp(3rem,7vh,5.5rem)]">
         <Reveal>
           <h1 className="font-serif text-[clamp(2.8rem,6.5vw,5.2rem)] font-normal leading-[1.08] text-text-primary max-w-[820px] tracking-[-0.03em] mb-7">
-            I design products where intelligence meets craft.
+            I design products where{" "}
+            <span className="hero-shimmer">intelligence</span> meets{" "}
+            <span className="hero-wave">craft</span>.
           </h1>
         </Reveal>
 
