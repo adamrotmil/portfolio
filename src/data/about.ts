@@ -55,7 +55,6 @@ export const COMPANY_BADGES = [
   "AstraZeneca",
   "Wild Brains",
   "Benchling",
-  "T. Rowe Price",
   "Goldman Sachs",
   "MICA Faculty",
 ];

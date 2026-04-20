@@ -8,7 +8,7 @@ export default function Hero() {
       className="pt-[clamp(7rem,14vh,10rem)] pb-[clamp(4rem,8vh,6rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto"
     >
       <Reveal>
-        <p className="font-sans text-[0.82rem] text-text-muted tracking-[0.08em] uppercase mb-5">
+        <p className="font-mono text-[0.72rem] text-text-muted mb-6">
           Design · AI · Product
         </p>
       </Reveal>
