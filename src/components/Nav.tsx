@@ -24,8 +24,7 @@ export default function Nav() {
 
   const links = [
     { label: "Work", href: sectionHref("work") },
-    { label: "Lab", href: sectionHref("lab") },
-    { label: "Play", href: sectionHref("play") },
+    { label: "Labs", href: sectionHref("lab") },
     { label: "About", href: sectionHref("about") },
     { label: "Contact", href: sectionHref("contact") },
   ];
@@ -72,14 +71,6 @@ export default function Nav() {
             className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
           >
             Resume ↗
-          </a>
-          <a
-            href="https://www.linkedin.com/in/adam-rotmil/"
-            target="_blank"
-            rel="noopener"
-            className="no-underline font-sans text-[0.8rem] text-bg-primary bg-text-primary px-4 py-2 rounded-md hover:bg-text-secondary transition-colors"
-          >
-            LinkedIn ↗
           </a>
         </div>
 
