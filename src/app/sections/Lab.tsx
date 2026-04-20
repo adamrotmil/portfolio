@@ -154,13 +154,13 @@ export default function Lab() {
                       <KranaMix text={item.title} className="uppercase" />
                     </h4>
                     <p
-                      className="font-sans text-[0.85rem] leading-[1.5]"
+                      className="font-mono text-[0.78rem] leading-[1.7] max-w-[40ch] mt-4 mb-5"
                       style={{
                         color: clickable
-                          ? "rgba(0,0,0,0.6)"
+                          ? "rgba(0,0,0,0.62)"
                           : "var(--color-text-muted)",
                         display: "-webkit-box",
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 4,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
                       }}

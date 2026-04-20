@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg-primary: #0a0a0b;
-  --color-bg-card: #141415;
-  --color-bg-elevated: #1a1a1c;
+  /* Off-black charcoal instead of pure #0a0a0b — reads as "night" with a
+     touch of warmth, so elements and thin rules feel like they sit on a
+     surface rather than a void. */
+  --color-bg-primary: #1a1b1e;
+  --color-bg-card: #24252a;
+  --color-bg-elevated: #2a2b30;
   /* Rules live in the Basel/Schick-Toikka tradition — visible hairlines
      that divide the page into horizontal bands, not whispered lines you
      have to look for. */
