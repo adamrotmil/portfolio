@@ -93,7 +93,7 @@ function CaseStudyCard({
               {study.subtitle}
             </span>
           </div>
-          <p className="font-sans text-[0.92rem] leading-[1.6] text-text-secondary mb-4">
+          <p className="font-mono text-[0.82rem] leading-[1.7] text-text-secondary max-w-[54ch] mt-5 mb-6">
             {study.description}
           </p>
           <div className="flex gap-1.5 flex-wrap">
