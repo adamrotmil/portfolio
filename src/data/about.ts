@@ -50,8 +50,11 @@ export const CREDENTIALS = [
 ];
 
 export const COMPANY_BADGES = [
-  "Fjord / Accenture",
+  "Clarvos",
+  "Respond AI",
   "AstraZeneca",
+  "Wild Brains",
+  "Benchling",
   "T. Rowe Price",
   "Goldman Sachs",
   "MICA Faculty",
