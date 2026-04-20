@@ -55,9 +55,11 @@ export default function Lab() {
               <div
                 className="group h-full overflow-hidden rounded-[12px] flex flex-col transition-transform duration-300 cursor-default"
                 style={{
-                  background: clickable ? "#f5f5f5" : "#141415",
+                  background: clickable
+                    ? "var(--color-bg-primary)"
+                    : "var(--color-bg-card)",
                   cursor: clickable ? "pointer" : "default",
-                  border: clickable ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(255,255,255,0.04)",
+                  border: "1px solid var(--color-border)",
                 }}
                 onMouseEnter={(e) => {
                   if (clickable)
@@ -93,12 +95,8 @@ export default function Lab() {
                     background:
                       item.liveThumbnail || item.thumbnail
                         ? "#0A0B0D"
-                        : clickable
-                          ? "#e5e5e5"
-                          : "#1e1e1f",
-                    borderBottom: clickable
-                      ? "1px solid rgba(0,0,0,0.06)"
-                      : "1px solid rgba(255,255,255,0.04)",
+                        : "var(--color-bg-card)",
+                    borderBottom: "1px solid var(--color-border)",
                   }}
                 >
                   {item.liveThumbnail === "primitives" ? (
@@ -129,20 +127,12 @@ export default function Lab() {
                     doesn't stretch any one tile. */}
                 <div className="p-5 flex flex-col flex-1 justify-between gap-3">
                   <div>
-                    <h4
-                      className="font-serif text-[1.15rem] font-normal mb-1.5 leading-tight"
-                      style={{
-                        color: clickable ? "#1a1a1a" : "var(--color-text-muted)",
-                      }}
-                    >
+                    <h4 className="font-sans text-[1.05rem] font-medium mb-1.5 leading-tight text-text-primary">
                       {item.title}
                     </h4>
                     <p
-                      className="font-sans text-[0.85rem] leading-[1.5]"
+                      className="font-sans text-[0.85rem] leading-[1.5] text-text-secondary"
                       style={{
-                        color: clickable
-                          ? "rgba(0,0,0,0.55)"
-                          : "var(--color-text-muted)",
                         display: "-webkit-box",
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: "vertical",
@@ -152,15 +142,7 @@ export default function Lab() {
                       {item.description}
                     </p>
                   </div>
-                  <p
-                    className="font-sans text-[0.7rem]"
-                    style={{
-                      color: clickable
-                        ? "rgba(0,0,0,0.35)"
-                        : "var(--color-text-muted)",
-                      letterSpacing: 0.2,
-                    }}
-                  >
+                  <p className="font-mono text-[0.7rem] tracking-[0.02em] text-text-muted">
                     {item.tech}
                   </p>
                 </div>

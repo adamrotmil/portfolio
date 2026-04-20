@@ -1,5 +1,5 @@
 import Reveal from "@/components/Reveal";
-import { BIO, EXPERIENCE, CREDENTIALS, TEACHING } from "@/data/about";
+import { BIO, EXPERIENCE, CREDENTIALS, TEACHING, CONTACT } from "@/data/about";
 import { assetPath } from "@/lib/basePath";
 
 export default function About() {
@@ -107,6 +107,27 @@ export default function About() {
                   {c}
                 </span>
               ))}
+            </div>
+
+            {/* Socials — plain text links, no pills */}
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+              {CONTACT.social.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="font-mono text-[0.75rem] text-text-secondary no-underline hover:text-text-primary transition-colors"
+                >
+                  {s.label} ↗
+                </a>
+              ))}
+              <a
+                href={`mailto:${CONTACT.email}`}
+                className="font-mono text-[0.75rem] text-text-secondary no-underline hover:text-text-primary transition-colors"
+              >
+                Email
+              </a>
             </div>
           </div>
         </div>

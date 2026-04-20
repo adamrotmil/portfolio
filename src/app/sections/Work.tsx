@@ -119,14 +119,14 @@ function WorkTile({ study }: { study: (typeof PROJECTS)[0] }) {
         )}
       </div>
 
-      <div className="mt-3 flex items-baseline justify-between gap-3">
-        <span className="font-mono text-[0.7rem] text-text-muted">
+      <div className="mt-4 flex items-baseline justify-between gap-3">
+        <span className="font-mono text-[0.72rem] text-text-muted">
           {dateLabel}
         </span>
-        <span className="text-right font-sans text-[0.78rem] text-text-primary">
+        <span className="text-right font-sans text-[0.92rem] font-medium text-text-primary">
           <span>{cardTitle}</span>
-          <span className="mx-1.5 text-text-muted">|</span>
-          <span className="text-text-secondary">{category}</span>
+          <span className="mx-2 font-normal text-text-muted">|</span>
+          <span className="font-normal text-text-secondary">{category}</span>
         </span>
       </div>
     </Link>
@@ -159,9 +159,9 @@ export default function Work() {
         </div>
       </Reveal>
 
-      <div className="grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-14 md:grid-cols-2">
         {orderedProjects.map((study, i) => (
-          <Reveal key={study.slug} delay={Math.min(i * 0.03, 0.24)}>
+          <Reveal key={study.slug} delay={Math.min(i * 0.04, 0.24)}>
             <WorkTile study={study} />
           </Reveal>
         ))}
