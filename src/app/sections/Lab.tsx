@@ -18,6 +18,7 @@ export default function Lab() {
   const [watchrcOpen, setWatchrcOpen] = useState(false);
   const [tickerOpen, setTickerOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     // Full-viewport warm off-white band. Labs lives as a "light room"
@@ -63,8 +64,27 @@ export default function Lab() {
           </p>
         </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
-        {LAB_ITEMS.map((item, i) => {
+      {/* Collapse the grid to ~2¼ rows initially with a vertical
+          fade-out on the bottom (iOS-style "more below" hint). The
+          "See all labs" button below toggles the reveal. The fixed
+          collapsed max-height is a pixel estimate of two full rows
+          plus a quarter of the third; max-height of 4000px when
+          expanded is enough to fit the full grid with animation. */}
+      <div
+        className="relative transition-[max-height] duration-700 ease-out"
+        style={{
+          maxHeight: expanded ? 4000 : 900,
+          overflow: "hidden",
+          maskImage: expanded
+            ? "none"
+            : "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
+          WebkitMaskImage: expanded
+            ? "none"
+            : "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
+        }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+          {LAB_ITEMS.map((item, i) => {
           const clickable = Boolean(item.url || item.action || item.href);
           return (
             <Reveal key={i} delay={i * 0.08} className="h-full">
@@ -182,6 +202,24 @@ export default function Lab() {
           );
         })}
         </div>
+      </div>
+
+      {!expanded && (
+        <div className="mt-10 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="font-mono text-[0.78rem] no-underline px-6 py-3 rounded-[4px] transition-colors"
+            style={{
+              color: "#0a0a0a",
+              background: "transparent",
+              border: "1px solid rgba(0,0,0,0.35)",
+            }}
+          >
+            See all labs ↓
+          </button>
+        </div>
+      )}
       </div>
 
       <FoothillsModal
