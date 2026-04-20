@@ -39,6 +39,12 @@ export interface Project {
   thumbnailAspect?: string;
   /** Category label shown below the tile, right-aligned. Short. */
   thumbnailCategory?: string;
+  /**
+   * Date code shown left of the title on the Work grid tile. Suggested
+   * format "YYYY.MM" or plain "YYYY". Optional — omitted tiles just hide
+   * the slot.
+   */
+  date?: string;
   heroImage?: string;
   heroObjectPosition?: string;
   meta: { label: string; value: string }[];

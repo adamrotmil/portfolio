@@ -11,8 +11,14 @@
   --color-text-muted: #636366;
   --color-accent: #6366f1;
 
-  --font-serif: var(--font-instrument-serif), Georgia, serif;
-  --font-sans: var(--font-dm-sans), -apple-system, sans-serif;
+  /* Geist Sans carries everything. `--font-serif` redirects to the same
+     stack so any residual font-serif classes from the old design still
+     render with the current face instead of Georgia. */
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), "SF Mono", ui-monospace, Menlo,
+    Monaco, monospace;
+  --font-serif: var(--font-geist-sans), -apple-system, sans-serif;
 }
 
 html {

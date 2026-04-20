@@ -49,18 +49,18 @@ export default function Nav() {
           href="/"
           className="no-underline flex items-baseline gap-1.5"
         >
-          <span className="font-serif text-[1.3rem] text-text-primary font-normal">
+          <span className="font-sans text-[0.88rem] font-medium text-text-primary">
             Adam Rotmil
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex gap-8 items-center">
+        {/* Desktop nav — mono, uppercase, tracked. Reads as tool chrome. */}
+        <div className="hidden md:flex gap-7 items-center">
           {links.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
+              className="no-underline font-mono text-[0.7rem] uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
             >
               {link.label}
             </Link>
@@ -69,7 +69,7 @@ export default function Nav() {
             href={resumeHref}
             target="_blank"
             rel="noopener"
-            className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
+            className="no-underline font-mono text-[0.7rem] uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
           >
             Resume ↗
           </a>
@@ -77,7 +77,7 @@ export default function Nav() {
             href="https://www.linkedin.com/in/adam-rotmil/"
             target="_blank"
             rel="noopener"
-            className="no-underline font-sans text-[0.8rem] text-bg-primary bg-text-primary px-4 py-2 rounded-md hover:bg-text-secondary transition-colors"
+            className="no-underline font-mono text-[0.68rem] uppercase tracking-[0.12em] text-bg-primary bg-text-primary px-3 py-1.5 rounded-[4px] hover:bg-text-secondary transition-colors"
           >
             LinkedIn ↗
           </a>
@@ -114,13 +114,13 @@ export default function Nav() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden pb-6 flex flex-col gap-4">
+        <div className="md:hidden pb-6 flex flex-col gap-3">
           {links.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
+              className="no-underline font-mono text-[0.78rem] uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
             >
               {link.label}
             </Link>
@@ -130,7 +130,7 @@ export default function Nav() {
             target="_blank"
             rel="noopener"
             onClick={() => setMenuOpen(false)}
-            className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
+            className="no-underline font-mono text-[0.78rem] uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
           >
             Resume ↗
           </a>

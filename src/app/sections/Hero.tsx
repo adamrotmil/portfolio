@@ -1,72 +1,47 @@
-import Link from "next/link";
 import Reveal from "@/components/Reveal";
 
 /**
- * Minimal, conversational hero — name + role on one line, a short first-
- * person paragraph, then tagged inline links to the main sections. No
- * display headline, no company badge rail. The trend has moved toward
- * portfolios that open like a Twitter profile instead of a magazine spread.
+ * Restrained, Micah-Carroll-style hero: name + two-line positioning on
+ * the left, contact + location in mono on the right. No display
+ * headline, no tagged inline pills, no company rail. The signal is
+ * "here's who I am, the work is the rest of the page."
  */
-
-function TagLink({
-  href,
-  children,
-  external = false,
-}: {
-  href: string;
-  children: React.ReactNode;
-  external?: boolean;
-}) {
-  const className =
-    "inline-flex items-center rounded-[4px] bg-bg-elevated px-2 py-0.5 font-serif italic text-text-primary no-underline transition-colors hover:bg-bg-card";
-  if (external) {
-    return (
-      <a href={href} className={className}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  );
-}
 
 export default function Hero() {
   return (
     <section
       id="top"
-      className="mx-auto max-w-[640px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(4rem,8vh,6rem)] pt-[clamp(8rem,16vh,12rem)]"
+      className="mx-auto max-w-[1400px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(5rem,10vh,8rem)] pt-[clamp(7rem,14vh,10rem)]"
     >
-      <Reveal>
-        <h1 className="font-serif text-[clamp(1.6rem,2.6vw,2rem)] font-normal leading-tight text-text-primary">
-          <span className="italic">Adam Rotmil</span>
-          <span className="mx-3 text-text-muted">—</span>
-          <span className="text-text-secondary">Senior Product Designer</span>
-        </h1>
-      </Reveal>
+      <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between md:gap-16">
+        <Reveal>
+          <div className="max-w-[560px]">
+            <h1 className="font-sans text-[clamp(1.35rem,1.9vw,1.6rem)] font-medium leading-tight tracking-[-0.01em] text-text-primary">
+              Adam Rotmil
+            </h1>
+            <p className="mt-3 font-sans text-[clamp(0.9rem,1vw,1rem)] leading-[1.5] text-text-secondary">
+              Senior product designer building AI-native tools at Clarvos.
+            </p>
+            <p className="mt-1 font-sans text-[clamp(0.9rem,1vw,1rem)] leading-[1.5] text-text-muted">
+              Twenty years across health tech, finance, and defense.
+            </p>
+          </div>
+        </Reveal>
 
-      <Reveal delay={0.08}>
-        <p className="mt-8 font-serif text-[clamp(1.1rem,1.4vw,1.35rem)] leading-[1.55] text-text-secondary">
-          I design AI-native products at Clarvos, now exploring roles in the
-          Bay Area. Twenty years across health tech, finance, and defense.
-          Taught at MICA, studied typography at Basel, and practiced sumi-e
-          in Japan for five years.
-        </p>
-      </Reveal>
-
-      <Reveal delay={0.16}>
-        <p className="mt-6 font-serif text-[clamp(1.1rem,1.4vw,1.35rem)] leading-[1.7] text-text-secondary">
-          See my <TagLink href="#work">work</TagLink>, my{" "}
-          <TagLink href="/primitives">motion primitives</TagLink> lab, or reach
-          me at{" "}
-          <TagLink href="mailto:adam.rotmil@gmail.com" external>
-            adam.rotmil@gmail.com
-          </TagLink>
-          .
-        </p>
-      </Reveal>
+        <Reveal delay={0.08}>
+          <div className="text-left md:text-right">
+            <a
+              href="mailto:adam.rotmil@gmail.com"
+              className="block font-mono text-[0.78rem] text-text-primary no-underline transition-colors hover:text-text-secondary"
+            >
+              adam.rotmil@gmail.com
+            </a>
+            <p className="mt-1 font-mono text-[0.78rem] text-text-muted">
+              San Francisco, CA
+            </p>
+          </div>
+        </Reveal>
+      </div>
     </section>
   );
 }

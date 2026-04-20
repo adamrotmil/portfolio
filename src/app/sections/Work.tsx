@@ -9,9 +9,9 @@ import { assetPath } from "@/lib/basePath";
 const PRIORITY_ORDER = ["clarvos", "gator", "respond-ai", "ai-training"];
 
 /**
- * Auto-rotating image sequence with a short crossfade. The tile owns
- * the rotation interval, pauses when reduced motion is preferred, and
- * simply renders a single <img> when only one image is supplied.
+ * Auto-rotating image sequence for tiles that supply thumbnailSequence.
+ * Short crossfade, respects prefers-reduced-motion, shuts off on single-
+ * source tiles.
  */
 function SequenceImage({
   sources,
@@ -48,7 +48,7 @@ function SequenceImage({
           alt={alt}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-out"
+          className="absolute inset-0 h-full w-full object-cover"
           style={{
             opacity: i === index ? 1 : 0,
             transform: `scale(${scale})`,
@@ -61,13 +61,7 @@ function SequenceImage({
   );
 }
 
-function WorkTile({
-  study,
-  aspect,
-}: {
-  study: (typeof PROJECTS)[0];
-  aspect: string;
-}) {
+function WorkTile({ study }: { study: (typeof PROJECTS)[0] }) {
   const [hovered, setHovered] = useState(false);
   const cardTitle =
     study.slug === "miami" ? "My Wellness Research" : study.title;
@@ -79,18 +73,19 @@ function WorkTile({
       : study.thumbnail
         ? [study.thumbnail]
         : [];
+  const dateLabel = study.date ?? "";
 
   return (
     <Link
       href={`/work/${study.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="mb-8 block break-inside-avoid no-underline"
+      className="block no-underline"
     >
       <div
-        className="relative w-full overflow-hidden rounded-[10px]"
+        className="relative w-full overflow-hidden rounded-[4px]"
         style={{
-          aspectRatio: aspect,
+          aspectRatio: "4 / 3",
           background: `linear-gradient(135deg, ${study.color}15, ${study.color}08)`,
         }}
       >
@@ -117,41 +112,26 @@ function WorkTile({
               background: `linear-gradient(135deg, ${study.color}18, ${study.color}08)`,
             }}
           >
-            <span className="font-sans text-[0.72rem] uppercase tracking-[0.14em] text-text-muted/40">
+            <span className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-text-muted/40">
               {cardTitle}
             </span>
           </div>
         )}
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between gap-4 px-0.5">
-        <h3 className="font-serif text-[1.15rem] font-normal leading-tight text-text-primary">
-          {cardTitle}
-        </h3>
-        <span className="font-sans text-[0.78rem] text-text-muted">
-          {category}
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <span className="font-mono text-[0.7rem] text-text-muted">
+          {dateLabel}
+        </span>
+        <span className="text-right font-sans text-[0.78rem] text-text-primary">
+          <span>{cardTitle}</span>
+          <span className="mx-1.5 text-text-muted">|</span>
+          <span className="text-text-secondary">{category}</span>
         </span>
       </div>
     </Link>
   );
 }
-
-// Aspect ratios chosen to give the mason layout visual rhythm — some
-// wide landscape, some squarer, so CSS multi-column produces natural
-// offsets between the two columns. The map is keyed by slug so it's
-// easy to tune per-project as we iterate.
-const TILE_ASPECTS: Record<string, string> = {
-  clarvos: "16 / 11",
-  gator: "4 / 5",
-  "respond-ai": "16 / 11",
-  "ai-training": "4 / 5",
-  miami: "16 / 11",
-  astrazeneca: "4 / 5",
-  "wild-brains": "16 / 11",
-  "content-studio": "4 / 5",
-  "collab-match": "16 / 11",
-  uscis: "4 / 5",
-};
 
 export default function Work() {
   const orderedProjects = [...PROJECTS].sort((a, b) => {
@@ -166,29 +146,23 @@ export default function Work() {
   return (
     <section
       id="work"
-      className="mx-auto max-w-[1200px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(4rem,8vh,7rem)] pt-[clamp(3rem,6vh,5rem)]"
+      className="mx-auto max-w-[1400px] px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(4rem,8vh,7rem)] pt-[clamp(2rem,4vh,4rem)]"
     >
       <Reveal>
-        <div className="mb-12 flex items-baseline justify-between">
-          <h2 className="font-serif text-[clamp(1rem,1.2vw,1.1rem)] font-normal uppercase tracking-[0.18em] text-text-muted">
-            Work
-          </h2>
-          <span className="font-sans text-[0.78rem] text-text-muted">
+        <div className="mb-8 flex items-baseline justify-between">
+          <span className="font-mono text-[0.72rem] text-text-muted">
+            Recent work
+          </span>
+          <span className="font-mono text-[0.72rem] text-text-muted">
             {PROJECTS.length} case studies
           </span>
         </div>
       </Reveal>
 
-      <div
-        className="md:columns-2 md:gap-8"
-        style={{ columnFill: "balance" }}
-      >
+      <div className="grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {orderedProjects.map((study, i) => (
-          <Reveal key={study.slug} delay={Math.min(i * 0.04, 0.24)}>
-            <WorkTile
-              study={study}
-              aspect={TILE_ASPECTS[study.slug] ?? "4 / 3"}
-            />
+          <Reveal key={study.slug} delay={Math.min(i * 0.03, 0.24)}>
+            <WorkTile study={study} />
           </Reveal>
         ))}
       </div>
