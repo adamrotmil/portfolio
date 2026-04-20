@@ -58,9 +58,7 @@ export default function Lab() {
             className="font-mono text-[0.82rem] leading-[1.7] max-w-[66%] mb-8"
             style={{ color: "#0a0a0a" }}
           >
-            Experiments in code, design, and AI. Small tools, native interaction
-            studies, and interactive pieces I build in public while learning
-            new platforms.
+            Experiments in code, design, and AI.
           </p>
         </Reveal>
 
