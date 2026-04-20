@@ -59,7 +59,11 @@ export default function Reveal({
       className={className}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(14px)",
+        // When settled, transform: "none" instead of translateY(0) so
+        // we don't create a stacking context on every Reveal wrapper —
+        // the Work-header dropdown relies on being able to stack above
+        // the tile grid.
+        transform: visible ? "none" : "translateY(14px)",
         transition: `opacity 0.45s cubic-bezier(0.2,0.8,0.2,1) ${delay}s, transform 0.45s cubic-bezier(0.2,0.8,0.2,1) ${delay}s`,
       }}
     >
