@@ -21,7 +21,7 @@ export default function About() {
 
           {/* Bio */}
           <div>
-            <h2 className="font-serif text-[clamp(1.8rem,3vw,2.4rem)] font-normal text-text-primary mb-6">
+            <h2 className="font-mono text-[0.72rem] text-text-primary mb-6">
               About
             </h2>
 
@@ -36,7 +36,7 @@ export default function About() {
 
             {/* Experience timeline */}
             <div className="border-t border-border pt-6 mt-8">
-              <p className="font-sans text-xs text-text-muted uppercase tracking-[0.08em] mb-4">
+              <p className="font-mono text-[0.7rem] text-text-primary mb-4">
                 Experience
               </p>
               {EXPERIENCE.map((exp, i) => (
@@ -67,7 +67,7 @@ export default function About() {
 
             {/* Teaching */}
             <div className="border-t border-border pt-6 mt-6">
-              <p className="font-sans text-xs text-text-muted uppercase tracking-[0.08em] mb-4">
+              <p className="font-mono text-[0.7rem] text-text-primary mb-4">
                 Teaching
               </p>
               <img
@@ -102,7 +102,7 @@ export default function About() {
               {CREDENTIALS.map((c) => (
                 <span
                   key={c}
-                  className="font-sans text-[0.72rem] text-text-muted px-2.5 py-1 border border-border rounded"
+                  className="font-mono text-[0.68rem] text-text-primary px-2.5 py-1 border border-border rounded-[3px]"
                 >
                   {c}
                 </span>

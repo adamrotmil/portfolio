@@ -1,4 +1,5 @@
 import Reveal from "@/components/Reveal";
+import KranaMix from "@/components/KranaMix";
 import { CONTACT } from "@/data/about";
 
 export default function Contact() {
@@ -9,18 +10,25 @@ export default function Contact() {
     >
       <Reveal>
         <div className="border-t border-border pt-10 text-center">
-          <h2 className="font-serif text-[clamp(2rem,4vw,3rem)] font-normal text-text-primary mb-4">
-            Let&#x2019;s build something
+          {/* Joyful, playfully European — Krana Fat A/B mixed across
+              every letter, scaled big, centered. The three-word phrase
+              gets a different cadence per word so the widths vary
+              visibly within each. */}
+          <h2 className="mb-6 text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.95] text-text-primary">
+            <KranaMix
+              text={"LET\u2019S BUILD SOMETHING"}
+              pattern="BAABB ABBAA BABAABBAA"
+            />
           </h2>
-          <p className="font-sans text-[1.05rem] text-text-secondary mb-8 leading-[1.6]">
+          <p className="font-mono text-[0.82rem] text-text-primary mb-10 leading-[1.6]">
             Available for product design, AI/UX consulting, and design
             engineering roles.
           </p>
 
-          <div className="flex justify-center gap-4 flex-wrap mb-8">
+          <div className="flex justify-center gap-4 flex-wrap mb-10">
             <a
               href={`mailto:${CONTACT.email}`}
-              className="font-sans text-[0.9rem] text-bg-primary bg-text-primary no-underline px-7 py-3 rounded-lg hover:bg-text-secondary transition-colors"
+              className="font-mono text-[0.78rem] text-bg-primary bg-text-primary no-underline px-6 py-3 rounded-[4px] hover:bg-text-secondary transition-colors"
             >
               Email Me
             </a>
@@ -28,7 +36,7 @@ export default function Contact() {
               href={CONTACT.calendly}
               target="_blank"
               rel="noopener"
-              className="font-sans text-[0.9rem] text-text-primary no-underline px-7 py-3 rounded-lg border border-border hover:border-text-muted transition-colors"
+              className="font-mono text-[0.78rem] text-text-primary no-underline px-6 py-3 rounded-[4px] border border-border hover:border-text-muted transition-colors"
             >
               Book a Chat
             </a>
@@ -41,7 +49,7 @@ export default function Contact() {
                 href={link.url}
                 target="_blank"
                 rel="noopener"
-                className="font-sans text-[0.82rem] text-text-muted no-underline hover:text-text-primary transition-colors"
+                className="font-mono text-[0.72rem] text-text-primary no-underline hover:text-text-secondary transition-colors"
               >
                 {link.label}
               </a>

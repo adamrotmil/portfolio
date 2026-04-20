@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { assetPath } from "@/lib/basePath";
+import KranaMix from "@/components/KranaMix";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -46,20 +47,22 @@ export default function Nav() {
       <div className="max-w-[1200px] mx-auto flex justify-between items-center h-16">
         <Link
           href="/"
-          className="no-underline flex items-baseline gap-1.5"
+          className="no-underline flex items-baseline gap-1.5 leading-none text-text-primary"
         >
-          <span className="font-serif text-[1.3rem] text-text-primary font-normal">
-            Adam Rotmil
-          </span>
+          <KranaMix
+            text="ADAM ROTMIL"
+            pattern="BAABB ABBAA"
+            className="text-[1.05rem] tracking-[-0.01em]"
+          />
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex gap-8 items-center">
+        {/* Desktop nav — small mono syntax, Schick-Toikka style. */}
+        <div className="hidden md:flex gap-6 items-center">
           {links.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
+              className="no-underline font-mono text-[0.72rem] text-text-primary hover:text-text-secondary transition-colors"
             >
               {link.label}
             </Link>
@@ -68,7 +71,7 @@ export default function Nav() {
             href={resumeHref}
             target="_blank"
             rel="noopener"
-            className="no-underline font-sans text-[0.85rem] text-text-muted hover:text-text-primary transition-colors tracking-[0.01em]"
+            className="no-underline font-mono text-[0.72rem] text-text-primary hover:text-text-secondary transition-colors"
           >
             Resume ↗
           </a>
@@ -105,13 +108,13 @@ export default function Nav() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden pb-6 flex flex-col gap-4">
+        <div className="md:hidden pb-6 flex flex-col gap-3">
           {links.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
+              className="no-underline font-mono text-[0.82rem] text-text-secondary hover:text-text-primary transition-colors"
             >
               {link.label}
             </Link>
@@ -121,7 +124,7 @@ export default function Nav() {
             target="_blank"
             rel="noopener"
             onClick={() => setMenuOpen(false)}
-            className="no-underline font-sans text-base text-text-secondary hover:text-text-primary transition-colors"
+            className="no-underline font-mono text-[0.82rem] text-text-secondary hover:text-text-primary transition-colors"
           >
             Resume ↗
           </a>

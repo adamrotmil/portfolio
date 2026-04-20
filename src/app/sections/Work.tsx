@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
+import KranaMix from "@/components/KranaMix";
 import { PROJECTS } from "@/data/projects";
 import { assetPath } from "@/lib/basePath";
 
@@ -84,11 +85,11 @@ function CaseStudyCard({
 
         {/* Content */}
         <div className="p-6 pb-7">
-          <div className="flex justify-between items-baseline mb-2">
-            <h3 className="font-serif text-2xl font-normal text-text-primary">
-              {cardTitle}
+          <div className="flex justify-between items-baseline mb-3 gap-4">
+            <h3 className="text-[1.35rem] leading-[1.05] text-text-primary">
+              <KranaMix text={cardTitle} className="uppercase" />
             </h3>
-            <span className="font-sans text-[0.78rem] text-text-muted hidden sm:inline">
+            <span className="font-mono text-[0.72rem] text-text-primary hidden sm:inline shrink-0">
               {study.subtitle}
             </span>
           </div>
@@ -99,7 +100,7 @@ function CaseStudyCard({
             {study.tags.map((tag) => (
               <span
                 key={tag}
-                className="font-sans text-[0.7rem] text-text-muted px-2 py-1 border border-border rounded"
+                className="font-mono text-[0.68rem] text-text-primary px-2 py-1 border border-border rounded-[3px]"
               >
                 {tag}
               </span>
@@ -128,11 +129,12 @@ export default function Work() {
       className="px-[clamp(1.5rem,4vw,4rem)] pb-[clamp(4rem,8vh,7rem)] max-w-[1200px] mx-auto"
     >
       <Reveal>
-        <div className="flex justify-between items-baseline mb-10 border-t border-border pt-8">
-          <h2 className="font-serif text-[clamp(1.8rem,3vw,2.4rem)] font-normal text-text-primary">
-            Selected Work
+        {/* No top rule here — Hero's bottom rule sits directly above us. */}
+        <div className="flex justify-between items-baseline mb-10 pt-[clamp(2rem,4vh,3rem)]">
+          <h2 className="font-mono text-[0.72rem] text-text-primary">
+            Selected work
           </h2>
-          <span className="font-sans text-[0.8rem] text-text-muted">
+          <span className="font-mono text-[0.72rem] text-text-primary">
             {PROJECTS.length} case studies
           </span>
         </div>

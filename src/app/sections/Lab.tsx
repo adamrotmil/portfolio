@@ -10,6 +10,7 @@ import RemoteFlightModal from "@/components/watchrc/RemoteFlightModal";
 import TickerSandboxModal from "@/components/ticker/TickerSandboxModal";
 import TableModal from "@/components/table/TableModal";
 import SvgMorph from "@/components/primitives/demos/SvgMorph";
+import KranaMix from "@/components/KranaMix";
 
 export default function Lab() {
   const router = useRouter();
@@ -24,15 +25,15 @@ export default function Lab() {
       className="py-[clamp(4rem,8vh,7rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto"
     >
       <Reveal>
-        <div className="flex justify-between items-baseline mb-8 border-t border-border pt-8">
-          <h2 className="font-serif text-[clamp(1.8rem,3vw,2.4rem)] font-normal text-text-primary">
-            Lab
+        <div className="flex justify-between items-baseline mb-8 border-t border-border pt-6">
+          <h2 className="font-mono text-[0.72rem] text-text-primary">
+            Labs
           </h2>
           <a
             href="https://github.com/adamrotmil"
             target="_blank"
             rel="noopener"
-            className="font-sans text-[0.8rem] text-text-muted no-underline hover:text-text-primary transition-colors"
+            className="font-mono text-[0.72rem] text-text-primary no-underline hover:text-text-secondary transition-colors"
           >
             GitHub ↗
           </a>
@@ -130,18 +131,18 @@ export default function Lab() {
                 <div className="p-5 flex flex-col flex-1 justify-between gap-3">
                   <div>
                     <h4
-                      className="font-serif text-[1.15rem] font-normal mb-1.5 leading-tight"
+                      className="text-[1.05rem] leading-[1.05] mb-2"
                       style={{
-                        color: clickable ? "#1a1a1a" : "var(--color-text-muted)",
+                        color: clickable ? "#1a1a1a" : "#f5f5f5",
                       }}
                     >
-                      {item.title}
+                      <KranaMix text={item.title} className="uppercase" />
                     </h4>
                     <p
                       className="font-sans text-[0.85rem] leading-[1.5]"
                       style={{
                         color: clickable
-                          ? "rgba(0,0,0,0.55)"
+                          ? "rgba(0,0,0,0.6)"
                           : "var(--color-text-muted)",
                         display: "-webkit-box",
                         WebkitLineClamp: 3,
@@ -153,12 +154,9 @@ export default function Lab() {
                     </p>
                   </div>
                   <p
-                    className="font-sans text-[0.7rem]"
+                    className="font-mono text-[0.68rem]"
                     style={{
-                      color: clickable
-                        ? "rgba(0,0,0,0.35)"
-                        : "var(--color-text-muted)",
-                      letterSpacing: 0.2,
+                      color: clickable ? "#1a1a1a" : "#f5f5f5",
                     }}
                   >
                     {item.tech}

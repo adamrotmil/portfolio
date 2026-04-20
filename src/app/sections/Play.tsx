@@ -10,11 +10,11 @@ export default function Play() {
       className="py-[clamp(4rem,8vh,7rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto"
     >
       <Reveal>
-        <div className="flex justify-between items-baseline mb-8 border-t border-border pt-8">
-          <h2 className="font-serif text-[clamp(1.8rem,3vw,2.4rem)] font-normal text-text-primary">
+        <div className="flex justify-between items-baseline mb-8 border-t border-border pt-6">
+          <h2 className="font-mono text-[0.72rem] text-text-primary">
             Play
           </h2>
-          <span className="font-sans text-[0.8rem] text-text-muted">
+          <span className="font-mono text-[0.72rem] text-text-primary">
             Small joyful side projects
           </span>
         </div>
