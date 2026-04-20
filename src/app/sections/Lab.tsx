@@ -20,33 +20,48 @@ export default function Lab() {
   const [tableOpen, setTableOpen] = useState(false);
 
   return (
+    // Full-viewport warm off-white band. Labs lives as a "light room"
+    // inside the otherwise dark page, signalling a shift in context
+    // from case studies → experiments. The base color #f7f4ec matches
+    // the paper tone the Work cards' pastel footers mix toward, so
+    // the transition reads as walking from dark hall into a warmer
+    // lit space rather than a hard palette break.
     <section
       id="lab"
-      className="py-[clamp(4rem,8vh,7rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto"
+      className="w-full"
+      style={{ background: "#f7f4ec", color: "#0a0a0a" }}
     >
-      <Reveal>
-        <div className="flex justify-between items-baseline mb-8 border-t border-border pt-6">
-          <h2 className="font-mono text-[0.72rem] text-text-primary">
-            Labs
-          </h2>
-          <a
-            href="https://github.com/adamrotmil"
-            target="_blank"
-            rel="noopener"
-            className="font-mono text-[0.72rem] text-text-primary no-underline hover:text-text-secondary transition-colors"
+      <div className="py-[clamp(4rem,8vh,7rem)] px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto">
+        <Reveal>
+          <div
+            className="flex justify-between items-baseline mb-8 pt-6"
+            style={{ borderTop: "1px solid rgba(0,0,0,0.22)" }}
           >
-            GitHub ↗
-          </a>
-        </div>
-      </Reveal>
+            <h2 className="font-mono text-[0.72rem]" style={{ color: "#0a0a0a" }}>
+              Labs
+            </h2>
+            <a
+              href="https://github.com/adamrotmil"
+              target="_blank"
+              rel="noopener"
+              className="font-mono text-[0.72rem] no-underline transition-colors"
+              style={{ color: "#0a0a0a" }}
+            >
+              GitHub ↗
+            </a>
+          </div>
+        </Reveal>
 
-      <Reveal>
-        <p className="font-sans text-base text-text-secondary leading-[1.6] max-w-[520px] mb-8">
-          Experiments in code, design, and AI. Small tools, native interaction
-          studies, and interactive pieces I build in public while learning new
-          platforms.
-        </p>
-      </Reveal>
+        <Reveal>
+          <p
+            className="font-sans text-base leading-[1.6] max-w-[520px] mb-8"
+            style={{ color: "rgba(0,0,0,0.65)" }}
+          >
+            Experiments in code, design, and AI. Small tools, native interaction
+            studies, and interactive pieces I build in public while learning
+            new platforms.
+          </p>
+        </Reveal>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
         {LAB_ITEMS.map((item, i) => {
@@ -166,6 +181,7 @@ export default function Lab() {
             </Reveal>
           );
         })}
+        </div>
       </div>
 
       <FoothillsModal

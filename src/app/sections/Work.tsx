@@ -18,7 +18,11 @@ function CaseStudyCard({
 }) {
   const [hovered, setHovered] = useState(false);
   const cardTitle =
-    study.slug === "miami" ? "My Wellness Research" : study.title;
+    study.slug === "miami"
+      ? "My Wellness"
+      : study.slug === "astrazeneca"
+        ? "CARE"
+        : study.title;
 
   // Derive a pastel footer background from each project's brand color.
   // Mixing ~16% of the brand into warm off-white gives a legible light
@@ -32,13 +36,13 @@ function CaseStudyCard({
   return (
     <Reveal
       delay={index * 0.08}
-      className={study.featured ? "col-span-full" : ""}
+      className={`h-full ${study.featured ? "col-span-full" : ""}`}
     >
       <Link
         href={`/work/${study.slug}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="block no-underline rounded-xl overflow-hidden transition-all duration-400"
+        className="block no-underline rounded-xl overflow-hidden transition-all duration-400 h-full"
         style={{
           background: cardBg,
           transform: hovered ? "translateY(-4px)" : "translateY(0)",
@@ -162,7 +166,7 @@ export default function Work() {
         </div>
       </Reveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         {orderedProjects.map((study, i) => (
           <CaseStudyCard key={study.slug} study={study} index={i} />
         ))}
