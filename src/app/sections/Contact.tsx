@@ -24,13 +24,18 @@ export default function Contact() {
             >
               {/* Split into three KranaMix calls so we can wrap just the
                   middle word in .wave-black for the callback to the hero
-                  "craft" motif. Patterns are tuned per word, same idea
-                  as the hero wordmark. */}
+                  "craft" motif. On mobile the headline shortens to
+                  "LET'S BUILD." so it still lands in a single comfortable
+                  line without crowding the buttons. */}
               <KranaMix text={"LET\u2019S"} pattern="BAABB" />{" "}
               <span className="wave-black">
                 <KranaMix text="BUILD" pattern="ABBAA" />
-              </span>{" "}
-              <KranaMix text="SOMETHING" pattern="BABAABBAA" />
+              </span>
+              <span className="sm:hidden">.</span>
+              <span className="hidden sm:inline">
+                {" "}
+                <KranaMix text="SOMETHING" pattern="BABAABBAA" />
+              </span>
             </h2>
             <p
               className="mb-10 font-mono text-[0.85rem] leading-[1.6] max-w-[56ch] mx-auto"
