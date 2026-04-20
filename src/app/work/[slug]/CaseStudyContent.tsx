@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Project, ProjectSection } from "@/data/projects";
-import { CONTACT } from "@/data/about";
 import { assetPath } from "@/lib/basePath";
+import Nav from "@/components/Nav";
 import ProgressBar from "@/components/ProgressBar";
-import CaseStudyNav from "@/components/CaseStudyNav";
 import Reveal from "@/components/Reveal";
 import SectionLabel from "@/components/SectionLabel";
 import PullQuote from "@/components/PullQuote";
@@ -14,6 +13,25 @@ import ImagePlaceholder from "@/components/ImagePlaceholder";
 import Counter from "@/components/Counter";
 import PhoneFrame from "@/components/PhoneFrame";
 import BrowserFrame from "@/components/BrowserFrame";
+import KranaMix from "@/components/KranaMix";
+
+/**
+ * Case study content — extended design language from the homepage:
+ *
+ * - Saol Display for hero title + section headings (no italic)
+ * - Saol Text body copy at text-text-primary (brighter than before)
+ * - Monospace for structural labels: breadcrumbs, meta rows, tags,
+ *   section kickers
+ * - Krana Fat A/B mix for NEXT project title (callback to homepage
+ *   Work tile titles)
+ * - MICA yellow #FFCB05 as the single accent: pull-quote rule,
+ *   hover/hover-inflected affordances, progress bar tint
+ * - Basel hairline rules between sections
+ * - The charcoal page bg carries through; the outcome section lifts
+ *   to bg-card for gentle shift in "room"
+ */
+
+const YELLOW = "#FFCB05";
 
 function RenderSection({ section }: { section: ProjectSection }) {
   switch (section.type) {
@@ -28,14 +46,14 @@ function RenderSection({ section }: { section: ProjectSection }) {
           )}
           {section.heading && (
             <Reveal>
-              <h2 className="font-serif text-[clamp(1.6rem,3vw,2.3rem)] font-normal leading-[1.2] text-text-primary mb-6">
+              <h2 className="font-serif text-[clamp(1.7rem,3vw,2.3rem)] font-normal leading-[1.2] text-text-primary mb-6">
                 {section.heading}
               </h2>
             </Reveal>
           )}
           {section.body?.map((p, i) => (
             <Reveal key={i} delay={i * 0.08}>
-              <p className="font-sans text-[1.02rem] leading-[1.72] text-text-secondary mb-5">
+              <p className="font-sans text-[1.02rem] leading-[1.72] text-text-primary mb-5">
                 {p}
               </p>
             </Reveal>
@@ -52,15 +70,15 @@ function RenderSection({ section }: { section: ProjectSection }) {
 
     case "stats":
       return (
-        <section className="bg-bg-card py-[clamp(3rem,6vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+        <section className="bg-bg-card py-[clamp(3rem,6vh,5rem)] px-[clamp(1.5rem,4vw,4rem)] border-y border-border">
           <div className="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
             {section.stats?.map((s, i) => (
               <Reveal key={i} delay={i * 0.1}>
                 <div className="text-center">
-                  <p className="font-serif text-[clamp(2.5rem,5vw,3.5rem)] text-text-primary font-normal leading-none mb-2">
+                  <p className="font-serif text-[clamp(2.5rem,5vw,3.5rem)] text-text-primary font-normal leading-none mb-3 tabular-nums">
                     <Counter value={s.number} suffix={s.suffix} />
                   </p>
-                  <p className="font-sans text-[0.8rem] text-text-muted leading-[1.4]">
+                  <p className="font-mono text-[0.72rem] text-text-secondary leading-[1.4]">
                     {s.label}
                   </p>
                 </div>
@@ -73,10 +91,9 @@ function RenderSection({ section }: { section: ProjectSection }) {
     case "images":
       if (!section.images) return null;
 
-      // Phone gallery layout: full screens in device frames on dark background
       if (section.layout === "phone-gallery") {
         return (
-          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <section className="bg-bg-card py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
             <div className="max-w-[960px] mx-auto flex flex-col items-center gap-[clamp(2rem,4vw,3rem)] sm:flex-row sm:justify-center sm:items-start">
               {section.images.map((img, i) => (
                 <Reveal key={i} delay={i * 0.12}>
@@ -90,10 +107,9 @@ function RenderSection({ section }: { section: ProjectSection }) {
         );
       }
 
-      // Desktop showcase layout: full-width app screenshots in browser frames
       if (section.layout === "desktop-showcase") {
         return (
-          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <section className="bg-bg-card py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
             <div className="max-w-[1200px] mx-auto flex flex-col gap-[clamp(1.5rem,3vw,2.5rem)]">
               {section.images.length === 1 && (
                 <Reveal>
@@ -134,10 +150,9 @@ function RenderSection({ section }: { section: ProjectSection }) {
         );
       }
 
-      // Photo grid layout: rounded-corner images on dark background, no device frames
       if (section.layout === "photo-grid") {
         return (
-          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <section className="bg-bg-card py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
             <div className="max-w-[1200px] mx-auto flex flex-col gap-[clamp(1.5rem,3vw,2.5rem)]">
               {section.images.length === 1 && (
                 <Reveal>
@@ -312,7 +327,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                 {section.body?.map((p, i) => (
                   <p
                     key={i}
-                    className="font-sans text-[1.02rem] leading-[1.72] text-text-secondary mb-5"
+                    className="font-sans text-[1.02rem] leading-[1.72] text-text-primary mb-5"
                   >
                     {p}
                   </p>
@@ -328,7 +343,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
 
       if (section.layout === "phone-gallery") {
         return (
-          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <section className="bg-bg-card py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
             <div className="max-w-[1200px] mx-auto flex justify-center">
               <Reveal>
                 <video
@@ -350,18 +365,18 @@ function RenderSection({ section }: { section: ProjectSection }) {
       }
       if (section.layout === "desktop-showcase") {
         return (
-          <section className="bg-[#1a1a1c] py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <section className="bg-bg-card py-[clamp(3rem,8vh,5rem)] px-[clamp(1.5rem,4vw,4rem)]">
             <div className="max-w-[1200px] mx-auto">
               <Reveal>
-                <div className="bg-[#2c2c2e] rounded-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] overflow-hidden">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-[#363638]">
+                <div className="bg-bg-elevated rounded-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] overflow-hidden border border-border">
+                  <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: "rgba(255,255,255,0.04)" }}>
                     <div className="flex gap-[6px]">
                       <div className="w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
                       <div className="w-[10px] h-[10px] rounded-full bg-[#febc2e]" />
                       <div className="w-[10px] h-[10px] rounded-full bg-[#28c840]" />
                     </div>
                     <div className="flex-1 flex justify-center">
-                      <div className="bg-[#2c2c2e] rounded-md px-4 py-1 text-[11px] text-[#8e8e93] font-sans max-w-[260px] truncate text-center">
+                      <div className="rounded-md px-4 py-1 text-[11px] font-mono max-w-[260px] truncate text-center" style={{ background: "rgba(0,0,0,0.35)", color: "rgba(255,255,255,0.55)" }}>
                         {section.videoLabel || "Video"}
                       </div>
                     </div>
@@ -385,7 +400,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
         );
       }
       return (
-        <section className="bg-[#1a1a1c]">
+        <section className="bg-bg-card">
           <div className="max-w-[1200px] mx-auto" style={{ aspectRatio: "16/9" }}>
             <Reveal>
               <video
@@ -410,11 +425,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
   }
 }
 
-function NextProject({
-  next,
-}: {
-  next: Project["nextProject"];
-}) {
+function NextProject({ next }: { next: Project["nextProject"] }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -425,31 +436,31 @@ function NextProject({
       className="block no-underline py-[clamp(4rem,8vh,6rem)] px-[clamp(1.5rem,4vw,4rem)] transition-colors duration-400"
       style={{
         background: hovered ? "var(--color-bg-card)" : "transparent",
+        borderTop: "1px solid var(--color-border)",
       }}
     >
-      <div className="max-w-[1200px] mx-auto flex justify-between items-center border-t border-border pt-12">
+      <div className="max-w-[1200px] mx-auto flex justify-between items-center gap-8">
         <div>
-          <p className="font-sans text-[0.72rem] text-text-muted uppercase tracking-[0.1em] mb-2">
-            Next Project
+          <p className="font-mono text-[0.72rem] text-text-primary mb-4">
+            Next project
           </p>
           <h3
-            className="font-serif text-[clamp(2rem,4vw,3.2rem)] font-normal text-text-primary transition-colors duration-300"
-            style={hovered ? { color: "var(--color-text-secondary)" } : {}}
+            className="text-[clamp(1.6rem,3.4vw,2.6rem)] leading-[1.02] text-text-primary transition-opacity duration-300"
+            style={{ opacity: hovered ? 0.75 : 1 }}
           >
-            {next.title}
+            <KranaMix text={next.title} className="uppercase" />
           </h3>
-          <p className="font-sans text-[0.95rem] text-text-muted mt-1">
+          <p className="font-mono text-[0.76rem] text-text-secondary mt-3">
             {next.subtitle}
           </p>
         </div>
         <span
-          className="font-serif text-5xl text-text-muted transition-all duration-400"
+          className="font-serif text-[clamp(2.4rem,4vw,3.2rem)] transition-all duration-400"
           style={{
             transform: hovered ? "translateX(8px)" : "translateX(0)",
-            color: hovered
-              ? "var(--color-text-primary)"
-              : "var(--color-text-muted)",
+            color: hovered ? YELLOW : "var(--color-text-muted)",
           }}
+          aria-hidden="true"
         >
           →
         </span>
@@ -461,56 +472,77 @@ function NextProject({
 export default function CaseStudyContent({ project }: { project: Project }) {
   return (
     <div className="min-h-screen">
-      <ProgressBar color={project.color} />
-      <CaseStudyNav title={project.title} />
+      <ProgressBar color={YELLOW} />
+      <Nav />
 
       {/* Hero */}
-      <section className="pt-[clamp(6rem,12vh,9rem)]">
+      <section className="pt-[clamp(7rem,14vh,10rem)]">
         <div className="max-w-[1200px] mx-auto px-[clamp(1.5rem,4vw,4rem)]">
+          {/* Breadcrumb */}
           <Reveal>
-            <div className="flex gap-3 flex-wrap mb-6">
-              {project.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="font-sans text-[0.72rem] text-text-muted px-3 py-1.5 border border-border rounded"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <nav className="font-mono text-[0.72rem] text-text-muted mb-10">
+              <Link
+                href="/#work"
+                className="transition-colors hover:text-text-primary"
+              >
+                Work
+              </Link>
+              <span className="mx-2 opacity-60">/</span>
+              <span className="text-text-secondary">{project.title}</span>
+            </nav>
           </Reveal>
 
-          <Reveal delay={0.08}>
-            <h1 className="font-serif text-[clamp(3rem,7vw,5.5rem)] font-normal leading-[1.02] text-text-primary tracking-[-0.035em] mb-7 max-w-[900px]">
-              {project.title}
-            </h1>
-          </Reveal>
+          {/* Basel rule */}
+          <div className="border-t border-border" />
 
-          <Reveal delay={0.15}>
-            <p className="font-serif italic text-[clamp(1.2rem,2.5vw,1.65rem)] leading-[1.45] text-text-secondary max-w-[680px] mb-12">
-              {project.description}
-            </p>
-          </Reveal>
+          <div className="pt-10 pb-12">
+            {/* Tags */}
+            <Reveal delay={0.04}>
+              <div className="flex gap-1.5 flex-wrap mb-8">
+                {project.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="font-mono text-[0.68rem] text-text-primary px-2 py-1 border border-border rounded-[3px]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
 
-          <Reveal delay={0.22}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-12 border-b border-border">
-              {project.meta.map((item) => (
-                <div key={item.label}>
-                  <p className="font-sans text-[0.7rem] text-text-muted uppercase tracking-[0.08em] mb-1.5">
-                    {item.label}
-                  </p>
-                  <p className="font-sans text-[0.92rem] text-text-primary">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
+            <Reveal delay={0.08}>
+              <h1 className="font-serif text-[clamp(2.8rem,6.5vw,5.2rem)] font-normal leading-[1.04] tracking-[-0.03em] text-text-primary mb-8 max-w-[900px]">
+                {project.title}
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.14}>
+              <p className="font-sans text-[clamp(1.05rem,1.35vw,1.22rem)] leading-[1.55] text-text-primary max-w-[640px] mb-12">
+                {project.description}
+              </p>
+            </Reveal>
+
+            {/* Meta grid */}
+            <Reveal delay={0.2}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-border">
+                {project.meta.map((item) => (
+                  <div key={item.label}>
+                    <p className="font-mono text-[0.68rem] text-text-muted mb-2">
+                      {item.label}
+                    </p>
+                    <p className="font-mono text-[0.85rem] text-text-primary leading-[1.4]">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
         </div>
 
         {/* Hero image */}
-        <Reveal delay={0.3}>
-          <div className="max-w-[1200px] mx-auto mt-12 px-[clamp(1.5rem,4vw,4rem)]">
+        <Reveal delay={0.26}>
+          <div className="max-w-[1200px] mx-auto mt-6 px-[clamp(1.5rem,4vw,4rem)]">
             <ImagePlaceholder
               height={560}
               label={`${project.title} — Hero Shot`}
@@ -530,7 +562,7 @@ export default function CaseStudyContent({ project }: { project: Project }) {
       </div>
 
       {/* Outcome */}
-      <section className="bg-bg-card py-[clamp(4rem,10vh,7rem)] px-[clamp(1.5rem,4vw,4rem)]">
+      <section className="bg-bg-card border-y border-border py-[clamp(4rem,10vh,7rem)] px-[clamp(1.5rem,4vw,4rem)]">
         <div className="max-w-[740px] mx-auto">
           <SectionLabel number="✦" title="Outcome" />
           <Reveal>
@@ -540,33 +572,34 @@ export default function CaseStudyContent({ project }: { project: Project }) {
           </Reveal>
           {project.outcome.body.map((p, i) => (
             <Reveal key={i} delay={i * 0.1}>
-              <p className="font-sans text-[1.02rem] leading-[1.72] text-text-secondary mb-5">
+              <p className="font-sans text-[1.02rem] leading-[1.72] text-text-primary mb-5">
                 {p}
               </p>
             </Reveal>
           ))}
 
           <Reveal delay={0.2}>
-            <div className="flex gap-8 flex-wrap pt-6 border-t border-border mt-8">
+            <div className="flex gap-8 flex-wrap pt-8 border-t border-border mt-10">
               {[
                 {
-                  label: "My Contribution",
+                  label: "My contribution",
                   items: project.outcome.contributions,
                 },
                 {
-                  label: project.slug === "gator" ? "Deliverables" : "Collaborators",
+                  label:
+                    project.slug === "gator" ? "Deliverables" : "Collaborators",
                   items: project.outcome.collaborators,
                 },
                 { label: "Tools", items: project.outcome.tools },
               ].map((col, i) => (
                 <div key={i} className="flex-1 min-w-[180px]">
-                  <p className="font-sans text-[0.7rem] text-text-muted/50 uppercase tracking-[0.08em] mb-2">
+                  <p className="font-mono text-[0.68rem] text-text-muted mb-3">
                     {col.label}
                   </p>
                   {col.items.map((item, j) => (
                     <p
                       key={j}
-                      className="font-sans text-[0.85rem] text-text-secondary leading-[1.8]"
+                      className="font-mono text-[0.78rem] text-text-primary leading-[1.75]"
                     >
                       {item}
                     </p>
@@ -578,52 +611,7 @@ export default function CaseStudyContent({ project }: { project: Project }) {
         </div>
       </section>
 
-      {/* Contact CTA */}
-      <section id="contact" className="py-16 px-[clamp(1.5rem,4vw,4rem)]">
-        <div className="max-w-[740px] mx-auto text-center">
-          <Reveal>
-            <h2 className="font-serif text-[clamp(1.8rem,3vw,2.4rem)] font-normal text-text-primary mb-4">
-              Interested in working together?
-            </h2>
-            <div className="flex justify-center gap-4 flex-wrap">
-              <a
-                href={`mailto:${CONTACT.email}`}
-                className="font-sans text-[0.9rem] text-bg-primary bg-text-primary no-underline px-7 py-3 rounded-lg hover:bg-text-secondary transition-colors"
-              >
-                Email Me
-              </a>
-              <a
-                href={CONTACT.calendly}
-                target="_blank"
-                rel="noopener"
-                className="font-sans text-[0.9rem] text-text-primary no-underline px-7 py-3 rounded-lg border border-border hover:border-text-muted transition-colors"
-              >
-                Book a Chat
-              </a>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
       <NextProject next={project.nextProject} />
-
-      {/* Footer */}
-      <footer className="px-[clamp(1.5rem,4vw,4rem)] max-w-[1200px] mx-auto flex justify-between items-center py-6">
-        <span className="font-sans text-xs text-text-muted">
-          © 2026 Adam Rotmil
-        </span>
-        <div className="flex gap-6">
-          {["LinkedIn", "GitHub", "Email"].map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="font-sans text-xs text-text-muted hover:text-text-primary no-underline transition-colors"
-            >
-              {link}
-            </a>
-          ))}
-        </div>
-      </footer>
     </div>
   );
 }
