@@ -25,6 +25,20 @@ export interface Project {
   featured?: boolean;
   thumbnail?: string;
   thumbnailVideo?: string;
+  /**
+   * Optional list of thumbnail images that rotate on a timer with a
+   * crossfade when the tile is visible. Overrides thumbnail for tiles
+   * that want a carousel feel.
+   */
+  thumbnailSequence?: string[];
+  /**
+   * Override aspect ratio for the Work tile thumbnail in the mason
+   * layout. Natural variation between tiles is what gives the grid
+   * rhythm. Defaults to "4 / 3".
+   */
+  thumbnailAspect?: string;
+  /** Category label shown below the tile, right-aligned. Short. */
+  thumbnailCategory?: string;
   heroImage?: string;
   heroObjectPosition?: string;
   meta: { label: string; value: string }[];
