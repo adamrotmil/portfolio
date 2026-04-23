@@ -106,14 +106,30 @@ function CaseStudyCard({
               }}
             />
           ) : study.thumbnail ? (
-            <img
-              src={assetPath(study.thumbnail)}
-              alt={`${study.title} — ${study.subtitle}`}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
-              style={{
-                transform: hovered ? "scale(1.03)" : "scale(1)",
-              }}
-            />
+            <>
+              <img
+                src={assetPath(study.thumbnail)}
+                alt={`${study.title} — ${study.subtitle}`}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
+                style={{
+                  transform: hovered ? "scale(1.03)" : "scale(1)",
+                }}
+              />
+              {/* Soft dark vignette in the bottom-right of the Gator tile
+                  to mask the thin white sliver of the phone screen's
+                  corner radius that peeks through the center-cover crop.
+                  Per-project override only — other covers don't need it. */}
+              {study.slug === "gator" && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 35% 42% at 100% 100%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 72%)",
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+            </>
           ) : (
             <>
               <div
