@@ -1494,7 +1494,7 @@ export const PROJECTS: Project[] = [
       "Accelerated cyber training authoring with a modular lab and learning platform.",
     tags: ["Defense", "Enterprise", "Canvas UI", "Design Systems"],
     color: "#06b6d4",
-    thumbnail: "/images/content-studio/isomorphic.png",
+    thumbnail: "/images/content-studio/isomorphic-tile.png",
     heroImage: "/images/content-studio/content-studio-cyber-training.png",
     meta: [
       { label: "Client", value: "Ultimate Knowledge Inst. / CYBERCOM" },
