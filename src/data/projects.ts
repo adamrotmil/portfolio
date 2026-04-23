@@ -671,7 +671,7 @@ export const PROJECTS: Project[] = [
       "Cut carrier response latency by designing an LLM dispatch workflow.",
     tags: ["AI / LLM", "Enterprise", "Human-in-the-Loop"],
     color: "#7c3aed",
-    thumbnail: "/images/respond-ai/Respond Cover.png",
+    thumbnail: "/images/respond-ai/respond-ai-cover-new.png",
     heroImage: "/images/respond-ai/Respond-new-hero.png",
     heroObjectPosition: "top",
     meta: [
