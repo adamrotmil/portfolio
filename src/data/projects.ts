@@ -2126,7 +2126,7 @@ export const PROJECTS: Project[] = [
       "Redesigned the marketing site for a $6B life sciences R&D platform — structuring content strategy, zone diagrams, and a scalable component system built for CMS.",
     tags: ["SaaS", "Biotech", "Component System", "Marketing"],
     color: "#1652f0",
-    thumbnail: "/images/benchling/homepage.png",
+    thumbnail: "/images/benchling/benchling-logo.png",
     heroImage: "/images/benchling/homepage.png",
     meta: [
       { label: "Client", value: "Benchling (via Code & Theory)" },
