@@ -513,7 +513,7 @@ export const PROJECTS: Project[] = [
       "Worked directly with a founder to design a multimodal AI support app for HVAC technicians — concept to MVP in 6 weeks, shipped with zero changes.",
     tags: ["Mobile", "Conversational AI", "QR/Vision", "Field Service"],
     color: "#2d5a3d",
-    thumbnail: "/images/gator/Gator cover.png",
+    thumbnail: "/images/gator/gator-cover-new.png",
     heroImage: "/images/gator/Gator First Image.png",
     meta: [
       { label: "Client", value: "Gator (Startup)" },
