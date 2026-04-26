@@ -5315,6 +5315,22 @@ export default function IceCreamGame() {
     if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
     setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    if (location === "earth") {
+      setCutsceneType("beam-up");
+    } else {
+      setCutsceneType("earth-departure");
+    }
+    setCutsceneTick(0);
+    setPhase("cutscene");
+  }, [alienVisited, location]);
+
+  const chooseShipInteriorFromDoor = useCallback(() => {
+    if (!alienVisited) return;
+    playDing();
+    setDoorOfferActive(false);
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
     setShipRoom("cockpit");
     setSelectedSpaceDestination(location);
     setSpaceMapMessage(null);
@@ -7074,8 +7090,23 @@ export default function IceCreamGame() {
           )}
           {alienVisited && (
             <p className="text-xs mb-2" style={{ color: "#888" }}>
-              Ship map groundwork: {SHIP_ROOMS.cockpit.name} charts {SPACE_DESTINATIONS.length} weird stops.
+              Take the ship keeps the flying sequence, pilot offer, and warp drive.
             </p>
+          )}
+          {alienVisited && (
+            <button onClick={chooseShipInteriorFromDoor}
+              className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4 mb-2"
+              style={{
+                background: "linear-gradient(180deg, #70FFE0, #208088)",
+                borderBottomColor: "#075858",
+                color: "#06122A",
+              }}>
+              {"\u{1F6F8}"} Explore ship rooms
+              <br />
+              <span className="text-xs font-normal" style={{ opacity: 0.8 }}>
+                optional: {SHIP_ROOMS.cockpit.name} map prototype, {SPACE_DESTINATIONS.length} charted stops
+              </span>
+            </button>
           )}
           <button onClick={closeDoorOffer}
             className="text-sm underline mt-1" style={{ color: "#C44569" }}>

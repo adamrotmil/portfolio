@@ -52,8 +52,8 @@
 - Completed:
 - Summary:
 - Checks run:
-- Commit: `feat(ice-cream): add walkable alien arcade`
-- Push status: pushed to `origin/feature/scoop-shop-expansion`
+- Commit:
+- Push status:
 - Remaining issues:
 
 ### Milestone 4 - Alien Arcade
@@ -62,8 +62,8 @@
 - Completed: 2026-04-26
 - Summary: Added a walkable Glitch Galaxy Arcade room, cabinet pixel art, cabinet previews, keyboard/button movement, Sarah's World return routing, Meteor Meltdown, and Slime Simon with persistent arcade high scores.
 - Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed; `npm run lint` still fails on pre-existing non-game files. Browser smoke entered the arcade room through the in-app browser and confirmed the room panel renders without the scoop-button UI leak after the guard fix.
-- Commit:
-- Push status:
+- Commit: `db48d41` (`feat(ice-cream): add walkable alien arcade`)
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
 - Remaining issues: Browser playthrough of Meteor Meltdown / Slime Simon was not completed because the existing travel flow branched into the black-hole event during the second verification pass; build and page lint cover implementation correctness.
 
 ### Milestone 5 - Underground
@@ -84,7 +84,7 @@
 - Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed.
 - Commit: `feat(ice-cream): add ship interior and space map`
 - Push status: pushed to `origin/feature/scoop-shop-expansion`
-- Remaining issues: Non-Earth/Alien destinations are charted placeholders until destination-local customer loops are added.
+- Remaining issues: Non-Earth/Alien destinations are charted placeholders until destination-local customer loops are added. Follow-up feedback restored `Take the ship` as the primary flying/cutscene path and moved ship rooms behind an optional `Explore ship rooms` button.
 
 ### Milestone 7 - The Shop Walks Away
 
