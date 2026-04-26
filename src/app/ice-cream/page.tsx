@@ -3017,6 +3017,14 @@ const STREET_SHOP_W = 28;
 const STREET_GAP = 4;
 const STREET_MARGIN = 2;
 const ARCADE_ROOM_W = 470;
+const UNDERGROUND_W = 360;
+const UNDERGROUND_CRYSTALS = [
+  { id: 1, x: 54, y: 77, color: "#70FFE0" },
+  { id: 2, x: 112, y: 66, color: "#B7FF9A" },
+  { id: 3, x: 178, y: 80, color: "#FF70F0" },
+  { id: 4, x: 246, y: 62, color: "#FFD86B" },
+  { id: 5, x: 314, y: 76, color: "#A8C8FF" },
+] as const;
 
 function streetWorldWidth(shops: Shop[]): number {
   return STREET_MARGIN * 2 + shops.length * STREET_SHOP_W + (shops.length - 1) * STREET_GAP;
@@ -3026,6 +3034,10 @@ function streetCameraX(heroX: number, shops: Shop[]): number {
   const worldW = streetWorldWidth(shops);
   if (worldW <= W) return 0;
   return Math.max(0, Math.min(worldW - W, Math.floor(heroX - W / 2)));
+}
+
+function alienLadderWorldX(shops: Shop[]): number {
+  return Math.max(38, streetWorldWidth(shops) - 18);
 }
 
 // Draws street backdrop with a scrolling camera when the world is wider than the viewport
@@ -3039,6 +3051,7 @@ function drawStreetScene(
   npcs: { x: number; spriteIdx: number; alien: boolean }[],
   highlightId: string | null,
   heldItemId: string | null,
+  showAlienLadder = false,
 ) {
   const cameraX = streetCameraX(heroX, shops);
   // Sky
@@ -3099,6 +3112,19 @@ function drawStreetScene(
 
   // Hero on sidewalk
   drawHero(ctx, Math.floor(heroX - cameraX), 82, walking, false, heldItemId);
+
+  if (location === "alien-planet" && showAlienLadder) {
+    const lx = Math.floor(alienLadderWorldX(shops) - cameraX);
+    if (lx > -12 && lx < W + 12) {
+      for (let dy = 0; dy < 23; dy++) {
+        px(ctx, lx - 4, 76 + dy, 1, 1, "#FFD86B");
+        px(ctx, lx + 4, 76 + dy, 1, 1, "#FFD86B");
+        if (dy % 4 === 0) px(ctx, lx - 4, 76 + dy, 9, 1, "#70FFE0");
+      }
+      px(ctx, lx - 8, 72, 17, 4, "#24104A");
+      drawText(ctx, "DOWN", lx, 70, "#FFD86B", 0.42);
+    }
+  }
 
   // Scroll hints when camera can scroll further
   const worldW = streetWorldWidth(shops);
@@ -3267,6 +3293,71 @@ function drawSlimeSimonScene(ctx: CanvasRenderingContext2D, tick: number, game: 
     const color = game.phase === "done" ? "#FFD86B" : game.phase === "play" ? "#FFFFFF" : "#B7FF9A";
     drawText(ctx, game.message, W / 2, 104, color, 0.55);
   }
+}
+
+function undergroundCameraX(heroX: number): number {
+  return Math.max(0, Math.min(UNDERGROUND_W - W, Math.floor(heroX - W / 2)));
+}
+
+function drawAlienUndergroundScene(
+  ctx: CanvasRenderingContext2D,
+  tick: number,
+  heroX: number,
+  walking: boolean,
+  collectedCrystalIds: number[],
+  shardCount: number,
+) {
+  const cameraX = undergroundCameraX(heroX);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const worldX = x + cameraX;
+      const strata = Math.floor((worldX + y * 2) / 12) % 3;
+      const color = y < 18 ? "#120820" : strata === 0 ? "#1B1838" : strata === 1 ? "#142C34" : "#24143A";
+      px(ctx, x, y, 1, 1, color);
+    }
+  }
+  px(ctx, 0, 18, W, 2, "#70FFE0");
+  px(ctx, 0, 88, W, 2, "#B7FF9A");
+
+  // Ladder back to the surface
+  const ladderX = Math.floor(18 - cameraX);
+  if (ladderX > -10 && ladderX < W + 10) {
+    for (let dy = 0; dy < 66; dy++) {
+      px(ctx, ladderX - 4, 22 + dy, 1, 1, "#FFD86B");
+      px(ctx, ladderX + 4, 22 + dy, 1, 1, "#FFD86B");
+      if (dy % 5 === 0) px(ctx, ladderX - 4, 22 + dy, 9, 1, "#70FFE0");
+    }
+    drawText(ctx, "UP", ladderX, 14, "#FFD86B", 0.55);
+  }
+
+  // Mushrooms and crystal clusters
+  for (let i = 0; i < 18; i++) {
+    const mx = Math.floor(i * 23 + 28 - cameraX);
+    const my = 92 - (i % 3) * 4;
+    if (mx < -8 || mx > W + 8) continue;
+    px(ctx, mx - 1, my - 5, 2, 6, "#C8F7C5");
+    px(ctx, mx - 4, my - 8, 8, 4, i % 2 ? "#FF70F0" : "#70FFE0");
+    px(ctx, mx - 2, my - 9, 4, 1, "#FFFFFF");
+  }
+
+  UNDERGROUND_CRYSTALS.forEach((crystal) => {
+    if (collectedCrystalIds.includes(crystal.id)) return;
+    const cx = Math.floor(crystal.x - cameraX);
+    if (cx < -10 || cx > W + 10) return;
+    const pulse = Math.floor(Math.sin((tick + crystal.id * 7) / 6) * 1);
+    for (let dy = -7; dy <= 7; dy++) {
+      const half = Math.max(1, 5 - Math.floor(Math.abs(dy) / 2));
+      for (let dx = -half; dx <= half; dx++) {
+        const edge = Math.abs(dx) === half;
+        px(ctx, cx + dx, crystal.y + dy + pulse, 1, 1, edge ? "#FFFFFF" : crystal.color);
+      }
+    }
+  });
+
+  drawAlienSprite(ctx, Math.floor(heroX - cameraX), 84, 1, walking);
+  if (cameraX > 0) drawText(ctx, "\u2190", 6, 50, "#FFFFFF", 1.0);
+  if (cameraX < UNDERGROUND_W - W) drawText(ctx, "\u2192", W - 6, 50, "#FFFFFF", 1.0);
+  drawText(ctx, `GLOW CAVERN  ${shardCount}`, W / 2, 104, "#B7FF9A", 0.55);
 }
 
 // Shop interior — draws owner behind counter and shop-themed backdrop
@@ -3970,6 +4061,9 @@ export default function IceCreamGame() {
   const [glowShards, setGlowShards] = useState(() =>
     loadJson<{ glowShards: number }>(STORAGE_KEYS.underground, { glowShards: 0 }).glowShards
   );
+  const [undergroundX, setUndergroundX] = useState(26);
+  const undergroundDirRef = useRef<-1 | 0 | 1>(0);
+  const [collectedUndergroundCrystals, setCollectedUndergroundCrystals] = useState<number[]>([]);
   const [shipRoom, setShipRoom] = useState<ShipRoomId>(() =>
     loadJson<{ room: ShipRoomId }>(STORAGE_KEYS.shipState, { room: "cockpit" }).room
   );
@@ -4078,6 +4172,10 @@ export default function IceCreamGame() {
     (loc: Location) => getVisibleShops(loc, { customersServed, inventory, unlockFlags }),
     [customersServed, inventory, unlockFlags]
   );
+  const alienLadderUnlocked = useMemo(
+    () => Boolean(inventory["gravity-boots"] || unlockFlags["alien-ladder"] || customersServed >= 18),
+    [customersServed, inventory, unlockFlags]
+  );
 
   useEffect(() => saveJson(STORAGE_KEYS.unlockFlags, unlockFlags), [unlockFlags]);
   useEffect(() => saveJson(STORAGE_KEYS.quests, quests), [quests]);
@@ -4093,7 +4191,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -4326,7 +4424,13 @@ export default function IceCreamGame() {
         streetNpcs,
         null,
         equippedHeld,
+        alienLadderUnlocked,
       );
+    }
+
+    function drawAlienUnderground() {
+      if (!ctx) return;
+      drawAlienUndergroundScene(ctx, streetTick, undergroundX, undergroundDirRef.current !== 0, collectedUndergroundCrystals, glowShards);
     }
 
     function drawShop() {
@@ -4410,6 +4514,8 @@ export default function IceCreamGame() {
         drawMeteorMeltdown();
       } else if (phase === "slime-simon") {
         drawSlimeSimon();
+      } else if (phase === "alien-underground") {
+        drawAlienUnderground();
       } else if (phase === "chase") {
         drawChase();
       } else if (phase === "boss-fight") {
@@ -4425,7 +4531,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -5589,6 +5695,17 @@ export default function IceCreamGame() {
       const shops = visibleShops(location);
       const cameraX = streetCameraX(heroX, shops);
       const worldGx = gx + cameraX;
+      if (location === "alien-planet" && alienLadderUnlocked && gy >= 70 && gy <= 102) {
+        const ladderX = alienLadderWorldX(shops);
+        if (Math.abs(worldGx - ladderX) <= 12) {
+          playDing();
+          setUndergroundX(26);
+          undergroundDirRef.current = 0;
+          setCollectedUndergroundCrystals([]);
+          setPhase("alien-underground");
+          return;
+        }
+      }
       for (let i = 0; i < shops.length; i++) {
         const bxWorld = STREET_MARGIN + i * (STREET_SHOP_W + STREET_GAP);
         if (worldGx >= bxWorld && worldGx <= bxWorld + STREET_SHOP_W && gy >= 11 && gy <= 76) {
@@ -5597,7 +5714,84 @@ export default function IceCreamGame() {
         }
       }
     },
-    [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX, visibleShops]
+    [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX, visibleShops, alienLadderUnlocked]
+  );
+
+  useEffect(() => {
+    if (phase !== "alien-underground") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      if (undergroundDirRef.current !== 0) {
+        setUndergroundX((x) => Math.max(12, Math.min(UNDERGROUND_W - 12, x + undergroundDirRef.current * 1.25)));
+      }
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const exitAlienUnderground = useCallback(() => {
+    playBoop();
+    undergroundDirRef.current = 0;
+    setPhase("street");
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "alien-underground") return;
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") undergroundDirRef.current = -1;
+      if (e.key === "ArrowRight") undergroundDirRef.current = 1;
+      if (e.key === "Escape") exitAlienUnderground();
+    };
+    const up = (e: KeyboardEvent) => {
+      if ((e.key === "ArrowLeft" && undergroundDirRef.current === -1) || (e.key === "ArrowRight" && undergroundDirRef.current === 1)) {
+        undergroundDirRef.current = 0;
+      }
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      undergroundDirRef.current = 0;
+    };
+  }, [phase, exitAlienUnderground]);
+
+  const collectUndergroundCrystal = useCallback((crystalId: number) => {
+    setCollectedUndergroundCrystals((prev) => {
+      if (prev.includes(crystalId)) return prev;
+      playCoinSound();
+      setGlowShards((count) => count + 1);
+      return [...prev, crystalId];
+    });
+  }, []);
+
+  const handleUndergroundTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const cameraX = undergroundCameraX(undergroundX);
+      const worldGx = gx + cameraX;
+
+      if (worldGx <= 34 && gy >= 20 && gy <= 90) {
+        exitAlienUnderground();
+        return;
+      }
+
+      const crystal = UNDERGROUND_CRYSTALS.find((c) =>
+        !collectedUndergroundCrystals.includes(c.id) &&
+        Math.abs(worldGx - c.x) <= 12 &&
+        Math.abs(gy - c.y) <= 14
+      );
+      if (crystal) collectUndergroundCrystal(crystal.id);
+    },
+    [undergroundX, collectedUndergroundCrystals, collectUndergroundCrystal, exitAlienUnderground]
   );
 
   // Alien Arcade room movement
@@ -6584,6 +6778,7 @@ export default function IceCreamGame() {
             : phase === "arcade-room" ? handleArcadeRoomTap
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
+            : phase === "alien-underground" ? handleUndergroundTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -6593,6 +6788,7 @@ export default function IceCreamGame() {
             : phase === "arcade-room" ? handleArcadeRoomTap
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
+            : phase === "alien-underground" ? handleUndergroundTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -6771,12 +6967,69 @@ export default function IceCreamGame() {
               style={{ background: "linear-gradient(180deg,#FFF,#FFD6E8)", borderBottomColor: "#FF9EBA", color: "#C44569" }}
               aria-label="Walk right">&rarr;</button>
           </div>
-          <p className="text-sm" style={{ color: "#555" }}>tap a shop to enter</p>
+          <p className="text-sm" style={{ color: "#555" }}>
+            tap a shop{location === "alien-planet" && alienLadderUnlocked ? " or ladder" : ""} to enter
+          </p>
           <button onClick={exitStreet}
             className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
             style={{ background: "linear-gradient(180deg, #B0FFC8, #50C080)", borderBottomColor: "#208050", color: "#FFF" }}>
             {"\u{1F3E0}"} Go home
           </button>
+        </div>
+      )}
+
+      {/* Alien underground controls */}
+      {phase === "alien-underground" && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4 select-none"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #102818, #081420)",
+            borderColor: "#B7FF9A",
+            color: "#EFFFF0",
+            boxShadow: "0 0 18px rgba(183,255,154,0.35)",
+          }}>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <strong style={{ color: "#B7FF9A" }}>Glow Cavern</strong>
+              <div className="text-xs" style={{ color: "#A8C8FF" }}>
+                tap crystals to collect glow shards
+              </div>
+            </div>
+            <div className="text-sm font-bold" style={{ color: "#FFD86B" }}>
+              {glowShards} shards
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUndergroundX((x) => Math.max(12, x - 24))}
+                onTouchStart={(e) => { e.preventDefault(); undergroundDirRef.current = -1; }}
+                onTouchEnd={(e) => { e.preventDefault(); undergroundDirRef.current = 0; }}
+                onTouchCancel={(e) => { e.preventDefault(); undergroundDirRef.current = 0; }}
+                onMouseDown={() => { undergroundDirRef.current = -1; }}
+                onMouseUp={() => { undergroundDirRef.current = 0; }}
+                onMouseLeave={() => { undergroundDirRef.current = 0; }}
+                className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+                style={{ background: "linear-gradient(180deg,#B7FF9A,#40A050)", borderBottomColor: "#145020", color: "#102018" }}
+                aria-label="Walk left">&larr;</button>
+              <button
+                onClick={() => setUndergroundX((x) => Math.min(UNDERGROUND_W - 12, x + 24))}
+                onTouchStart={(e) => { e.preventDefault(); undergroundDirRef.current = 1; }}
+                onTouchEnd={(e) => { e.preventDefault(); undergroundDirRef.current = 0; }}
+                onTouchCancel={(e) => { e.preventDefault(); undergroundDirRef.current = 0; }}
+                onMouseDown={() => { undergroundDirRef.current = 1; }}
+                onMouseUp={() => { undergroundDirRef.current = 0; }}
+                onMouseLeave={() => { undergroundDirRef.current = 0; }}
+                className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+                style={{ background: "linear-gradient(180deg,#70C8FF,#2060A0)", borderBottomColor: "#103060", color: "#FFF" }}
+                aria-label="Walk right">&rarr;</button>
+            </div>
+            <button onClick={exitAlienUnderground}
+              className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
+              style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+              back up
+            </button>
+          </div>
         </div>
       )}
 
@@ -7930,7 +8183,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">

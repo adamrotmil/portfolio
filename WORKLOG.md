@@ -68,13 +68,13 @@
 
 ### Milestone 5 - Underground
 
-- Started:
-- Completed:
-- Summary:
-- Checks run:
-- Commit:
-- Push status:
-- Remaining issues:
+- Started: 2026-04-26
+- Completed: 2026-04-26
+- Summary: Added an alien street ladder unlock, Glow Cavern phase, walk controls, keyboard escape/arrow handling, tap-to-return ladder, crystal pickups, and persisted glow shard count.
+- Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed; `npm run lint` still fails on pre-existing non-game files.
+- Commit: `feat(ice-cream): add alien underground cavern`
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
+- Remaining issues: Underground has collection/exploration only; Murm dialogue or an underground shop can be layered in a later pass.
 
 ### Milestone 6 - Ship / Space Map
 
