@@ -14,15 +14,85 @@ type Topping = {
   emoji: string;
 };
 
+type SpaceDestinationId =
+  | "alien-planet"
+  | "earth"
+  | "moon-dairy"
+  | "asteroid-bazaar"
+  | "comet-carnival"
+  | "black-hole-cafe"
+  | "cone-constellation"
+  | "star-nursery"
+  | "dino-timeline";
+
+type CharacterId =
+  | "scoopy"
+  | "zorp"
+  | "zarixa"
+  | "ren"
+  | "glitch"
+  | "tina"
+  | "blorp"
+  | "xarnix"
+  | "milo"
+  | "luma"
+  | "tock"
+  | "veev"
+  | "first-scoop"
+  | "alive-shop";
+
+type QuestId =
+  | "penpal-tina-blorp"
+  | "ren-glitch-rivalry"
+  | "zorp-scoopy-origin"
+  | "alive-shop";
+
+type UnlockFlags = Record<string, boolean>;
+
+type DialogueEffect =
+  | { type: "give-coins"; amount: number; location?: Location }
+  | { type: "set-flag"; flag: string; value: boolean }
+  | { type: "start-quest"; questId: QuestId }
+  | { type: "advance-quest"; questId: QuestId }
+  | { type: "unlock-shop"; shopId: string }
+  | { type: "unlock-destination"; destinationId: SpaceDestinationId }
+  | { type: "change-affinity"; characterId: CharacterId; amount: number };
+
+type DialogueChoice = {
+  label: string;
+  next: number;
+  effects?: DialogueEffect[];
+};
+
 type DialogueNode = {
   speaker: "them" | "you";
   text: string;
-  choiceA?: { label: string; next: number };
-  choiceB?: { label: string; next: number };
+  choiceA?: DialogueChoice;
+  choiceB?: DialogueChoice;
+  effects?: DialogueEffect[];
   // if no choices, it's the end of the conversation
 };
 
-type GamePhase = "menu" | "playing" | "cutscene" | "blackhole" | "pilot" | "street" | "shop" | "chase" | "boss-fight" | "sarahs-world" | "result";
+type GamePhase =
+  | "menu"
+  | "playing"
+  | "cutscene"
+  | "blackhole"
+  | "pilot"
+  | "street"
+  | "shop"
+  | "chase"
+  | "boss-fight"
+  | "sarahs-world"
+  | "arcade-room"
+  | "meteor-meltdown"
+  | "slime-simon"
+  | "alien-underground"
+  | "space-map"
+  | "space-destination"
+  | "ship-interior"
+  | "alive-shop-event"
+  | "result";
 
 type Asteroid = { id: number; x: number; y: number; vx: number; vy: number; size: number; };
 type Laser = { id: number; x: number; y: number; };
@@ -56,6 +126,22 @@ type ShopItem = {
   price: number;
   description: string;
   slot?: "held" | "decor";  // if present, item is equippable tamagotchi-style
+  effect?: ShopItemEffect;
+};
+
+type ShopItemEffect =
+  | { type: "tip-bonus"; chance: number; amount: number }
+  | { type: "visual-weather"; weather: "rain" | "snow" | "rainbow" }
+  | { type: "unlock-flavor"; flavorId: string }
+  | { type: "unlock-topping"; toppingId: string }
+  | { type: "unlock-destination"; destinationId: SpaceDestinationId }
+  | { type: "set-flag"; flag: string; value: boolean }
+  | { type: "give-glow-shards"; amount: number };
+
+type ShopUnlock = {
+  served?: number;
+  itemId?: string;
+  flag?: string;
 };
 
 type Shop = {
@@ -69,9 +155,90 @@ type Shop = {
   items: ShopItem[];
   greeting: string;        // short blurb when opened
   type?: "retail" | "casino" | "arcade";
+  unlock?: ShopUnlock;
 };
 
 type Location = "earth" | "alien-planet";
+
+type CharacterMemory = {
+  timesTalked: number;
+  affinity: number;
+  lastChoice?: string;
+  flags: Record<string, boolean>;
+};
+
+type CharacterMemoryMap = Partial<Record<CharacterId, CharacterMemory>>;
+
+type QuestState = {
+  id: QuestId;
+  step: number;
+  complete: boolean;
+};
+
+type QuestMap = Partial<Record<QuestId, QuestState>>;
+
+type ArcadeGameId =
+  | "sarahs-world"
+  | "meteor-meltdown"
+  | "slime-simon"
+  | "moon-maze"
+  | "ufo-claw"
+  | "pixel-rift";
+
+type ArcadeCabinet = {
+  id: ArcadeGameId;
+  name: string;
+  subtitle: string;
+  x: number;
+  colors: {
+    body: string;
+    screen: string;
+    accent: string;
+  };
+  emoji: string;
+  unlocked?: boolean;
+  unlockFlag?: string;
+  highScoreKey: ArcadeGameId;
+};
+
+type SpaceDestination = {
+  id: SpaceDestinationId;
+  name: string;
+  emoji: string;
+  x: number;
+  y: number;
+  unlocked: boolean;
+  unlockFlag?: string;
+  description: string;
+  travelRisk: "none" | "asteroids" | "blackhole" | "weird";
+};
+
+type ShipRoomId = "cockpit" | "galley" | "cargo" | "engine" | "crew-pod";
+
+type ShipRoom = {
+  id: ShipRoomId;
+  name: string;
+  exits: {
+    left?: ShipRoomId;
+    right?: ShipRoomId;
+    door?: ShipRoomId;
+  };
+};
+
+type AliveShopStep =
+  | "awakening"
+  | "street-chase"
+  | "ship-stowaway"
+  | "underground-hideout"
+  | "heart-talk"
+  | "resolved";
+
+type AliveShopState = {
+  started: boolean;
+  step: AliveShopStep;
+  affinity: number;
+  completed: boolean;
+};
 
 type CutsceneType =
   | "alien-arrival"      // saucer flies in, beam drops alien at earth shop
@@ -112,6 +279,162 @@ type Customer = {
   minions?: Minion[];    // trashy sidekicks flanking the boss
 };
 
+const STORAGE_KEYS = {
+  quests: "scoopstack-quests",
+  characterMemory: "scoopstack-character-memory",
+  unlockFlags: "scoopstack-unlock-flags",
+  arcadeHighScores: "scoopstack-arcade-highscores",
+  underground: "scoopstack-underground",
+  spaceDestinations: "scoopstack-space-destinations",
+  shipState: "scoopstack-ship-state",
+  aliveShop: "scoopstack-alive-shop",
+  mobileShop: "scoopstack-mobile-shop",
+} as const;
+
+const DEFAULT_ALIVE_SHOP_STATE: AliveShopState = {
+  started: false,
+  step: "awakening",
+  affinity: 0,
+  completed: false,
+};
+
+const SHIP_ROOMS: Record<ShipRoomId, ShipRoom> = {
+  cockpit: { id: "cockpit", name: "Cockpit", exits: { right: "galley" } },
+  galley: { id: "galley", name: "Scoop Lab", exits: { left: "cockpit", right: "cargo" } },
+  cargo: { id: "cargo", name: "Cargo Hold", exits: { left: "galley", right: "engine" } },
+  engine: { id: "engine", name: "Engine Room", exits: { left: "cargo", right: "crew-pod" } },
+  "crew-pod": { id: "crew-pod", name: "Crew Pod", exits: { left: "engine" } },
+};
+
+const ALIEN_ARCADE_CABINETS: ArcadeCabinet[] = [
+  {
+    id: "sarahs-world",
+    name: "Sarah's World",
+    subtitle: "Build Sarah's house and shoo Julia.",
+    x: 80,
+    colors: { body: "#4B2A8A", screen: "#9EEBFF", accent: "#FFD86B" },
+    emoji: "\u{1F3E0}",
+    unlocked: true,
+    highScoreKey: "sarahs-world",
+  },
+  {
+    id: "meteor-meltdown",
+    name: "Meteor Meltdown",
+    subtitle: "Zap falling meteors before they land.",
+    x: 190,
+    colors: { body: "#882244", screen: "#120020", accent: "#FF8050" },
+    emoji: "\u2604\uFE0F",
+    unlocked: true,
+    highScoreKey: "meteor-meltdown",
+  },
+  {
+    id: "slime-simon",
+    name: "Slime Simon",
+    subtitle: "Repeat the glowing slime pattern.",
+    x: 300,
+    colors: { body: "#146B4A", screen: "#B7FF9A", accent: "#78F060" },
+    emoji: "\u{1F9EA}",
+    unlocked: true,
+    highScoreKey: "slime-simon",
+  },
+  {
+    id: "pixel-rift",
+    name: "Pixel Rift",
+    subtitle: "A cabinet that dreams about another arcade.",
+    x: 410,
+    colors: { body: "#301050", screen: "#FF70F0", accent: "#70FFE0" },
+    emoji: "\u{1F300}",
+    unlockFlag: "pixel-rift-unlocked",
+    highScoreKey: "pixel-rift",
+  },
+];
+
+const SPACE_DESTINATIONS: SpaceDestination[] = [
+  {
+    id: "earth",
+    name: "Earth",
+    emoji: "\u{1F30E}",
+    x: 22,
+    y: 72,
+    unlocked: true,
+    description: "Home of Scoop Shop, soft sidewalks, and familiar faces.",
+    travelRisk: "none",
+  },
+  {
+    id: "alien-planet",
+    name: "Alien Planet",
+    emoji: "\u{1FA90}",
+    x: 64,
+    y: 42,
+    unlocked: true,
+    description: "Three suns, weird scoops, and Zorp's glowing counter.",
+    travelRisk: "asteroids",
+  },
+  {
+    id: "moon-dairy",
+    name: "Moon Dairy",
+    emoji: "\u{1F319}",
+    x: 38,
+    y: 24,
+    unlocked: false,
+    unlockFlag: "destination-moon-dairy",
+    description: "Low gravity scoops and moon milk in little silver jars.",
+    travelRisk: "none",
+  },
+  {
+    id: "asteroid-bazaar",
+    name: "Asteroid Bazaar",
+    emoji: "\u2604\uFE0F",
+    x: 90,
+    y: 24,
+    unlocked: false,
+    unlockFlag: "destination-asteroid-bazaar",
+    description: "Markets bolted to drifting rocks.",
+    travelRisk: "asteroids",
+  },
+  {
+    id: "black-hole-cafe",
+    name: "Black Hole Cafe",
+    emoji: "\u{1F311}",
+    x: 104,
+    y: 78,
+    unlocked: false,
+    unlockFlag: "destination-black-hole-cafe",
+    description: "The espresso never arrives, but the conversation does.",
+    travelRisk: "blackhole",
+  },
+  {
+    id: "cone-constellation",
+    name: "Cone Constellation",
+    emoji: "\u2728",
+    x: 68,
+    y: 88,
+    unlocked: false,
+    unlockFlag: "destination-cone-constellation",
+    description: "A star pattern shaped suspiciously like dessert.",
+    travelRisk: "weird",
+  },
+];
+
+function loadJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson<T>(key: string, value: T): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage can fail in private mode; the game should keep running.
+  }
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 const FLAVORS: Flavor[] = [
   { name: "Vanilla",    colors: ["#FFF8DC", "#F5E6B8", "#D4C090"], emoji: "\u{1F366}" },
@@ -129,6 +452,41 @@ const TOPPINGS: Topping[] = [
   { name: "Hot Fudge",     emoji: "\u{1F36B}" },
   { name: "Gummy Bears",   emoji: "\u{1F43B}" },
 ];
+
+const EARTH_UNLOCKABLE_FLAVORS: Record<string, Flavor> = {
+  pistachio: {
+    name: "Pistachio",
+    colors: ["#D8F0B0", "#A8C878", "#6C9048"],
+    emoji: "\u{1F95C}",
+  },
+  cookieDough: {
+    name: "Cookie Dough",
+    colors: ["#E8C898", "#C09060", "#704830"],
+    emoji: "\u{1F36A}",
+  },
+  mythicVanilla: {
+    name: "Mythic Vanilla",
+    colors: ["#FFFBE8", "#F6D878", "#C28A28"],
+    emoji: "\u2728",
+  },
+};
+
+const UNDERGROUND_FLAVORS: Record<string, Flavor> = {
+  magmaCream: {
+    name: "Magma Cream",
+    colors: ["#FFC060", "#FF6040", "#803010"],
+    emoji: "\u{1F30B}",
+  },
+  crystalMint: {
+    name: "Crystal Mint",
+    colors: ["#D0FFFF", "#80E0E0", "#309090"],
+    emoji: "\u{1F48E}",
+  },
+};
+
+const EARTH_UNLOCKABLE_TOPPINGS: Record<string, Topping> = {
+  stellarSprinkles: { name: "Stellar Sprinkles", emoji: "\u{1F308}" },
+};
 
 const CUSTOMER_NAMES = [
   "Timmy", "Sarah", "Marco", "Rose", "Lola",
@@ -155,6 +513,12 @@ const ALIEN_TOPPINGS: Topping[] = [
   { name: "Cosmic Dust",  emoji: "\u2728" },
   { name: "Space Jelly",  emoji: "\u{1F47D}" },
 ];
+
+const ALIEN_UNLOCKABLE_TOPPINGS: Record<string, Topping> = {
+  glowWormsDeluxe: { name: "Glow Worms Deluxe", emoji: "\u{1FAB1}" },
+  glowShards: { name: "Glow Shards", emoji: "\u{1F48E}" },
+  fossilCrunch: { name: "Fossil Crunch", emoji: "\u{1F9B4}" },
+};
 
 const ALIEN_NAMES = [
   "Zog", "Blorp", "Xarnix", "Tuvok", "Vex",
@@ -339,6 +703,69 @@ const EARTH_SHOPS: Shop[] = [
     ],
   },
   {
+    id: "flavor-lab",
+    name: "Flavor Lab",
+    ownerName: "Dr. Momo",
+    signColor: "#A8C878",
+    wallColor: "#E8F8D8",
+    accentColor: "#4F7A34",
+    location: "earth",
+    greeting: "Science says every new flavor needs one brave scooper and several tiny beakers.",
+    items: [
+      { id: "recipe-pistachio", name: "Recipe Card: Pistachio", emoji: "\u{1F95C}", price: 80, description: "Unlocks Pistachio for future orders.", effect: { type: "unlock-flavor", flavorId: "pistachio" } },
+      { id: "recipe-cookie-dough", name: "Recipe Card: Cookie Dough", emoji: "\u{1F36A}", price: 120, description: "Unlocks Cookie Dough for future orders.", effect: { type: "unlock-flavor", flavorId: "cookie-dough" } },
+      { id: "tiny-beaker", name: "Tiny Beaker", emoji: "\u{1F9EA}", price: 30, description: "Bubbles gently in your shop.", slot: "decor", effect: { type: "set-flag", flag: "decor-tiny-beaker", value: true } },
+      { id: "lab-goggles", name: "Lab Goggles", emoji: "\u{1F97D}", price: 45, description: "Makes you look extremely ready for scoop science.", slot: "held" },
+    ],
+  },
+  {
+    id: "scoop-mail",
+    name: "Scoop Mail",
+    ownerName: "Milo",
+    signColor: "#E05050",
+    wallColor: "#FFF0E8",
+    accentColor: "#9B2030",
+    location: "earth",
+    greeting: "Letters, stamps, postcards, and one envelope that hums when aliens are nearby.",
+    items: [
+      { id: "stamp-book", name: "Stamp Book", emoji: "\u{1F4D5}", price: 25, description: "A pocket full of tiny destinations.", slot: "held", effect: { type: "set-flag", flag: "mail-dialogue-unlocked", value: true } },
+      { id: "tiny-mailbox", name: "Tiny Mailbox", emoji: "\u{1F4EB}", price: 35, description: "A mailbox for very small good news.", slot: "decor" },
+      { id: "galactic-postcard", name: "Galactic Postcard", emoji: "\u{1F4EE}", price: 60, description: "Starts the Tina and Blorp pen-pal thread.", effect: { type: "set-flag", flag: "penpal-postcard-bought", value: true } },
+    ],
+  },
+  {
+    id: "weather-window",
+    name: "Weather Window",
+    ownerName: "Mei",
+    signColor: "#80C8FF",
+    wallColor: "#E8F7FF",
+    accentColor: "#2F6F9F",
+    location: "earth",
+    greeting: "Weather in jars! Open gently. One thundercloud got dramatic last week.",
+    items: [
+      { id: "rain-jar", name: "Rain Jar", emoji: "\u{1F327}\uFE0F", price: 70, description: "Stores a polite drizzle.", slot: "decor", effect: { type: "visual-weather", weather: "rain" } },
+      { id: "sun-charm", name: "Sun Charm", emoji: "\u2600\uFE0F", price: 90, description: "Customers sometimes tip an extra coin.", slot: "held", effect: { type: "tip-bonus", chance: 0.1, amount: 1 } },
+      { id: "snow-globe", name: "Snow Globe", emoji: "\u{1F30C}", price: 120, description: "Tiny drifting snow for cozy days.", slot: "decor", effect: { type: "visual-weather", weather: "snow" } },
+      { id: "rainbow-forecast", name: "Rainbow Forecast", emoji: "\u{1F308}", price: 200, description: "Predicts delight. Also unlocks Stellar Sprinkles early.", slot: "decor", effect: { type: "unlock-topping", toppingId: "stellar-sprinkles" } },
+    ],
+  },
+  {
+    id: "night-market",
+    name: "Night Market",
+    ownerName: "Nix",
+    signColor: "#FFD060",
+    wallColor: "#201020",
+    accentColor: "#E0A040",
+    location: "earth",
+    greeting: "Everything here is mysterious, discounted, or mildly enchanted.",
+    unlock: { served: 15 },
+    items: [
+      { id: "mystery-ticket", name: "Mystery Ticket", emoji: "\u{1F39F}\uFE0F", price: 25, description: "A tiny chance machine in paper form.", effect: { type: "set-flag", flag: "mystery-ticket-owned", value: true } },
+      { id: "lucky-lantern", name: "Lucky Lantern", emoji: "\u{1F3EE}", price: 80, description: "Keeps the Night Market lit.", slot: "decor", effect: { type: "set-flag", flag: "night-market-permanent", value: true } },
+      { id: "fortune-spoon", name: "Fortune Spoon", emoji: "\u{1F944}", price: 120, description: "Sometimes whispers what comes next.", slot: "held", effect: { type: "set-flag", flag: "fortune-spoon-owned", value: true } },
+    ],
+  },
+  {
     id: "cherry-slots",
     name: "Cherry Slots",
     ownerName: "Vince",
@@ -396,6 +823,65 @@ const ALIEN_SHOPS: Shop[] = [
     ],
   },
   {
+    id: "alien-arcade",
+    name: "Glitch Galaxy Arcade",
+    ownerName: "Glitch",
+    signColor: "#FF70F0",
+    wallColor: "#120030",
+    accentColor: "#70FFE0",
+    location: "alien-planet",
+    greeting: "Every cabinet is slightly haunted. That's normal.",
+    items: [],
+    type: "arcade",
+  },
+  {
+    id: "gravity-tailor",
+    name: "Gravity Tailor",
+    ownerName: "Veev",
+    signColor: "#A0E0FF",
+    wallColor: "#203050",
+    accentColor: "#F0D080",
+    location: "alien-planet",
+    greeting: "Try these boots. If you fall upward, they fit.",
+    items: [
+      { id: "gravity-boots", name: "Gravity Boots", emoji: "\u{1F462}", price: 90, description: "Unlocks the ladder under the alien street.", slot: "held", effect: { type: "set-flag", flag: "alien-ladder", value: true } },
+      { id: "ceiling-cape", name: "Ceiling Cape", emoji: "\u{1F9E3}", price: 70, description: "Drapes downward no matter which way gravity points.", slot: "held" },
+      { id: "anti-hat", name: "Anti-Hat", emoji: "\u{1F3A9}", price: 55, description: "Floats six thoughts above your head.", slot: "held" },
+      { id: "pocket-gravity", name: "Pocket Gravity", emoji: "\u{1F300}", price: 180, description: "Unlocks Moon Dairy on the ship map.", effect: { type: "unlock-destination", destinationId: "moon-dairy" } },
+    ],
+  },
+  {
+    id: "memory-aquarium",
+    name: "Memory Aquarium",
+    ownerName: "Luma",
+    signColor: "#70FFE0",
+    wallColor: "#102A3A",
+    accentColor: "#B8FFF0",
+    location: "alien-planet",
+    greeting: "The fish remember everything. Some of them remember tomorrow by mistake.",
+    items: [
+      { id: "memory-pearl", name: "Memory Pearl", emoji: "\u{1F9AA}", price: 100, description: "Named characters remember you more clearly.", slot: "held", effect: { type: "set-flag", flag: "memory-pearl-owned", value: true } },
+      { id: "echo-fish", name: "Echo Fish", emoji: "\u{1F420}", price: 140, description: "Past choices bubble up in your shop.", slot: "decor", effect: { type: "set-flag", flag: "echo-fish-owned", value: true } },
+      { id: "forget-me-not-filter", name: "Forget-Me-Not Filter", emoji: "\u{1F9FD}", price: 60, description: "Resets one awkward conversation in spirit, if not yet in code.", effect: { type: "set-flag", flag: "memory-filter-owned", value: true } },
+    ],
+  },
+  {
+    id: "chrono-garage",
+    name: "Chrono Garage",
+    ownerName: "Tock",
+    signColor: "#FFD040",
+    wallColor: "#181830",
+    accentColor: "#80E0FF",
+    location: "alien-planet",
+    greeting: "Ship repairs while you wait. Time repairs while you don't.",
+    items: [
+      { id: "star-map-fragment", name: "Star Map Fragment", emoji: "\u{1F5FA}\uFE0F", price: 150, description: "Unlocks Asteroid Bazaar.", effect: { type: "unlock-destination", destinationId: "asteroid-bazaar" } },
+      { id: "wormhole-compass", name: "Wormhole Compass", emoji: "\u{1F9ED}", price: 250, description: "Unlocks Black Hole Cafe.", slot: "held", effect: { type: "unlock-destination", destinationId: "black-hole-cafe" } },
+      { id: "engine-sticker", name: "Engine Sticker", emoji: "\u{1F3F7}\uFE0F", price: 30, description: "Makes the ship engine feel appreciated.", slot: "decor", effect: { type: "set-flag", flag: "engine-sticker-owned", value: true } },
+      { id: "time-wrench", name: "Time Wrench", emoji: "\u{1F527}", price: 300, description: "A future ship upgrade. Also unlocks Dino Timeline.", slot: "held", effect: { type: "unlock-destination", destinationId: "dino-timeline" } },
+    ],
+  },
+  {
     id: "orbit-spins",
     name: "Orbit Spins",
     ownerName: "Zork",
@@ -435,6 +921,64 @@ function getShops(location: Location): Shop[] {
 
 function shopById(id: string): Shop | undefined {
   return [...EARTH_SHOPS, ...ALIEN_SHOPS].find((s) => s.id === id);
+}
+
+function isShopUnlocked(
+  shop: Shop,
+  args: { customersServed: number; inventory: Record<string, number>; unlockFlags: UnlockFlags }
+): boolean {
+  if (!shop.unlock) return true;
+  if (shop.unlock.served != null && args.customersServed < shop.unlock.served) return false;
+  if (shop.unlock.itemId && !args.inventory[shop.unlock.itemId]) return false;
+  if (shop.unlock.flag && !args.unlockFlags[shop.unlock.flag]) return false;
+  return true;
+}
+
+function getVisibleShops(
+  location: Location,
+  args: { customersServed: number; inventory: Record<string, number>; unlockFlags: UnlockFlags }
+): Shop[] {
+  return getShops(location).filter((shop) => isShopUnlocked(shop, args));
+}
+
+function getAvailableEarthFlavors(inventory: Record<string, number>, unlockFlags: UnlockFlags): Flavor[] {
+  return [
+    ...FLAVORS,
+    ...(inventory["recipe-pistachio"] || unlockFlags["flavor-pistachio"] ? [EARTH_UNLOCKABLE_FLAVORS.pistachio] : []),
+    ...(inventory["recipe-cookie-dough"] || unlockFlags["flavor-cookie-dough"] ? [EARTH_UNLOCKABLE_FLAVORS.cookieDough] : []),
+    ...(unlockFlags["flavor-mythic-vanilla"] ? [EARTH_UNLOCKABLE_FLAVORS.mythicVanilla] : []),
+  ];
+}
+
+function getAvailableAlienFlavors(inventory: Record<string, number>, unlockFlags: UnlockFlags): Flavor[] {
+  return [
+    ...ALIEN_FLAVORS,
+    ...(inventory["magma-recipe"] || unlockFlags["flavor-magma-cream"] ? [UNDERGROUND_FLAVORS.magmaCream] : []),
+    ...(inventory["crystal-mint-recipe"] || unlockFlags["flavor-crystal-mint"] ? [UNDERGROUND_FLAVORS.crystalMint] : []),
+  ];
+}
+
+function getAvailableToppings(
+  location: Location,
+  inventory: Record<string, number>,
+  unlockFlags: UnlockFlags
+): Topping[] {
+  if (location === "alien-planet") {
+    return [
+      ...ALIEN_TOPPINGS,
+      ...(unlockFlags["topping-glow-worms-deluxe"] ? [ALIEN_UNLOCKABLE_TOPPINGS.glowWormsDeluxe] : []),
+      ...(unlockFlags["topping-glow-shards"] ? [ALIEN_UNLOCKABLE_TOPPINGS.glowShards] : []),
+      ...(unlockFlags["topping-fossil-crunch"] ? [ALIEN_UNLOCKABLE_TOPPINGS.fossilCrunch] : []),
+    ];
+  }
+  return [
+    ...TOPPINGS,
+    ...(inventory["stellar-sprinkles"] || unlockFlags["topping-stellar-sprinkles"] ? [EARTH_UNLOCKABLE_TOPPINGS.stellarSprinkles] : []),
+  ];
+}
+
+function getDestinationUnlockFlag(destinationId: SpaceDestinationId): string {
+  return `destination-${destinationId}`;
 }
 
 // ── Dialogue Trees ───────────────────────────────────────────────────────────
@@ -530,17 +1074,17 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function generateOrder(level: number): Flavor[] {
+function generateOrder(level: number, flavors: Flavor[] = FLAVORS): Flavor[] {
   const count = Math.min(1 + Math.floor((level + 1) / 2), 4);
-  return Array.from({ length: count }, () => pick(FLAVORS));
+  return Array.from({ length: count }, () => pick(flavors));
 }
 
-function generateToppings(level: number): Topping[] {
+function generateToppings(level: number, toppings: Topping[] = TOPPINGS): Topping[] {
   if (level < 2) return [];
   if (Math.random() > 0.5) return [];
   const count = Math.min(1 + Math.floor(level / 3), 2);
   const chosen: Topping[] = [];
-  const available = [...TOPPINGS];
+  const available = [...toppings];
   for (let i = 0; i < count && available.length > 0; i++) {
     const idx = Math.floor(Math.random() * available.length);
     chosen.push(available.splice(idx, 1)[0]);
@@ -548,13 +1092,18 @@ function generateToppings(level: number): Topping[] {
   return chosen;
 }
 
-function createCustomer(id: number, level: number): Customer {
+function createCustomer(
+  id: number,
+  level: number,
+  flavors: Flavor[] = FLAVORS,
+  toppings: Topping[] = TOPPINGS
+): Customer {
   return {
     id,
     name: pick(CUSTOMER_NAMES),
     spriteIdx: Math.floor(Math.random() * TAMA_PALETTES.length),
-    order: generateOrder(level),
-    toppings: generateToppings(level),
+    order: generateOrder(level, flavors),
+    toppings: generateToppings(level, toppings),
     x: W + 10,
     targetX: 20 + Math.random() * 20,
     state: "walking-in",
@@ -563,17 +1112,22 @@ function createCustomer(id: number, level: number): Customer {
   };
 }
 
-function createAlienCustomer(id: number, level: number): Customer {
+function createAlienCustomer(
+  id: number,
+  level: number,
+  flavors: Flavor[] = ALIEN_FLAVORS,
+  toppings: Topping[] = ALIEN_TOPPINGS
+): Customer {
   const count = Math.min(2 + Math.floor(level / 2), 4);
   return {
     id,
     name: pick(ALIEN_NAMES),
     spriteIdx: Math.floor(Math.random() * ALIEN_PALETTES.length),
-    order: Array.from({ length: count }, () => pick(ALIEN_FLAVORS)),
+    order: Array.from({ length: count }, () => pick(flavors)),
     toppings: Math.random() > 0.4
       ? Array.from(
           { length: Math.min(2, 1 + Math.floor(level / 3)) },
-          () => pick(ALIEN_TOPPINGS)
+          () => pick(toppings)
         )
       : [],
     x: W + 10,
@@ -2219,6 +2773,11 @@ function drawHeldItemIcon(ctx: CanvasRenderingContext2D, itemId: string | null, 
       px(ctx, x, y + 1, 1, 3, "#AAAAAA");
       px(ctx, x - 1, y - 3, 1, 1, "#FFB0B0");
       break;
+    default:
+      px(ctx, x - 2, y - 2, 5, 5, "#FFE080");
+      px(ctx, x - 1, y - 1, 3, 3, "#80E0FF");
+      px(ctx, x, y, 1, 1, "#FF70F0");
+      break;
   }
 }
 
@@ -2263,6 +2822,32 @@ function drawHomeDecor(ctx: CanvasRenderingContext2D, decorIds: string[], tick: 
         px(ctx, rx - 2 + i, ry + 6, 1, 2, "#D4567A");
         px(ctx, rx + 44 - 8 + i, ry + 6, 1, 2, "#D4567A");
       }
+    } else if (id === "tiny-beaker") {
+      const bx = 104, by = 62;
+      px(ctx, bx, by, 8, 1, "#203040");
+      px(ctx, bx + 1, by + 1, 6, 7, "#B8F8FF");
+      px(ctx, bx + 2, by + 4, 4, 3, "#80E0B0");
+      const bubbleY = by - 2 + Math.floor(Math.sin(tick / 10) * 1);
+      px(ctx, bx + 2, bubbleY, 1, 1, "#E8FFFF");
+      px(ctx, bx + 5, bubbleY - 3, 1, 1, "#E8FFFF");
+    } else if (id === "tiny-mailbox") {
+      const mx = 106, my = 63;
+      px(ctx, mx, my, 9, 6, "#D84040");
+      px(ctx, mx + 1, my + 1, 7, 2, "#FF9090");
+      px(ctx, mx + 4, my + 6, 1, 5, "#604020");
+      px(ctx, mx + 8, my - 1, 2, 1, "#FFE080");
+    } else if (id === "rain-jar" || id === "snow-globe" || id === "rainbow-forecast") {
+      const gx = 106, gy = 63;
+      px(ctx, gx, gy + 5, 10, 2, "#604020");
+      for (let dy = 0; dy < 6; dy++) for (let dx = 1; dx < 9; dx++) {
+        const color = id === "rain-jar" ? "#80C8FF" : id === "snow-globe" ? "#E8FFFF" : dx < 4 ? "#FF80A0" : dx < 6 ? "#FFE080" : "#80E0A0";
+        px(ctx, gx + dx, gy + dy, 1, 1, color);
+      }
+    } else if (id === "lucky-lantern") {
+      const lx = 108, ly = 25;
+      px(ctx, lx, ly, 6, 1, "#FFD060");
+      px(ctx, lx + 1, ly + 1, 4, 6, "#FF7040");
+      px(ctx, lx + 2, ly + 2, 2, 4, Math.floor(tick / 12) % 2 ? "#FFE080" : "#FFD040");
     }
   });
 }
@@ -3172,6 +3757,27 @@ export default function IceCreamGame() {
       return saved ? (JSON.parse(saved) as Record<string, number>) : {};
     } catch { return {}; }
   });
+  const [unlockFlags, setUnlockFlags] = useState<UnlockFlags>(() =>
+    loadJson<UnlockFlags>(STORAGE_KEYS.unlockFlags, {})
+  );
+  const [quests, setQuests] = useState<QuestMap>(() =>
+    loadJson<QuestMap>(STORAGE_KEYS.quests, {})
+  );
+  const [characterMemory, setCharacterMemory] = useState<CharacterMemoryMap>(() =>
+    loadJson<CharacterMemoryMap>(STORAGE_KEYS.characterMemory, {})
+  );
+  const [arcadeHighScores, setArcadeHighScores] = useState<Partial<Record<ArcadeGameId, number>>>(() =>
+    loadJson<Partial<Record<ArcadeGameId, number>>>(STORAGE_KEYS.arcadeHighScores, {})
+  );
+  const [glowShards, setGlowShards] = useState(() =>
+    loadJson<{ glowShards: number }>(STORAGE_KEYS.underground, { glowShards: 0 }).glowShards
+  );
+  const [shipRoom, setShipRoom] = useState<ShipRoomId>(() =>
+    loadJson<{ room: ShipRoomId }>(STORAGE_KEYS.shipState, { room: "cockpit" }).room
+  );
+  const [aliveShopState, setAliveShopState] = useState<AliveShopState>(() =>
+    loadJson<AliveShopState>(STORAGE_KEYS.aliveShop, DEFAULT_ALIVE_SHOP_STATE)
+  );
   // Equipped items, tamagotchi-style
   const [equippedHeld, setEquippedHeld] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -3249,6 +3855,35 @@ export default function IceCreamGame() {
 
   const level = Math.floor(customersServed / 3) + 1;
   const totalGold = earthCoins + alienCoins;
+  const availableEarthFlavors = useMemo(
+    () => getAvailableEarthFlavors(inventory, unlockFlags),
+    [inventory, unlockFlags]
+  );
+  const availableAlienFlavors = useMemo(
+    () => getAvailableAlienFlavors(inventory, unlockFlags),
+    [inventory, unlockFlags]
+  );
+  const currentFlavorPool = location === "alien-planet" ? availableAlienFlavors : availableEarthFlavors;
+  const currentToppingPool = useMemo(
+    () => getAvailableToppings(location, inventory, unlockFlags),
+    [location, inventory, unlockFlags]
+  );
+  const visibleShops = useCallback(
+    (loc: Location) => getVisibleShops(loc, { customersServed, inventory, unlockFlags }),
+    [customersServed, inventory, unlockFlags]
+  );
+
+  useEffect(() => saveJson(STORAGE_KEYS.unlockFlags, unlockFlags), [unlockFlags]);
+  useEffect(() => saveJson(STORAGE_KEYS.quests, quests), [quests]);
+  useEffect(() => saveJson(STORAGE_KEYS.characterMemory, characterMemory), [characterMemory]);
+  useEffect(() => saveJson(STORAGE_KEYS.arcadeHighScores, arcadeHighScores), [arcadeHighScores]);
+  useEffect(() => saveJson(STORAGE_KEYS.underground, { glowShards }), [glowShards]);
+  useEffect(() => saveJson(STORAGE_KEYS.shipState, { room: shipRoom }), [shipRoom]);
+  useEffect(() => saveJson(STORAGE_KEYS.aliveShop, aliveShopState), [aliveShopState]);
+
+  const setFlag = useCallback((flag: string, value = true) => {
+    setUnlockFlags((prev) => ({ ...prev, [flag]: value }));
+  }, []);
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
@@ -3479,7 +4114,7 @@ export default function IceCreamGame() {
         ctx,
         streetTick,
         location,
-        getShops(location),
+        visibleShops(location),
         heroX,
         heroDirRef.current !== 0,
         streetNpcs,
@@ -3502,7 +4137,7 @@ export default function IceCreamGame() {
 
     function drawBossFightView() {
       if (!ctx || !bossFight) return;
-      const pool = bossFight.bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+      const pool = bossFight.bossOnAlien ? availableAlienFlavors : availableEarthFlavors;
       const flavorColor = (name: string) => {
         const f = pool.find((ff) => ff.name === name);
         return f ? f.colors[1] : "#CCCCCC";
@@ -3563,7 +4198,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -3649,7 +4284,7 @@ export default function IceCreamGame() {
         const encounterIdx = bossEncounterRef.current;
         const bossOnAlien = location === "alien-planet";
         const orderLen = Math.min(6, 4 + (encounterIdx - 1));
-        const pool = bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+        const pool = bossOnAlien ? availableAlienFlavors : availableEarthFlavors;
         const order = Array.from({ length: orderLen }, () => pick(pool).name);
         const chaseTotalTime = Math.max(3000, 5500 - (encounterIdx - 1) * 400);
         setBossFight({
@@ -3672,8 +4307,8 @@ export default function IceCreamGame() {
       }
       customerIdRef.current += 1;
       const c = location === "alien-planet"
-        ? createAlienCustomer(customerIdRef.current, level)
-        : createCustomer(customerIdRef.current, level);
+        ? createAlienCustomer(customerIdRef.current, level, availableAlienFlavors, currentToppingPool)
+        : createCustomer(customerIdRef.current, level, availableEarthFlavors, currentToppingPool);
       setScoopsDone(0);
       setConeScoops([]);
       setToppingsDone(0);
@@ -3681,7 +4316,7 @@ export default function IceCreamGame() {
       walkCustomerIn(c);
     }, 800);
     return () => clearTimeout(timer);
-  }, [customer, phase, level, walkCustomerIn, location, pendingAlien, customersServed]);
+  }, [customer, phase, level, walkCustomerIn, location, pendingAlien, customersServed, availableAlienFlavors, availableEarthFlavors, currentToppingPool]);
 
   // Level up every 3 customers
   // Gold coin animation aging
@@ -3701,7 +4336,10 @@ export default function IceCreamGame() {
     if (!customer) return;
     const isVIP = !!customer.isAlienVIP;
     const bonusMult = isVIP ? 3 : 1;
-    const coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult;
+    let coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult;
+    if ((inventory["sun-charm"] || unlockFlags["tip-bonus-1"]) && Math.random() < 0.1) {
+      coinCount += 1;
+    }
     const pointsEarned = (100 + customer.toppings.length * 25) * bonusMult;
     const nextScore = score + pointsEarned;
     setScore(nextScore);
@@ -3757,7 +4395,7 @@ export default function IceCreamGame() {
         setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
       }, 1400);
     }
-  }, [customer, highScore, score, location, alienEncountered]);
+  }, [customer, highScore, score, location, alienEncountered, inventory, unlockFlags]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -3839,6 +4477,8 @@ export default function IceCreamGame() {
     setChaseMinions([]); setChaseTick(0);
     chaseResumeRef.current = null;
     setWarpActive(false); setWarpTick(0);
+    setShipRoom("cockpit");
+    setAliveShopState((state) => state);
     setPendingAlien(false);
     setAlienEncountered(false);
     setChatActive(false); setChatTarget(null);
@@ -4009,6 +4649,10 @@ export default function IceCreamGame() {
             const reward = cur.phase === "won"
               ? 150
               : Math.max(0, cur.tileCount * 5);
+            setArcadeHighScores((prev) => {
+              const best = prev["sarahs-world"] ?? 0;
+              return cur.tileCount > best ? { ...prev, "sarahs-world": cur.tileCount } : prev;
+            });
             if (reward > 0) {
               playCoinSound();
               setEarthCoins((g) => {
@@ -4223,7 +4867,7 @@ export default function IceCreamGame() {
 
   // Spawn a handful of ambient passersby on the street (world coords)
   const seedStreetNpcs = useCallback((loc: Location) => {
-    const worldW = streetWorldWidth(getShops(loc));
+    const worldW = streetWorldWidth(visibleShops(loc));
     const list: { id: number; x: number; spriteIdx: number; alien: boolean; dir: -1 | 1 }[] = [];
     const count = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < count; i++) {
@@ -4236,7 +4880,7 @@ export default function IceCreamGame() {
       });
     }
     setStreetNpcs(list);
-  }, []);
+  }, [visibleShops]);
 
   // Door tap: open the fork panel (Ship vs Shops). For first-time use the
   // door is only enabled after the player has visited the alien planet at least once.
@@ -4289,6 +4933,105 @@ export default function IceCreamGame() {
   const persistEquipped = useCallback((held: string | null, decor: string[]) => {
     try { window.localStorage.setItem("scoopstack-equipped", JSON.stringify({ held, decor })); } catch { /* */ }
   }, []);
+
+  const startQuest = useCallback((id: QuestId) => {
+    setQuests((prev) => prev[id] ? prev : { ...prev, [id]: { id, step: 0, complete: false } });
+  }, []);
+
+  const advanceQuest = useCallback((id: QuestId, stepIncrement = 1) => {
+    setQuests((prev) => {
+      const old = prev[id] ?? { id, step: 0, complete: false };
+      return { ...prev, [id]: { ...old, step: old.step + stepIncrement } };
+    });
+  }, []);
+
+  const bumpCharacterTalked = useCallback((characterId: CharacterId, lastChoice?: string) => {
+    setCharacterMemory((prev) => {
+      const old = prev[characterId] ?? { timesTalked: 0, affinity: 0, flags: {} };
+      return {
+        ...prev,
+        [characterId]: {
+          ...old,
+          timesTalked: old.timesTalked + 1,
+          lastChoice: lastChoice ?? old.lastChoice,
+        },
+      };
+    });
+  }, []);
+
+  const applyDialogueEffects = useCallback((effects?: DialogueEffect[]) => {
+    if (!effects) return;
+    effects.forEach((effect) => {
+      switch (effect.type) {
+        case "set-flag":
+          setFlag(effect.flag, effect.value);
+          break;
+        case "start-quest":
+          startQuest(effect.questId);
+          break;
+        case "advance-quest":
+          advanceQuest(effect.questId);
+          break;
+        case "unlock-destination":
+          setFlag(getDestinationUnlockFlag(effect.destinationId));
+          break;
+        case "change-affinity":
+          setCharacterMemory((prev) => {
+            const old = prev[effect.characterId] ?? { timesTalked: 0, affinity: 0, flags: {} };
+            return {
+              ...prev,
+              [effect.characterId]: { ...old, affinity: old.affinity + effect.amount },
+            };
+          });
+          break;
+        case "give-coins":
+          if (effect.location === "alien-planet") {
+            setAlienCoins((g) => {
+              const n = g + effect.amount;
+              window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+              return n;
+            });
+          } else {
+            setEarthCoins((g) => {
+              const n = g + effect.amount;
+              window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+              return n;
+            });
+          }
+          break;
+        case "unlock-shop":
+          setFlag(`shop-${effect.shopId}`);
+          break;
+      }
+    });
+  }, [advanceQuest, setFlag, startQuest]);
+
+  const applyShopItemEffect = useCallback((effect?: ShopItemEffect) => {
+    if (!effect) return;
+    switch (effect.type) {
+      case "set-flag":
+        setFlag(effect.flag, effect.value);
+        break;
+      case "unlock-destination":
+        setFlag(getDestinationUnlockFlag(effect.destinationId));
+        break;
+      case "unlock-flavor":
+        setFlag(`flavor-${effect.flavorId}`);
+        break;
+      case "unlock-topping":
+        setFlag(`topping-${effect.toppingId}`);
+        break;
+      case "visual-weather":
+        setFlag(`weather-${effect.weather}`);
+        break;
+      case "give-glow-shards":
+        setGlowShards((n) => n + effect.amount);
+        break;
+      case "tip-bonus":
+        setFlag(`tip-bonus-${effect.amount}`);
+        break;
+    }
+  }, [setFlag]);
 
   const toggleEquip = useCallback((item: ShopItem) => {
     if (!item.slot) return;
@@ -4512,8 +5255,10 @@ export default function IceCreamGame() {
       persistInventory(next);
       return next;
     });
-    setShopFlash(`Bought ${item.name}! +1`);
-  }, [totalGold, location, persistInventory]);
+    applyShopItemEffect(item.effect);
+    if (item.id === "galactic-postcard") startQuest("penpal-tina-blorp");
+    setShopFlash(item.effect ? `Bought ${item.name}! New discovery unlocked.` : `Bought ${item.name}! +1`);
+  }, [totalGold, location, persistInventory, applyShopItemEffect, startQuest]);
 
   // Return an item: refund coins to the shop's planet, remove from inventory
   const returnItem = useCallback((item: ShopItem) => {
@@ -4559,7 +5304,7 @@ export default function IceCreamGame() {
   // The street tick drives ambient NPC movement and hero walking animation.
   useEffect(() => {
     if (phase !== "street") return;
-    const worldW = streetWorldWidth(getShops(location));
+    const worldW = streetWorldWidth(visibleShops(location));
     const interval = setInterval(() => {
       setStreetTick((t) => t + 1);
       if (heroDirRef.current !== 0) {
@@ -4574,7 +5319,7 @@ export default function IceCreamGame() {
       }));
     }, 40);
     return () => clearInterval(interval);
-  }, [phase, location]);
+  }, [phase, location, visibleShops]);
 
   // Tap handler for the street canvas — route to the correct shop or NPC
   const handleStreetTap = useCallback(
@@ -4606,7 +5351,7 @@ export default function IceCreamGame() {
       }
 
       // Convert tap to world coords (account for camera scroll)
-      const shops = getShops(location);
+      const shops = visibleShops(location);
       const cameraX = streetCameraX(heroX, shops);
       const worldGx = gx + cameraX;
       for (let i = 0; i < shops.length; i++) {
@@ -4617,7 +5362,7 @@ export default function IceCreamGame() {
         }
       }
     },
-    [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX]
+    [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX, visibleShops]
   );
 
   // Tap handler for the shop interior — route exit door tap, owner chat
@@ -4714,6 +5459,13 @@ export default function IceCreamGame() {
   );
 
   const handleChatChoice = useCallback((nextIdx: number) => {
+    const node = chatDialogue[chatNodeIdx];
+    const choice =
+      node?.choiceA?.next === nextIdx ? node.choiceA :
+      node?.choiceB?.next === nextIdx ? node.choiceB :
+      undefined;
+    applyDialogueEffects(choice?.effects);
+    if (chatTarget === "scoopy") bumpCharacterTalked(location === "alien-planet" ? "zorp" : "scoopy", choice?.label);
     playBoop();
     if (nextIdx === 100) {
       // ACCEPT → beam-up cutscene (earth -> alien)
@@ -4731,14 +5483,16 @@ export default function IceCreamGame() {
       return;
     }
     setChatNodeIdx(nextIdx);
-  }, []);
+  }, [applyDialogueEffects, bumpCharacterTalked, chatDialogue, chatNodeIdx, chatTarget, location]);
 
   const closeChat = useCallback(() => {
+    applyDialogueEffects(chatDialogue[chatNodeIdx]?.effects);
+    if (chatTarget === "scoopy") bumpCharacterTalked(location === "alien-planet" ? "zorp" : "scoopy");
     setChatActive(false);
     setChatTarget(null);
     // If the alien VIP is still there after bye, walk them out
     setCustomer((prev) => prev && prev.isAlienVIP ? { ...prev, state: "walking-out" } : prev);
-  }, []);
+  }, [applyDialogueEffects, bumpCharacterTalked, chatDialogue, chatNodeIdx, chatTarget, location]);
 
   // ── Cutscene driver ────────────────────────────────────────────────────
   useEffect(() => {
@@ -5420,6 +6174,11 @@ export default function IceCreamGame() {
               The ship option unlocks after your first alien visit.
             </p>
           )}
+          {alienVisited && (
+            <p className="text-xs mb-2" style={{ color: "#888" }}>
+              Ship map groundwork: {SHIP_ROOMS.cockpit.name} charts {SPACE_DESTINATIONS.length} weird stops.
+            </p>
+          )}
           <button onClick={closeDoorOffer}
             className="text-sm underline mt-1" style={{ color: "#C44569" }}>
             never mind, stay inside
@@ -5487,6 +6246,27 @@ export default function IceCreamGame() {
             <p className="text-xs mb-3" style={{ color: "#C0C0FF" }}>
               Pick a cabinet, scooper!
             </p>
+            {shop.location === "alien-planet" && (
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {ALIEN_ARCADE_CABINETS.slice(0, 4).map((cabinet) => {
+                  const unlocked = cabinet.unlocked || !cabinet.unlockFlag || unlockFlags[cabinet.unlockFlag];
+                  return (
+                    <div key={cabinet.id} className="rounded-lg p-2 border-2"
+                      style={{
+                        background: cabinet.colors.body,
+                        borderColor: cabinet.colors.accent,
+                        color: unlocked ? "#FFF" : "#A0A0B8",
+                      }}>
+                      <div className="text-lg">{cabinet.emoji}</div>
+                      <div className="text-xs font-bold">{cabinet.name}</div>
+                      <div className="text-[10px]" style={{ color: unlocked ? "#D8FFFF" : "#888" }}>
+                        {unlocked ? "cabinet warming up" : "locked"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <button onClick={startSarahsWorld}
               className="w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-95 border-b-4 mb-3"
               style={{
@@ -5827,7 +6607,7 @@ export default function IceCreamGame() {
 
       {/* Boss fight overlay — Simon order flavors then chase-tap button */}
       {phase === "boss-fight" && bossFight && (() => {
-        const pool = bossFight.bossOnAlien ? ALIEN_FLAVORS : FLAVORS;
+        const pool = bossFight.bossOnAlien ? availableAlienFlavors : availableEarthFlavors;
         return (
           <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
             style={{
@@ -6366,7 +7146,7 @@ export default function IceCreamGame() {
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
-            {(location === "alien-planet" ? ALIEN_FLAVORS : FLAVORS).map((f) => {
+            {currentFlavorPool.map((f) => {
               const isNext =
                 customer?.state === "waiting" &&
                 !toppingsPhase &&
@@ -6394,7 +7174,7 @@ export default function IceCreamGame() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {(location === "alien-planet" ? ALIEN_TOPPINGS : TOPPINGS).map((t) => {
+            {currentToppingPool.map((t) => {
               const isNext =
                 customer?.state === "waiting" &&
                 toppingsPhase &&
