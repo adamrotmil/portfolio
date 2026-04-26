@@ -3360,6 +3360,72 @@ function drawAlienUndergroundScene(
   drawText(ctx, `GLOW CAVERN  ${shardCount}`, W / 2, 104, "#B7FF9A", 0.55);
 }
 
+function drawShipInteriorScene(ctx: CanvasRenderingContext2D, tick: number, room: ShipRoom) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const rib = Math.floor((x + tick / 4) / 10) % 2;
+      const color = y < 18 ? "#081830" : y < 88 ? (rib ? "#142C48" : "#102038") : "#1C1C30";
+      px(ctx, x, y, 1, 1, color);
+    }
+  }
+  px(ctx, 0, 18, W, 2, "#80C0FF");
+  px(ctx, 0, 88, W, 2, "#FFD86B");
+  drawText(ctx, room.name.toUpperCase(), W / 2, 10, "#FFD86B", 0.7);
+
+  // Windows
+  for (let i = 0; i < 3; i++) {
+    const wx = 20 + i * 36;
+    for (let dy = 0; dy < 15; dy++) {
+      for (let dx = 0; dx < 22; dx++) {
+        const edge = dx === 0 || dx === 21 || dy === 0 || dy === 14;
+        const star = !edge && ((dx * 3 + dy * 5 + tick + i) % 17 === 0);
+        px(ctx, wx + dx, 28 + dy, 1, 1, edge ? "#80C0FF" : star ? "#FFFFFF" : "#080018");
+      }
+    }
+  }
+
+  if (room.id === "cockpit") {
+    px(ctx, 48, 58, 32, 14, "#203860");
+    px(ctx, 52, 60, 24, 8, "#70FFE0");
+    drawText(ctx, "MAP", 64, 64, "#102038", 0.55);
+  } else if (room.id === "galley") {
+    drawCone(ctx, 64, 68, [FLAVORS[0], FLAVORS[3]], [], 0);
+  } else if (room.id === "cargo") {
+    for (let i = 0; i < 4; i++) {
+      px(ctx, 32 + i * 16, 62, 12, 12, i % 2 ? "#A8C8FF" : "#FFD86B");
+      px(ctx, 32 + i * 16, 62, 12, 1, "#FFFFFF");
+    }
+  } else if (room.id === "engine") {
+    const pulse = Math.floor(tick / 5) % 2;
+    px(ctx, 52, 48, 24, 28, "#303050");
+    px(ctx, 58, 54, 12, 16, pulse ? "#FF70F0" : "#70FFE0");
+  } else {
+    drawAlienSprite(ctx, 64, 70, 4, false);
+    drawText(ctx, "Zzz", 82, 52, "#B8E0FF", 0.55);
+  }
+
+  drawHero(ctx, 20, 82, false, false, null);
+  drawFlyingSaucer(ctx, 110, 86, tick);
+}
+
+function drawSpaceMapScene(ctx: CanvasRenderingContext2D, tick: number, selectedId: SpaceDestinationId | null, unlockFlags: UnlockFlags) {
+  drawSpaceScene(ctx, tick, "out");
+  drawText(ctx, "SPACE MAP", W / 2, 10, "#FFE080", 0.8);
+  SPACE_DESTINATIONS.forEach((dest) => {
+    const unlocked = dest.unlocked || !dest.unlockFlag || unlockFlags[dest.unlockFlag];
+    const selected = selectedId === dest.id;
+    const pulse = selected ? Math.floor(Math.sin(tick / 5) * 1) : 0;
+    const color = unlocked ? (selected ? "#FFFFFF" : "#80E0FF") : "#606080";
+    for (let dy = -4; dy <= 4; dy++) {
+      for (let dx = -4; dx <= 4; dx++) {
+        if (dx * dx + dy * dy <= 16) px(ctx, dest.x + dx, dest.y + dy + pulse, 1, 1, color);
+      }
+    }
+    if (!unlocked) drawText(ctx, "x", dest.x, dest.y + pulse, "#202030", 0.45);
+  });
+  drawText(ctx, "PICK A DOT BELOW", W / 2, 104, "#FFFFFF", 0.5);
+}
+
 // Shop interior — draws owner behind counter and shop-themed backdrop
 function drawShopInterior(ctx: CanvasRenderingContext2D, shop: Shop, tick: number) {
   // Wall
@@ -4001,6 +4067,8 @@ export default function IceCreamGame() {
 
   // Alien/Location state
   const [location, setLocation] = useState<Location>("earth");
+  const [selectedSpaceDestination, setSelectedSpaceDestination] = useState<SpaceDestinationId | null>(null);
+  const [spaceMapMessage, setSpaceMapMessage] = useState<string | null>(null);
   const [cutsceneType, setCutsceneType] = useState<CutsceneType | null>(null);
   const [cutsceneTick, setCutsceneTick] = useState(0);
   const [pendingAlien, setPendingAlien] = useState(false);
@@ -4191,7 +4259,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -4433,6 +4501,16 @@ export default function IceCreamGame() {
       drawAlienUndergroundScene(ctx, streetTick, undergroundX, undergroundDirRef.current !== 0, collectedUndergroundCrystals, glowShards);
     }
 
+    function drawShipInterior() {
+      if (!ctx) return;
+      drawShipInteriorScene(ctx, streetTick, SHIP_ROOMS[shipRoom]);
+    }
+
+    function drawSpaceMap() {
+      if (!ctx) return;
+      drawSpaceMapScene(ctx, streetTick, selectedSpaceDestination, unlockFlags);
+    }
+
     function drawShop() {
       if (!ctx) return;
       const shop = currentShopId ? shopById(currentShopId) : null;
@@ -4516,6 +4594,12 @@ export default function IceCreamGame() {
         drawSlimeSimon();
       } else if (phase === "alien-underground") {
         drawAlienUnderground();
+      } else if (phase === "ship-interior") {
+        drawShipInterior();
+      } else if (phase === "space-map") {
+        drawSpaceMap();
+      } else if (phase === "space-destination") {
+        drawSpaceMap();
       } else if (phase === "chase") {
         drawChase();
       } else if (phase === "boss-fight") {
@@ -4531,7 +4615,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, selectedSpaceDestination, unlockFlags]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -5231,13 +5315,10 @@ export default function IceCreamGame() {
     if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
     setCustomer(null);
     setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
-    if (location === "earth") {
-      setCutsceneType("beam-up");
-    } else {
-      setCutsceneType("earth-departure");
-    }
-    setCutsceneTick(0);
-    setPhase("cutscene");
+    setShipRoom("cockpit");
+    setSelectedSpaceDestination(location);
+    setSpaceMapMessage(null);
+    setPhase("ship-interior");
   }, [alienVisited, location]);
 
   // Fork action: walk to shops (enter street phase for the current planet)
@@ -5252,6 +5333,66 @@ export default function IceCreamGame() {
     setStreetTick(0);
     setPhase("street");
   }, [location, seedStreetNpcs]);
+
+  const exitShipInterior = useCallback(() => {
+    playBoop();
+    setPhase("playing");
+  }, []);
+
+  const openSpaceMap = useCallback(() => {
+    playDing();
+    setSelectedSpaceDestination(location);
+    setSpaceMapMessage(null);
+    setPhase("space-map");
+  }, [location]);
+
+  const moveShipRoom = useCallback((dir: "left" | "right") => {
+    const next = SHIP_ROOMS[shipRoom].exits[dir];
+    if (!next) {
+      playWrong();
+      return;
+    }
+    playBoop();
+    setShipRoom(next);
+  }, [shipRoom]);
+
+  const isDestinationUnlocked = useCallback(
+    (dest: SpaceDestination) => dest.unlocked || !dest.unlockFlag || unlockFlags[dest.unlockFlag],
+    [unlockFlags]
+  );
+
+  const travelToDestination = useCallback((dest: SpaceDestination) => {
+    setSelectedSpaceDestination(dest.id);
+    if (!isDestinationUnlocked(dest)) {
+      playWrong();
+      setSpaceMapMessage(`${dest.name} is still locked.`);
+      return;
+    }
+    playDing();
+    setSpaceMapMessage(null);
+    if (dest.id === "earth") {
+      if (location === "earth") {
+        setPhase("playing");
+        return;
+      }
+      setCutsceneType("earth-departure");
+      setCutsceneTick(0);
+      setPhase("cutscene");
+      return;
+    }
+    if (dest.id === "alien-planet") {
+      if (location === "alien-planet") {
+        setPhase("playing");
+        return;
+      }
+      setCutsceneType("beam-up");
+      setCutsceneTick(0);
+      setPhase("cutscene");
+      return;
+    }
+    setPhase("space-destination");
+    setSpaceMapMessage(`${dest.name} is charted. Local customers arrive in a future pass.`);
+  }, [isDestinationUnlocked, location]);
 
   const closeDoorOffer = useCallback(() => {
     playBoop();
@@ -6943,6 +7084,120 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Ship interior controls */}
+      {phase === "ship-interior" && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4 select-none"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #102038, #081020)",
+            borderColor: "#80C0FF",
+            color: "#F0F8FF",
+            boxShadow: "0 0 18px rgba(128,192,255,0.35)",
+          }}>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <strong style={{ color: "#FFD86B" }}>{SHIP_ROOMS[shipRoom].name}</strong>
+              <div className="text-xs" style={{ color: "#B8E0FF" }}>
+                ship interior prototype
+              </div>
+            </div>
+            <div className="text-xs" style={{ color: "#80C0FF" }}>
+              orbit: {location === "alien-planet" ? "alien planet" : "earth"}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <button onClick={() => moveShipRoom("left")}
+              disabled={!SHIP_ROOMS[shipRoom].exits.left}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: SHIP_ROOMS[shipRoom].exits.left ? "linear-gradient(180deg, #B8E0FF, #5070D0)" : "linear-gradient(180deg, #555, #333)",
+                borderBottomColor: SHIP_ROOMS[shipRoom].exits.left ? "#2060A0" : "#111",
+                color: "#FFF",
+                opacity: SHIP_ROOMS[shipRoom].exits.left ? 1 : 0.5,
+              }}>
+              &larr; room
+            </button>
+            <button onClick={() => moveShipRoom("right")}
+              disabled={!SHIP_ROOMS[shipRoom].exits.right}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: SHIP_ROOMS[shipRoom].exits.right ? "linear-gradient(180deg, #B8E0FF, #5070D0)" : "linear-gradient(180deg, #555, #333)",
+                borderBottomColor: SHIP_ROOMS[shipRoom].exits.right ? "#2060A0" : "#111",
+                color: "#FFF",
+                opacity: SHIP_ROOMS[shipRoom].exits.right ? 1 : 0.5,
+              }}>
+              room &rarr;
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={openSpaceMap}
+              disabled={shipRoom !== "cockpit"}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{
+                background: shipRoom === "cockpit" ? "linear-gradient(180deg, #70FFE0, #208088)" : "linear-gradient(180deg, #555, #333)",
+                borderBottomColor: shipRoom === "cockpit" ? "#075858" : "#111",
+                color: shipRoom === "cockpit" ? "#06122A" : "#AAA",
+                opacity: shipRoom === "cockpit" ? 1 : 0.6,
+              }}>
+              open map
+            </button>
+            <button onClick={exitShipInterior}
+              className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+              style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+              back to shop
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Space map controls */}
+      {(phase === "space-map" || phase === "space-destination") && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #080018, #101030)",
+            borderColor: "#FFE080",
+            color: "#F8F8FF",
+            boxShadow: "0 0 18px rgba(255,224,128,0.3)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#FFE080" }}>Space Map</strong>
+            <button onClick={() => setPhase("ship-interior")}
+              className="text-sm underline" style={{ color: "#80C0FF" }}>
+              back to cockpit
+            </button>
+          </div>
+          {spaceMapMessage && (
+            <p className="text-xs text-center mb-2 rounded py-1"
+              style={{ color: "#FFE080", background: "#201040" }}>
+              {spaceMapMessage}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            {SPACE_DESTINATIONS.slice(0, 6).map((dest) => {
+              const unlocked = isDestinationUnlocked(dest);
+              const selected = selectedSpaceDestination === dest.id;
+              return (
+                <button key={dest.id}
+                  onClick={() => travelToDestination(dest)}
+                  className="p-2 rounded-xl text-left transition-all active:scale-95 border-b-4"
+                  style={{
+                    background: unlocked
+                      ? selected ? "linear-gradient(180deg, #FFF, #B8E0FF)" : "linear-gradient(180deg, #203860, #102040)"
+                      : "linear-gradient(180deg, #333344, #202030)",
+                    borderBottomColor: unlocked ? "#80C0FF" : "#111",
+                    color: unlocked ? selected ? "#102038" : "#F8F8FF" : "#888",
+                  }}>
+                  <span className="text-lg mr-1" style={{ fontFamily: "sans-serif" }}>{dest.emoji}</span>
+                  <strong>{dest.name}</strong>
+                  <br /><span className="text-[10px]">{unlocked ? dest.description : "locked"}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Street controls: left / right / enter-home */}
       {phase === "street" && (
         <div className="w-full max-w-lg flex items-center justify-between gap-2 mb-3 select-none"
@@ -8183,7 +8438,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">

@@ -78,13 +78,13 @@
 
 ### Milestone 6 - Ship / Space Map
 
-- Started:
-- Completed:
-- Summary:
-- Checks run:
-- Commit:
-- Push status:
-- Remaining issues:
+- Started: 2026-04-26
+- Completed: 2026-04-26
+- Summary: Added a ship-interior phase with room navigation, cockpit map console, space-map phase, visible locked/unlocked destinations, and Earth/Alien travel routing back into the existing cutscene system.
+- Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed.
+- Commit: `feat(ice-cream): add ship interior and space map`
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
+- Remaining issues: Non-Earth/Alien destinations are charted placeholders until destination-local customer loops are added.
 
 ### Milestone 7 - The Shop Walks Away
 
