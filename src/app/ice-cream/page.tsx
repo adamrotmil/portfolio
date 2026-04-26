@@ -119,6 +119,36 @@ type BossFightState = {
   orderMoney: number;       // the unpaid bill, added to the reward on capture
 };
 
+type ArcadeMeteor = {
+  id: number;
+  x: number;
+  y: number;
+  vy: number;
+  size: number;
+  color: string;
+};
+
+type MeteorMeltdownState = {
+  score: number;
+  timeLeft: number;
+  lives: number;
+  meteors: ArcadeMeteor[];
+  nextId: number;
+  phase: "play" | "done";
+  message: string;
+};
+
+type SlimeSimonState = {
+  sequence: number[];
+  showIdx: number;
+  playIdx: number;
+  round: number;
+  score: number;
+  phase: "show" | "play" | "done";
+  flashIdx: number | null;
+  message: string;
+};
+
 type ShopItem = {
   id: string;        // stable id used as inventory key
   name: string;
@@ -348,6 +378,13 @@ const ALIEN_ARCADE_CABINETS: ArcadeCabinet[] = [
     highScoreKey: "pixel-rift",
   },
 ];
+
+const SLIME_SIMON_PADS = [
+  { name: "berry", x: 32, y: 48, color: "#FF70A6", accent: "#A82050" },
+  { name: "mint", x: 96, y: 48, color: "#70F0A0", accent: "#148A50" },
+  { name: "lemon", x: 32, y: 78, color: "#FFE060", accent: "#B08010" },
+  { name: "blue", x: 96, y: 78, color: "#70C8FF", accent: "#2060A0" },
+] as const;
 
 const SPACE_DESTINATIONS: SpaceDestination[] = [
   {
@@ -2979,6 +3016,7 @@ function drawShopFront(ctx: CanvasRenderingContext2D, shop: Shop, bx: number, bw
 const STREET_SHOP_W = 28;
 const STREET_GAP = 4;
 const STREET_MARGIN = 2;
+const ARCADE_ROOM_W = 470;
 
 function streetWorldWidth(shops: Shop[]): number {
   return STREET_MARGIN * 2 + shops.length * STREET_SHOP_W + (shops.length - 1) * STREET_GAP;
@@ -3069,6 +3107,166 @@ function drawStreetScene(
 
   // Street label
   drawText(ctx, location === "alien-planet" ? "ALIEN STREET" : "MAIN STREET", W / 2, 94, "#FFFFFF", 0.55);
+}
+
+function arcadeCameraX(heroX: number): number {
+  return Math.max(0, Math.min(ARCADE_ROOM_W - W, Math.floor(heroX - W / 2)));
+}
+
+function drawArcadeCabinet(ctx: CanvasRenderingContext2D, cabinet: ArcadeCabinet, x: number, tick: number, selected: boolean) {
+  const body = selected ? cabinet.colors.accent : cabinet.colors.body;
+  const blink = Math.floor(tick / 12) % 2 === 0;
+  for (let dy = 0; dy < 42; dy++) {
+    for (let dx = 0; dx < 22; dx++) {
+      const edge = dx === 0 || dx === 21 || dy === 0 || dy === 41;
+      const marquee = dy < 6 && (dx + Math.floor(tick / 8)) % 4 < 2;
+      const color = edge ? cabinet.colors.accent : marquee ? "#FFF0A0" : body;
+      px(ctx, x + dx, 40 + dy, 1, 1, color);
+    }
+  }
+  // screen
+  for (let dy = 0; dy < 13; dy++) {
+    for (let dx = 0; dx < 16; dx++) {
+      const edge = dx === 0 || dx === 15 || dy === 0 || dy === 12;
+      px(ctx, x + 3 + dx, 49 + dy, 1, 1, edge ? "#101020" : cabinet.colors.screen);
+    }
+  }
+  px(ctx, x + 8, 67, 2, 2, blink ? "#FF70F0" : "#FFD86B");
+  px(ctx, x + 13, 67, 2, 2, "#70FFE0");
+  drawText(ctx, cabinet.name.split(" ")[0].toUpperCase().slice(0, 7), x + 11, 36, cabinet.colors.accent, 0.42);
+}
+
+function drawArcadeRoomScene(
+  ctx: CanvasRenderingContext2D,
+  tick: number,
+  heroX: number,
+  walking: boolean,
+  previewId: ArcadeGameId | null
+) {
+  const cameraX = arcadeCameraX(heroX);
+  // Deep neon room shell
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const checker = (Math.floor((x + cameraX) / 8) + Math.floor(y / 8)) % 2;
+      const color = y < 18 ? "#120030" : y < 84 ? (checker ? "#1B0A3A" : "#24104A") : (checker ? "#31204A" : "#1A1630");
+      px(ctx, x, y, 1, 1, color);
+    }
+  }
+  // Neon ceiling rail and stars
+  px(ctx, 0, 18, W, 2, "#70FFE0");
+  px(ctx, 0, 84, W, 2, "#FF70F0");
+  for (let i = 0; i < 22; i++) {
+    const sx = (i * 23 - Math.floor(cameraX / 2) + Math.floor(tick / 3)) % W;
+    const sy = 5 + (i * 7) % 28;
+    px(ctx, sx, sy, 1, 1, i % 2 ? "#FFD86B" : "#70FFE0");
+  }
+
+  ALIEN_ARCADE_CABINETS.forEach((cabinet) => {
+    const x = Math.floor(cabinet.x - cameraX);
+    if (x < -28 || x > W + 8) return;
+    const selected = previewId === cabinet.id || Math.abs(heroX - cabinet.x) < 20;
+    drawArcadeCabinet(ctx, cabinet, x, tick, selected);
+  });
+
+  // Glitch, the floating host
+  const hostX = Math.floor(36 - cameraX);
+  if (hostX > -12 && hostX < W + 12) {
+    drawAlienSprite(ctx, hostX, 78, 2, false);
+    drawText(ctx, "GLITCH", hostX, 92, "#70FFE0", 0.42);
+  }
+
+  drawHero(ctx, Math.floor(heroX - cameraX), 88, walking, true, null);
+  if (cameraX > 0) drawText(ctx, "\u2190", 6, 56, "#FFFFFF", 1.0);
+  if (cameraX < ARCADE_ROOM_W - W) drawText(ctx, "\u2192", W - 6, 56, "#FFFFFF", 1.0);
+  drawText(ctx, "GLITCH GALAXY ARCADE", W / 2, 102, "#FFD86B", 0.55);
+}
+
+function drawMeteorMeltdownScene(ctx: CanvasRenderingContext2D, tick: number, game: MeteorMeltdownState | null) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const band = Math.floor((y + tick) / 8) % 2;
+      px(ctx, x, y, 1, 1, y < 86 ? (band ? "#140824" : "#201040") : "#382048");
+    }
+  }
+  for (let i = 0; i < 26; i++) {
+    const sx = (i * 17 + tick) % W;
+    const sy = 4 + (i * 11) % 50;
+    px(ctx, sx, sy, 1, 1, i % 3 ? "#FFE080" : "#70FFE0");
+  }
+
+  px(ctx, 0, 86, W, 2, "#FF8050");
+  for (let x = 0; x < W; x++) {
+    const check = (Math.floor(x / 6) + Math.floor(tick / 6)) % 2;
+    px(ctx, x, 88, 1, H - 88, check ? "#3A2038" : "#241428");
+  }
+
+  // Laser cannon
+  const cannonX = W / 2;
+  px(ctx, cannonX - 10, 94, 20, 5, "#70FFE0");
+  px(ctx, cannonX - 4, 87, 8, 8, "#FFD86B");
+  px(ctx, cannonX - 2, 84, 4, 4, "#FF70F0");
+
+  game?.meteors.forEach((m) => {
+    const flame = Math.floor(tick / 4) % 2;
+    for (let dy = -m.size; dy <= m.size; dy++) {
+      for (let dx = -m.size; dx <= m.size; dx++) {
+        if (dx * dx + dy * dy <= m.size * m.size) {
+          const edge = Math.abs(dx) + Math.abs(dy) > m.size;
+          px(ctx, Math.floor(m.x + dx), Math.floor(m.y + dy), 1, 1, edge ? "#FFE080" : m.color);
+        }
+      }
+    }
+    px(ctx, Math.floor(m.x - 1), Math.floor(m.y - m.size - 2 - flame), 3, 2, "#FFB040");
+  });
+
+  if (game) {
+    drawText(ctx, `METEORS ${game.score}`, 28, 8, "#FFE080", 0.55);
+    drawText(ctx, `${Math.ceil(game.timeLeft / 1000)}s`, W / 2, 8, "#70FFE0", 0.55);
+    drawText(ctx, `LIVES ${game.lives}`, W - 26, 8, "#FFB0CB", 0.55);
+    if (game.phase === "done") {
+      drawText(ctx, game.message, W / 2, H / 2 - 4, "#FFD86B", 0.75);
+      drawText(ctx, "RESULTS BELOW", W / 2, H / 2 + 8, "#70FFE0", 0.5);
+    } else {
+      drawText(ctx, "TAP METEORS", W / 2, 102, "#FFFFFF", 0.52);
+    }
+  }
+}
+
+function drawSlimeSimonScene(ctx: CanvasRenderingContext2D, tick: number, game: SlimeSimonState | null) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const glow = (Math.floor(x / 10) + Math.floor(y / 8) + Math.floor(tick / 12)) % 2;
+      px(ctx, x, y, 1, 1, y < 22 ? "#102818" : glow ? "#183820" : "#102018");
+    }
+  }
+  px(ctx, 0, 22, W, 2, "#78F060");
+  px(ctx, 0, 96, W, 2, "#B7FF9A");
+  drawText(ctx, "SLIME SIMON", W / 2, 10, "#B7FF9A", 0.75);
+  drawText(ctx, game ? `ROUND ${game.round}  SCORE ${game.score}` : "READY", W / 2, 18, "#FFE080", 0.45);
+
+  SLIME_SIMON_PADS.forEach((pad, i) => {
+    const lit = game?.flashIdx === i;
+    const radius = lit ? 15 : 13;
+    const bob = Math.floor(Math.sin((tick + i * 5) / 7) * 1);
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        const dist = (dx * dx) / 1.4 + dy * dy;
+        if (dist <= radius * radius) {
+          const edge = dist > (radius - 2) * (radius - 2);
+          px(ctx, pad.x + dx, pad.y + dy + bob, 1, 1, lit ? "#FFFFFF" : edge ? pad.accent : pad.color);
+        }
+      }
+    }
+    px(ctx, pad.x - 4, pad.y - 3 + bob, 3, 3, "#102018");
+    px(ctx, pad.x + 2, pad.y - 3 + bob, 3, 3, "#102018");
+    px(ctx, pad.x - 2, pad.y + 4 + bob, 5, 1, pad.accent);
+    drawText(ctx, `${i + 1}`, pad.x, pad.y + 18, "#FFFFFF", 0.48);
+  });
+
+  if (game) {
+    const color = game.phase === "done" ? "#FFD86B" : game.phase === "play" ? "#FFFFFF" : "#B7FF9A";
+    drawText(ctx, game.message, W / 2, 104, color, 0.55);
+  }
 }
 
 // Shop interior — draws owner behind counter and shop-themed backdrop
@@ -3804,6 +4002,13 @@ export default function IceCreamGame() {
   const [slotMessage, setSlotMessage] = useState<string | null>(null);
   const slotIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Alien Arcade room state
+  const [arcadeRoomX, setArcadeRoomX] = useState(28);
+  const arcadeDirRef = useRef<-1 | 0 | 1>(0);
+  const [arcadeCabinetPreview, setArcadeCabinetPreview] = useState<ArcadeGameId | null>(null);
+  const [meteorMeltdown, setMeteorMeltdown] = useState<MeteorMeltdownState | null>(null);
+  const [slimeSimon, setSlimeSimon] = useState<SlimeSimonState | null>(null);
+
   // Boss state
   const [shakeTick, setShakeTick] = useState(0);
   const lastBossAtRef = useRef(0);
@@ -3834,6 +4039,7 @@ export default function IceCreamGame() {
     phase: "play" | "won" | "lost";
     phaseTick: number;
   } | null>(null);
+  const sarahsWorldReturnRef = useRef<"shop" | "arcade-room">("shop");
 
   // Pilot minigame state — most of the gameplay uses refs to avoid excessive
   // re-renders; `pilotTick` state drives the canvas to repaint and the UI to update.
@@ -3887,7 +4093,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -4130,6 +4336,21 @@ export default function IceCreamGame() {
       drawShopInterior(ctx, shop, streetTick);
     }
 
+    function drawArcadeRoom() {
+      if (!ctx) return;
+      drawArcadeRoomScene(ctx, streetTick, arcadeRoomX, arcadeDirRef.current !== 0, arcadeCabinetPreview);
+    }
+
+    function drawMeteorMeltdown() {
+      if (!ctx) return;
+      drawMeteorMeltdownScene(ctx, streetTick, meteorMeltdown);
+    }
+
+    function drawSlimeSimon() {
+      if (!ctx) return;
+      drawSlimeSimonScene(ctx, streetTick, slimeSimon);
+    }
+
     function drawChase() {
       if (!ctx) return;
       drawChaseScene(ctx, chaseTick, chaseMinions);
@@ -4183,6 +4404,12 @@ export default function IceCreamGame() {
         drawStreet();
       } else if (phase === "shop") {
         drawShop();
+      } else if (phase === "arcade-room") {
+        drawArcadeRoom();
+      } else if (phase === "meteor-meltdown") {
+        drawMeteorMeltdown();
+      } else if (phase === "slime-simon") {
+        drawSlimeSimon();
       } else if (phase === "chase") {
         drawChase();
       } else if (phase === "boss-fight") {
@@ -4198,7 +4425,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -4661,7 +4888,7 @@ export default function IceCreamGame() {
                 return n;
               });
             }
-            setPhase("shop");
+            setPhase(sarahsWorldReturnRef.current);
             return null;
           }
           return { ...cur, phaseTick: nextPhaseTick };
@@ -5057,6 +5284,13 @@ export default function IceCreamGame() {
     setSlotMessage(null);
     setSlotSpinning(false);
     if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
+    if (shopId === "alien-arcade") {
+      setArcadeRoomX(42);
+      arcadeDirRef.current = 0;
+      setArcadeCabinetPreview(null);
+      setPhase("arcade-room");
+      return;
+    }
     setPhase("shop");
   }, []);
 
@@ -5074,6 +5308,7 @@ export default function IceCreamGame() {
   // Arcade: start Sarah's World
   const startSarahsWorld = useCallback(() => {
     playDing();
+    sarahsWorldReturnRef.current = phase === "arcade-room" ? "arcade-room" : "shop";
     setSarahsWorld({
       tick: 0,
       tileCount: 0,
@@ -5086,7 +5321,7 @@ export default function IceCreamGame() {
       phaseTick: 0,
     });
     setPhase("sarahs-world");
-  }, []);
+  }, [phase]);
 
   // Sarah's World: stack a tile
   const handleStackTile = useCallback(() => {
@@ -5110,7 +5345,7 @@ export default function IceCreamGame() {
   const exitSarahsWorld = useCallback(() => {
     playBoop();
     setSarahsWorld(null);
-    setPhase("shop");
+    setPhase(sarahsWorldReturnRef.current);
   }, []);
 
   // Casino: pull the lever
@@ -5363,6 +5598,326 @@ export default function IceCreamGame() {
       }
     },
     [chatActive, streetNpcs, location, pickDialogue, enterShop, heroX, visibleShops]
+  );
+
+  // Alien Arcade room movement
+  useEffect(() => {
+    if (phase !== "arcade-room") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      if (arcadeDirRef.current !== 0) {
+        setArcadeRoomX((x) => Math.max(14, Math.min(ARCADE_ROOM_W - 14, x + arcadeDirRef.current * 1.4)));
+      }
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const exitArcadeRoom = useCallback(() => {
+    playBoop();
+    setArcadeCabinetPreview(null);
+    arcadeDirRef.current = 0;
+    setCurrentShopId(null);
+    setPhase("street");
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "arcade-room") return;
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") arcadeDirRef.current = -1;
+      if (e.key === "ArrowRight") arcadeDirRef.current = 1;
+      if (e.key === "Escape") exitArcadeRoom();
+    };
+    const up = (e: KeyboardEvent) => {
+      if ((e.key === "ArrowLeft" && arcadeDirRef.current === -1) || (e.key === "ArrowRight" && arcadeDirRef.current === 1)) {
+        arcadeDirRef.current = 0;
+      }
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      arcadeDirRef.current = 0;
+    };
+  }, [phase, exitArcadeRoom]);
+
+  const recordArcadeScore = useCallback((gameId: ArcadeGameId, scoreValue: number) => {
+    setArcadeHighScores((prev) => {
+      const best = prev[gameId] ?? 0;
+      return scoreValue > best ? { ...prev, [gameId]: scoreValue } : prev;
+    });
+  }, []);
+
+  const startMeteorMeltdown = useCallback(() => {
+    playDing();
+    setShopFlash(null);
+    setArcadeCabinetPreview(null);
+    setSlimeSimon(null);
+    setMeteorMeltdown({
+      score: 0,
+      timeLeft: 30000,
+      lives: 3,
+      meteors: [],
+      nextId: 1,
+      phase: "play",
+      message: "Zap the falling meteors.",
+    });
+    setPhase("meteor-meltdown");
+  }, []);
+
+  const startSlimeSimon = useCallback(() => {
+    playDing();
+    setShopFlash(null);
+    setArcadeCabinetPreview(null);
+    setMeteorMeltdown(null);
+    setSlimeSimon({
+      sequence: [Math.floor(Math.random() * SLIME_SIMON_PADS.length)],
+      showIdx: 0,
+      playIdx: 0,
+      round: 1,
+      score: 0,
+      phase: "show",
+      flashIdx: null,
+      message: "Watch the slime pattern.",
+    });
+    setPhase("slime-simon");
+  }, []);
+
+  const exitArcadeGame = useCallback(() => {
+    playBoop();
+    setMeteorMeltdown(null);
+    setSlimeSimon(null);
+    setArcadeCabinetPreview(null);
+    setPhase("arcade-room");
+  }, []);
+
+  const playArcadeCabinet = useCallback((gameId: ArcadeGameId) => {
+    if (gameId === "sarahs-world") {
+      setArcadeCabinetPreview(null);
+      startSarahsWorld();
+      return;
+    }
+    if (gameId === "meteor-meltdown") {
+      startMeteorMeltdown();
+      return;
+    }
+    if (gameId === "slime-simon") {
+      startSlimeSimon();
+      return;
+    }
+    playBoop();
+    setShopFlash(`${ALIEN_ARCADE_CABINETS.find((c) => c.id === gameId)?.name ?? "Cabinet"} is humming. Full game wiring next!`);
+  }, [startSarahsWorld, startMeteorMeltdown, startSlimeSimon]);
+
+  useEffect(() => {
+    if (phase !== "meteor-meltdown" || meteorMeltdown?.phase !== "play") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      setMeteorMeltdown((cur) => {
+        if (!cur || cur.phase !== "play") return cur;
+        const timeLeft = Math.max(0, cur.timeLeft - 80);
+        let lives = cur.lives;
+        let nextId = cur.nextId;
+        let meteors = cur.meteors
+          .map((m) => ({ ...m, y: m.y + m.vy }))
+          .filter((m) => {
+            const landed = m.y + m.size >= 87;
+            if (landed) lives -= 1;
+            return !landed;
+          });
+
+        const spawnChance = Math.min(0.44, 0.18 + cur.score * 0.003);
+        if (Math.random() < spawnChance) {
+          const size = 3 + Math.floor(Math.random() * 3);
+          meteors = [
+            ...meteors,
+            {
+              id: nextId,
+              x: 8 + Math.random() * (W - 16),
+              y: -6,
+              vy: 0.8 + Math.random() * 1.2 + cur.score * 0.004,
+              size,
+              color: ["#FF8050", "#FFB040", "#D85070"][nextId % 3],
+            },
+          ];
+          nextId += 1;
+        }
+
+        if (lives <= 0 || timeLeft <= 0) {
+          return {
+            ...cur,
+            timeLeft,
+            lives: Math.max(0, lives),
+            meteors,
+            nextId,
+            phase: "done",
+            message: `Score ${cur.score}`,
+          };
+        }
+
+        return { ...cur, timeLeft, lives, meteors, nextId };
+      });
+    }, 80);
+    return () => clearInterval(interval);
+  }, [phase, meteorMeltdown?.phase]);
+
+  useEffect(() => {
+    if (phase !== "slime-simon") return;
+    const interval = setInterval(() => setStreetTick((t) => t + 1), 80);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "slime-simon" || !slimeSimon || slimeSimon.phase !== "show") return;
+    const timeout = setTimeout(() => {
+      setSlimeSimon((cur) => {
+        if (!cur || cur.phase !== "show") return cur;
+        if (cur.showIdx >= cur.sequence.length) {
+          return { ...cur, phase: "play", playIdx: 0, flashIdx: null, message: "Your turn. Repeat it!" };
+        }
+        return {
+          ...cur,
+          flashIdx: cur.sequence[cur.showIdx],
+          showIdx: cur.showIdx + 1,
+          message: "Watch the slime pattern.",
+        };
+      });
+    }, slimeSimon.showIdx === 0 && slimeSimon.flashIdx === null ? 350 : 650);
+    return () => clearTimeout(timeout);
+  }, [phase, slimeSimon]);
+
+  useEffect(() => {
+    if (phase !== "slime-simon" || slimeSimon?.phase !== "play" || slimeSimon.flashIdx === null) return;
+    const timeout = setTimeout(() => {
+      setSlimeSimon((cur) => cur && cur.phase === "play" ? { ...cur, flashIdx: null } : cur);
+    }, 180);
+    return () => clearTimeout(timeout);
+  }, [phase, slimeSimon?.phase, slimeSimon?.flashIdx]);
+
+  const handleMeteorMeltdownTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      playBoop();
+      setMeteorMeltdown((cur) => {
+        if (!cur || cur.phase !== "play") return cur;
+        let hit: ArcadeMeteor | null = null;
+        for (let i = cur.meteors.length - 1; i >= 0; i--) {
+          const m = cur.meteors[i];
+          const dx = gx - m.x;
+          const dy = gy - m.y;
+          if (dx * dx + dy * dy <= (m.size + 6) * (m.size + 6)) {
+            hit = m;
+            break;
+          }
+        }
+        if (!hit) return cur;
+        const points = Math.max(5, 18 - hit.size * 2);
+        const nextScore = cur.score + points;
+        recordArcadeScore("meteor-meltdown", nextScore);
+        return {
+          ...cur,
+          score: nextScore,
+          meteors: cur.meteors.filter((m) => m.id !== hit?.id),
+          message: `+${points}`,
+        };
+      });
+    },
+    [recordArcadeScore]
+  );
+
+  const handleSlimeSimonPad = useCallback((padIdx: number) => {
+    setSlimeSimon((cur) => {
+      if (!cur || cur.phase !== "play") return cur;
+      const expected = cur.sequence[cur.playIdx];
+      if (padIdx !== expected) {
+        playWrong();
+        return {
+          ...cur,
+          phase: "done",
+          flashIdx: padIdx,
+          message: `Oops. Score ${cur.score}`,
+        };
+      }
+
+      const nextPlayIdx = cur.playIdx + 1;
+      if (nextPlayIdx >= cur.sequence.length) {
+        playCoinSound();
+        const nextScore = cur.score + 1;
+        recordArcadeScore("slime-simon", nextScore);
+        return {
+          sequence: [...cur.sequence, Math.floor(Math.random() * SLIME_SIMON_PADS.length)],
+          showIdx: 0,
+          playIdx: 0,
+          round: cur.round + 1,
+          score: nextScore,
+          phase: "show",
+          flashIdx: padIdx,
+          message: "Nice! Watch the next one.",
+        };
+      }
+
+      playBoop();
+      return {
+        ...cur,
+        playIdx: nextPlayIdx,
+        flashIdx: padIdx,
+        message: `${cur.sequence.length - nextPlayIdx} more`,
+      };
+    });
+  }, [recordArcadeScore]);
+
+  const handleSlimeSimonCanvasTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const padIdx = SLIME_SIMON_PADS.findIndex((pad) => Math.abs(gx - pad.x) <= 19 && Math.abs(gy - pad.y) <= 17);
+      if (padIdx >= 0) handleSlimeSimonPad(padIdx);
+    },
+    [handleSlimeSimonPad]
+  );
+
+  const handleArcadeRoomTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const cameraX = arcadeCameraX(arcadeRoomX);
+      const worldGx = gx + cameraX;
+      if (gy >= 34 && gy <= 84) {
+        const cabinet = ALIEN_ARCADE_CABINETS.find((c) => Math.abs(c.x + 11 - worldGx) <= 18);
+        if (cabinet) {
+          const unlocked = cabinet.unlocked || !cabinet.unlockFlag || unlockFlags[cabinet.unlockFlag];
+          playBoop();
+          setArcadeCabinetPreview(unlocked ? cabinet.id : null);
+          setShopFlash(unlocked ? null : "That cabinet is still asleep.");
+        }
+      }
+    },
+    [arcadeRoomX, unlockFlags]
   );
 
   // Tap handler for the shop interior — route exit door tap, owner chat
@@ -6026,12 +6581,18 @@ export default function IceCreamGame() {
           onClick={
             phase === "street" ? handleStreetTap
             : phase === "shop" ? handleShopTap
+            : phase === "arcade-room" ? handleArcadeRoomTap
+            : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
+            : phase === "slime-simon" ? handleSlimeSimonCanvasTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
           onTouchStart={
             phase === "street" ? handleStreetTap
             : phase === "shop" ? handleShopTap
+            : phase === "arcade-room" ? handleArcadeRoomTap
+            : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
+            : phase === "slime-simon" ? handleSlimeSimonCanvasTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -6219,6 +6780,121 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Alien Arcade room controls */}
+      {phase === "arcade-room" && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4 select-none"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #160C32, #080418)",
+            borderColor: "#70FFE0",
+            color: "#E8FFFF",
+            boxShadow: "0 0 18px rgba(112,255,224,0.35)",
+          }}>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <strong style={{ color: "#FFD86B" }}>Glitch Galaxy Arcade</strong>
+              <div className="text-xs" style={{ color: "#B8A8FF" }}>
+                tap a cabinet to inspect it
+              </div>
+            </div>
+            <div className="text-sm font-bold" style={{ color: "#70FFE0" }}>
+              {totalGold}G
+            </div>
+          </div>
+
+          {shopFlash && (
+            <p className="text-xs text-center mb-2 rounded py-1"
+              style={{ color: "#FFD86B", background: "#24104A" }}>
+              {shopFlash}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setArcadeRoomX((x) => Math.max(14, x - 28))}
+                onTouchStart={(e) => { e.preventDefault(); arcadeDirRef.current = -1; }}
+                onTouchEnd={(e) => { e.preventDefault(); arcadeDirRef.current = 0; }}
+                onTouchCancel={(e) => { e.preventDefault(); arcadeDirRef.current = 0; }}
+                onMouseDown={() => { arcadeDirRef.current = -1; }}
+                onMouseUp={() => { arcadeDirRef.current = 0; }}
+                onMouseLeave={() => { arcadeDirRef.current = 0; }}
+                className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+                style={{ background: "linear-gradient(180deg,#2FFFE0,#138A88)", borderBottomColor: "#075858", color: "#06122A" }}
+                aria-label="Walk left">&larr;</button>
+              <button
+                onClick={() => setArcadeRoomX((x) => Math.min(ARCADE_ROOM_W - 14, x + 28))}
+                onTouchStart={(e) => { e.preventDefault(); arcadeDirRef.current = 1; }}
+                onTouchEnd={(e) => { e.preventDefault(); arcadeDirRef.current = 0; }}
+                onTouchCancel={(e) => { e.preventDefault(); arcadeDirRef.current = 0; }}
+                onMouseDown={() => { arcadeDirRef.current = 1; }}
+                onMouseUp={() => { arcadeDirRef.current = 0; }}
+                onMouseLeave={() => { arcadeDirRef.current = 0; }}
+                className="rounded-lg border-b-4 text-2xl font-bold py-2 px-5"
+                style={{ background: "linear-gradient(180deg,#FF80D8,#9830A8)", borderBottomColor: "#5C166C", color: "#FFF" }}
+                aria-label="Walk right">&rarr;</button>
+            </div>
+            <button onClick={exitArcadeRoom}
+              className="rounded-lg border-b-4 font-bold py-2 px-3 text-sm"
+              style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+              back to street
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Alien Arcade cabinet preview */}
+      {phase === "arcade-room" && arcadeCabinetPreview && (() => {
+        const cabinet = ALIEN_ARCADE_CABINETS.find((c) => c.id === arcadeCabinetPreview);
+        if (!cabinet) return null;
+        const best = arcadeHighScores[cabinet.highScoreKey] ?? 0;
+        const playable = cabinet.id === "sarahs-world" || cabinet.id === "meteor-meltdown" || cabinet.id === "slime-simon";
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
+            style={{
+              fontFamily: "monospace",
+              background: "linear-gradient(180deg, #24104A, #100820)",
+              borderColor: cabinet.colors.accent,
+              color: "#E8FFFF",
+              boxShadow: `0 0 20px ${cabinet.colors.accent}`,
+            }}>
+            <div className="flex items-start gap-3 mb-3">
+              <div className="text-3xl" style={{ fontFamily: "sans-serif" }}>{cabinet.emoji}</div>
+              <div className="flex-1">
+                <strong style={{ color: cabinet.colors.accent }}>{cabinet.name}</strong>
+                <p className="text-xs mt-1" style={{ color: "#C0C0FF" }}>{cabinet.subtitle}</p>
+              </div>
+              <div className="text-right text-xs" style={{ color: "#FFD86B" }}>
+                best<br /><span className="text-base font-bold">{best}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => playArcadeCabinet(cabinet.id)}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{
+                  background: playable
+                    ? "linear-gradient(180deg, #FFB0CB, #D04060)"
+                    : "linear-gradient(180deg, #70FFE0, #208088)",
+                  borderBottomColor: playable ? "#801040" : "#075858",
+                  color: playable ? "#FFF" : "#06122A",
+                  textShadow: playable ? "1px 1px 0 #400020" : "none",
+                }}>
+                {playable ? "play" : "preview"}
+              </button>
+              <button onClick={() => setArcadeCabinetPreview(null)}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{
+                  background: "linear-gradient(180deg, #FFF, #B8A8FF)",
+                  borderBottomColor: "#6A4AC0",
+                  color: "#201020",
+                }}>
+                keep walking
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Arcade panel — pick a game */}
       {phase === "shop" && currentShopId && (() => {
         const shop = shopById(currentShopId);
@@ -6351,6 +7027,118 @@ export default function IceCreamGame() {
               }}>
               back to the arcade {"\u2190"}
             </button>
+          )}
+        </div>
+      )}
+
+      {/* Meteor Meltdown controls */}
+      {phase === "meteor-meltdown" && meteorMeltdown && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #201040, #100820)",
+            borderColor: "#FF8050",
+            color: "#FFF",
+            boxShadow: "0 0 18px rgba(255,128,80,0.35)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#FFB040" }}>Meteor Meltdown</strong>
+            <span className="text-xs" style={{ color: "#70FFE0" }}>
+              best {arcadeHighScores["meteor-meltdown"] ?? 0}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-sm mb-3">
+            <div className="rounded-lg py-2" style={{ background: "#2A184A" }}>
+              <strong>{meteorMeltdown.score}</strong><br /><span className="text-xs">score</span>
+            </div>
+            <div className="rounded-lg py-2" style={{ background: "#2A184A" }}>
+              <strong>{Math.ceil(meteorMeltdown.timeLeft / 1000)}s</strong><br /><span className="text-xs">time</span>
+            </div>
+            <div className="rounded-lg py-2" style={{ background: "#2A184A" }}>
+              <strong>{meteorMeltdown.lives}</strong><br /><span className="text-xs">lives</span>
+            </div>
+          </div>
+          {meteorMeltdown.phase === "done" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={startMeteorMeltdown}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #FFB040, #D85030)", borderBottomColor: "#7A2010", color: "#FFF" }}>
+                retry
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #70FFE0, #208088)", borderBottomColor: "#075858", color: "#06122A" }}>
+                back to arcade
+              </button>
+            </div>
+          ) : (
+            <button onClick={exitArcadeGame}
+              className="w-full py-2 rounded-xl font-bold transition-all active:scale-95 border-b-4 text-sm"
+              style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+              quit to arcade
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Slime Simon controls */}
+      {phase === "slime-simon" && slimeSimon && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #102818, #08140C)",
+            borderColor: "#78F060",
+            color: "#EFFFF0",
+            boxShadow: "0 0 18px rgba(120,240,96,0.35)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#B7FF9A" }}>Slime Simon</strong>
+            <span className="text-xs" style={{ color: "#FFE080" }}>
+              best {arcadeHighScores["slime-simon"] ?? 0}
+            </span>
+          </div>
+          <p className="text-xs text-center mb-2" style={{ color: "#D8FFD0" }}>
+            {slimeSimon.message}
+          </p>
+          {slimeSimon.phase === "done" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={startSlimeSimon}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #B7FF9A, #40A050)", borderBottomColor: "#145020", color: "#102018" }}>
+                retry
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+                back to arcade
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {SLIME_SIMON_PADS.map((pad, idx) => (
+                  <button key={pad.name}
+                    onClick={() => handleSlimeSimonPad(idx)}
+                    disabled={slimeSimon.phase !== "play"}
+                    className="py-4 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                    style={{
+                      background: slimeSimon.flashIdx === idx
+                        ? "linear-gradient(180deg, #FFF, #F8FFE8)"
+                        : `linear-gradient(180deg, ${pad.color}, ${pad.accent})`,
+                      borderBottomColor: pad.accent,
+                      color: idx === 2 ? "#201800" : "#FFF",
+                      opacity: slimeSimon.phase === "play" ? 1 : 0.75,
+                    }}>
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+              <button onClick={exitArcadeGame}
+                className="w-full py-2 rounded-xl font-bold transition-all active:scale-95 border-b-4 text-sm"
+                style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+                quit to arcade
+              </button>
+            </>
           )}
         </div>
       )}
@@ -7142,7 +7930,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">

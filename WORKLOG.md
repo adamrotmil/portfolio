@@ -32,8 +32,8 @@
 - Completed: 2026-04-26
 - Summary: Added additive expansion phases, persistence helpers, unlock flags, quest/memory scaffolding, arcade/ship/space/alive-shop data models, dynamic flavor/topping pools, and visible groundwork in existing UI.
 - Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed; `npm run lint` still fails on pre-existing non-game files.
-- Commit:
-- Push status:
+- Commit: `fcaed6f` (`feat(ice-cream): add expansion foundations and shops`)
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
 - Remaining issues: Global lint debt predates this branch.
 
 ### Milestone 2 - Shops
@@ -42,9 +42,9 @@
 - Completed: 2026-04-26
 - Summary: Added Flavor Lab, Scoop Mail, Weather Window, Night Market, Alien Arcade, Gravity Tailor, Memory Aquarium, and Chrono Garage with item effects for unlocks, flags, destination map groundwork, visual decor, and tip bonus.
 - Checks run: covered by Milestone 1 check set above.
-- Commit:
-- Push status:
-- Remaining issues: Alien Arcade currently uses the existing arcade panel with cabinet groundwork; full walkable room is next.
+- Commit: `fcaed6f` (`feat(ice-cream): add expansion foundations and shops`)
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
+- Remaining issues: None for the shop list; deeper destination systems remain future milestones.
 
 ### Milestone 3 - Dialogue / quests
 
@@ -52,19 +52,19 @@
 - Completed:
 - Summary:
 - Checks run:
-- Commit:
-- Push status:
+- Commit: `feat(ice-cream): add walkable alien arcade`
+- Push status: pushed to `origin/feature/scoop-shop-expansion`
 - Remaining issues:
 
 ### Milestone 4 - Alien Arcade
 
-- Started:
-- Completed:
-- Summary:
-- Checks run:
+- Started: 2026-04-26
+- Completed: 2026-04-26
+- Summary: Added a walkable Glitch Galaxy Arcade room, cabinet pixel art, cabinet previews, keyboard/button movement, Sarah's World return routing, Meteor Meltdown, and Slime Simon with persistent arcade high scores.
+- Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed; `npm run lint` still fails on pre-existing non-game files. Browser smoke entered the arcade room through the in-app browser and confirmed the room panel renders without the scoop-button UI leak after the guard fix.
 - Commit:
 - Push status:
-- Remaining issues:
+- Remaining issues: Browser playthrough of Meteor Meltdown / Slime Simon was not completed because the existing travel flow branched into the black-hole event during the second verification pass; build and page lint cover implementation correctness.
 
 ### Milestone 5 - Underground
 
