@@ -295,6 +295,44 @@ type SpaceDestination = {
   travelRisk: "none" | "asteroids" | "blackhole" | "weird";
 };
 
+type SpaceDestinationContent = {
+  id: SpaceDestinationId;
+  tagline: string;
+  arrival: string;
+  popupIntro: string;
+  completeMessage: string;
+  localNames: string[];
+  flavors: Flavor[];
+  toppings: Topping[];
+  palette: {
+    sky: string;
+    ground: string;
+    accent: string;
+    shadow: string;
+  };
+  reward: {
+    label: string;
+    flag?: string;
+    itemId?: string;
+    coins: number;
+  };
+};
+
+type SpaceDestinationVisit = {
+  id: SpaceDestinationId;
+  status: "approaching" | "landed";
+  tick: number;
+};
+
+type DestinationPopUpState = {
+  destinationId: SpaceDestinationId;
+  phase: "serving" | "complete";
+  customersServed: number;
+  targetCustomers: number;
+  rewardClaimed: boolean;
+  message: string | null;
+};
+
 type ShipRoomId = "cockpit" | "galley" | "cargo" | "engine" | "crew-pod";
 
 type ShipRoom = {
@@ -619,6 +657,142 @@ const SPACE_DESTINATIONS: SpaceDestination[] = [
   },
 ];
 
+const SPACE_DESTINATION_CONTENT: Partial<Record<SpaceDestinationId, SpaceDestinationContent>> = {
+  "moon-dairy": {
+    id: "moon-dairy",
+    tagline: "Low gravity barns and milk-star lanterns.",
+    arrival: "The saucer settles beside a silver barn. Moon cows hop like balloons.",
+    popupIntro: "Open the fold-out counter and catch floaty low-gravity orders.",
+    completeMessage: "The moon cows stamp your menu with Moon Milk.",
+    localNames: ["Moo-Nova", "Luna Calf", "Crater Kid", "Milk Star"],
+    flavors: [
+      { name: "Moon Milk", colors: ["#F8F8FF", "#C8D8FF", "#8090C0"], emoji: "\u{1F319}" },
+      { name: "Low-G Swirl", colors: ["#E8FFFF", "#90E0FF", "#4080B0"], emoji: "\u{1F300}" },
+      { name: "Silver Cream", colors: ["#FFFFFF", "#D8D8E8", "#8888A8"], emoji: "\u2728" },
+    ],
+    toppings: [
+      { name: "Milk Stars", emoji: "\u2B50" },
+      { name: "Crater Crunch", emoji: "\u{1FAA8}" },
+    ],
+    palette: { sky: "#101838", ground: "#D8D8F8", accent: "#F8F8FF", shadow: "#506080" },
+    reward: { label: "Moon Milk flavor", flag: "flavor-moon-milk", itemId: "moon-dairy-stamp", coins: 30 },
+  },
+  "asteroid-bazaar": {
+    id: "asteroid-bazaar",
+    tagline: "A market bolted to tumbling rocks.",
+    arrival: "Docking clamps bite into a market asteroid. Stalls wobble, bells ring.",
+    popupIntro: "Serve shoppers between drifting crates and tiny planet pets.",
+    completeMessage: "The market crew expands your cargo straps.",
+    localNames: ["Pebble Vendor", "Meteor Max", "Orbit Auntie", "Tiny Planet"],
+    flavors: [
+      { name: "Rocky Roadster", colors: ["#C8A080", "#8A6050", "#503030"], emoji: "\u{1FAA8}" },
+      { name: "Market Mint", colors: ["#D8FFD8", "#80D8A0", "#408060"], emoji: "\u{1F33F}" },
+      { name: "Meteor Malt", colors: ["#FFD0A0", "#B87840", "#603820"], emoji: "\u2604\uFE0F" },
+    ],
+    toppings: [
+      { name: "Meteor Metals", emoji: "\u{1F529}" },
+      { name: "Orbit Seeds", emoji: "\u{1FAD8}" },
+    ],
+    palette: { sky: "#101020", ground: "#7A5A48", accent: "#FFD86B", shadow: "#2A2030" },
+    reward: { label: "cargo room upgrade", flag: "ship-cargo-upgrade", itemId: "meteor-metal-sample", coins: 45 },
+  },
+  "black-hole-cafe": {
+    id: "black-hole-cafe",
+    tagline: "A cafe where orders vanish politely.",
+    arrival: "The cafe sign bends around itself. Your reservation arrives yesterday.",
+    popupIntro: "Take impossible orders before the toppings disappear.",
+    completeMessage: "The cafe stamps a discount into the void.",
+    localNames: ["Event Barista", "No-Show Latte", "Gravity Guest", "Zog's Cousin"],
+    flavors: [
+      { name: "Event Horizon", colors: ["#9090C0", "#303060", "#080810"], emoji: "\u{1F311}" },
+      { name: "Espresso Void", colors: ["#705040", "#302018", "#100808"], emoji: "\u2615" },
+      { name: "Singularity Softserve", colors: ["#F0D0FF", "#8060C0", "#202040"], emoji: "\u{1F300}" },
+    ],
+    toppings: [
+      { name: "Lost Sprinkles", emoji: "\u2728" },
+      { name: "Gravity Glaze", emoji: "\u{1F30C}" },
+    ],
+    palette: { sky: "#080010", ground: "#201830", accent: "#C080FF", shadow: "#000000" },
+    reward: { label: "Void Scoops discount", flag: "void-discount", itemId: "event-horizon-punchcard", coins: 60 },
+  },
+  "cone-constellation": {
+    id: "cone-constellation",
+    tagline: "The Original Magic Cone drawn in stars.",
+    arrival: "Constellation lines tug your cone into a perfect triangle.",
+    popupIntro: "Serve pilgrims while the shrine hums the old scoop song.",
+    completeMessage: "A tiny shrine star falls safely into your inventory.",
+    localNames: ["Cone Pilgrim", "Starlace", "Old Waffle", "Shrine Kid"],
+    flavors: [
+      { name: "Mythic Vanilla", colors: ["#FFFBE8", "#F6D878", "#C28A28"], emoji: "\u2728" },
+      { name: "Cone Star Cream", colors: ["#FFE8B0", "#E0A050", "#805020"], emoji: "\u{1F366}" },
+      { name: "Origin Swirl", colors: ["#FFFFFF", "#B8E0FF", "#5070D0"], emoji: "\u{1F30C}" },
+    ],
+    toppings: [
+      { name: "Waffle Halo", emoji: "\u{1F36A}" },
+      { name: "Shrine Dust", emoji: "\u2728" },
+    ],
+    palette: { sky: "#081020", ground: "#302850", accent: "#FFF0A0", shadow: "#101020" },
+    reward: { label: "Original Cone Shrine decor", flag: "flavor-mythic-vanilla", itemId: "original-cone-shrine", coins: 50 },
+  },
+  "comet-carnival": {
+    id: "comet-carnival",
+    tagline: "A carnival braided through a comet tail.",
+    arrival: "The ship skims glitter. Rides swing from a bright comet ribbon.",
+    popupIntro: "Serve fast before the stalls drift down the tail.",
+    completeMessage: "A carnival barker tosses you Comet Dust.",
+    localNames: ["Tail Barker", "Ring Toss Ray", "Cotton Comet", "Prize Kid"],
+    flavors: [
+      { name: "Comet Tail", colors: ["#FFF0A0", "#FFB040", "#D86040"], emoji: "\u2604\uFE0F" },
+      { name: "Carnival Cotton", colors: ["#FFD0F0", "#FF80C0", "#B03080"], emoji: "\u{1F3AA}" },
+      { name: "Tilt-a-Swirl", colors: ["#D0F0FF", "#70A0FF", "#4050B0"], emoji: "\u{1F300}" },
+    ],
+    toppings: [
+      { name: "Comet Dust", emoji: "\u2604\uFE0F" },
+      { name: "Ticket Sprinkles", emoji: "\u{1F39F}\uFE0F" },
+    ],
+    palette: { sky: "#181030", ground: "#704060", accent: "#FFB040", shadow: "#301020" },
+    reward: { label: "Comet Dust topping", flag: "topping-comet-dust", itemId: "comet-ticket", coins: 45 },
+  },
+  "star-nursery": {
+    id: "star-nursery",
+    tagline: "Baby stars asleep in silver cradles.",
+    arrival: "The engine whispers. Little stars blink under blanket domes.",
+    popupIntro: "Serve gently. The quiet orders sparkle brightest.",
+    completeMessage: "Zarixa records a lullaby for the ship.",
+    localNames: ["Sleepy Star", "Nurse Nova", "Blanket Beam", "Tiny Sun"],
+    flavors: [
+      { name: "Star Milk", colors: ["#FFF8C0", "#FFD860", "#B88020"], emoji: "\u{1F31F}" },
+      { name: "Lullaby Lemon", colors: ["#FFFFC0", "#F0D850", "#A89020"], emoji: "\u{1F34B}" },
+      { name: "Blanket Berry", colors: ["#D0D8FF", "#9098E0", "#5058A0"], emoji: "\u{1FAD0}" },
+    ],
+    toppings: [
+      { name: "Quiet Sparkles", emoji: "\u2728" },
+      { name: "Blanket Fluff", emoji: "\u2601\uFE0F" },
+    ],
+    palette: { sky: "#081828", ground: "#203858", accent: "#FFF8B0", shadow: "#102030" },
+    reward: { label: "ship lullaby decor", flag: "ship-lullaby", itemId: "star-blanket", coins: 35 },
+  },
+  "dino-timeline": {
+    id: "dino-timeline",
+    tagline: "The prehistoric detour, now on purpose.",
+    arrival: "Time grass bends around the landing gear.",
+    popupIntro: "Serve fossil-hungry locals between timeline ripples.",
+    completeMessage: "Fossil Crunch joins the alien topping shelf.",
+    localNames: ["Tiny Rex", "Fern Friend", "Amber Scout", "Time Fossil"],
+    flavors: [
+      { name: "Fossil Fudge", colors: ["#B89060", "#704020", "#301808"], emoji: "\u{1F9B4}" },
+      { name: "Amber Vanilla", colors: ["#FFE0A0", "#D89030", "#804810"], emoji: "\u{1F995}" },
+      { name: "Fern Freeze", colors: ["#D8FFC0", "#80C060", "#306030"], emoji: "\u{1F33F}" },
+    ],
+    toppings: [
+      { name: "Fossil Crunch", emoji: "\u{1F9B4}" },
+      { name: "Fern Bits", emoji: "\u{1F33F}" },
+    ],
+    palette: { sky: "#80C8A0", ground: "#608040", accent: "#FFD080", shadow: "#305020" },
+    reward: { label: "Fossil Crunch topping", flag: "topping-fossil-crunch", itemId: "fossil-snack-box", coins: 40 },
+  },
+};
+
 function loadJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -687,6 +861,14 @@ const UNDERGROUND_FLAVORS: Record<string, Flavor> = {
   },
 };
 
+const SPACE_UNLOCKABLE_FLAVORS: Record<string, Flavor> = {
+  moonMilk: {
+    name: "Moon Milk",
+    colors: ["#F8F8FF", "#C8D8FF", "#8090C0"],
+    emoji: "\u{1F319}",
+  },
+};
+
 const EARTH_UNLOCKABLE_TOPPINGS: Record<string, Topping> = {
   stellarSprinkles: { name: "Stellar Sprinkles", emoji: "\u{1F308}" },
 };
@@ -721,6 +903,7 @@ const ALIEN_UNLOCKABLE_TOPPINGS: Record<string, Topping> = {
   glowWormsDeluxe: { name: "Glow Worms Deluxe", emoji: "\u{1FAB1}" },
   glowShards: { name: "Glow Shards", emoji: "\u{1F48E}" },
   fossilCrunch: { name: "Fossil Crunch", emoji: "\u{1F9B4}" },
+  cometDust: { name: "Comet Dust", emoji: "\u2604\uFE0F" },
 };
 
 const ALIEN_NAMES = [
@@ -1158,6 +1341,8 @@ function getAvailableAlienFlavors(inventory: Record<string, number>, unlockFlags
     ...ALIEN_FLAVORS,
     ...(inventory["magma-recipe"] || unlockFlags["flavor-magma-cream"] ? [UNDERGROUND_FLAVORS.magmaCream] : []),
     ...(inventory["crystal-mint-recipe"] || unlockFlags["flavor-crystal-mint"] ? [UNDERGROUND_FLAVORS.crystalMint] : []),
+    ...(unlockFlags["flavor-moon-milk"] ? [SPACE_UNLOCKABLE_FLAVORS.moonMilk] : []),
+    ...(unlockFlags["flavor-mythic-vanilla"] ? [EARTH_UNLOCKABLE_FLAVORS.mythicVanilla] : []),
   ];
 }
 
@@ -1172,6 +1357,7 @@ function getAvailableToppings(
       ...(unlockFlags["topping-glow-worms-deluxe"] ? [ALIEN_UNLOCKABLE_TOPPINGS.glowWormsDeluxe] : []),
       ...(unlockFlags["topping-glow-shards"] ? [ALIEN_UNLOCKABLE_TOPPINGS.glowShards] : []),
       ...(unlockFlags["topping-fossil-crunch"] ? [ALIEN_UNLOCKABLE_TOPPINGS.fossilCrunch] : []),
+      ...(unlockFlags["topping-comet-dust"] ? [ALIEN_UNLOCKABLE_TOPPINGS.cometDust] : []),
     ];
   }
   return [
@@ -1335,6 +1521,28 @@ function createAlienCustomer(
       : [],
     x: W + 10,
     targetX: 20 + Math.random() * 20,
+    state: "walking-in",
+    reaction: "",
+    waitTicks: 0,
+    isAlien: true,
+  };
+}
+
+function createDestinationCustomer(
+  id: number,
+  level: number,
+  content: SpaceDestinationContent,
+  servedInSession: number
+): Customer {
+  const localLevel = Math.max(1, Math.min(5, level + servedInSession));
+  return {
+    id,
+    name: pick(content.localNames),
+    spriteIdx: Math.floor(Math.random() * ALIEN_PALETTES.length),
+    order: generateOrder(localLevel, content.flavors),
+    toppings: generateToppings(localLevel, content.toppings),
+    x: W + 10,
+    targetX: 22 + Math.random() * 18,
     state: "walking-in",
     reaction: "",
     waitTicks: 0,
@@ -3723,6 +3931,128 @@ function drawSpaceMapScene(ctx: CanvasRenderingContext2D, tick: number, selected
   drawText(ctx, "TAP A DOT", W / 2, 104, "#FFFFFF", 0.5);
 }
 
+function drawSpaceDestinationScene(
+  ctx: CanvasRenderingContext2D,
+  tick: number,
+  destination: SpaceDestination | null,
+  content: SpaceDestinationContent | null,
+  visit: SpaceDestinationVisit | null,
+  customer: Customer | null,
+  scoopsDone: number,
+  coneScoops: Flavor[],
+  toppingsDone: number,
+  toppingsPhase: boolean,
+) {
+  if (!destination || !content || !visit) {
+    drawSpaceMapScene(ctx, tick, null, {});
+    return;
+  }
+
+  if (visit.status === "approaching") {
+    drawSpaceScene(ctx, tick, "out");
+    const p = Math.min(1, visit.tick / 70);
+    const sx = Math.floor(64 + Math.sin(tick / 4) * 4);
+    const sy = Math.floor(86 - p * 38);
+    drawFlyingSaucer(ctx, sx, sy, tick);
+    for (let r = 7; r >= 2; r--) {
+      const color = r % 2 === 0 ? content.palette.accent : content.palette.ground;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (dx * dx + dy * dy <= r * r && dx * dx + dy * dy > (r - 1) * (r - 1)) {
+            px(ctx, destination.x + dx, destination.y + dy, 1, 1, color);
+          }
+        }
+      }
+    }
+    drawText(ctx, `TO ${destination.name.toUpperCase()}`, W / 2, 15, "#FFE080", 0.65);
+    drawText(ctx, destination.emoji, W / 2, 32, "#FFFFFF", 0.9);
+    return;
+  }
+
+  for (let y = 0; y < H; y++) {
+    const band = Math.floor((y + tick / 8) / 12) % 2;
+    const color = y < 76 ? (band ? content.palette.sky : lightenColor(content.palette.sky, 12)) : content.palette.ground;
+    for (let x = 0; x < W; x++) px(ctx, x, y, 1, 1, color);
+  }
+
+  for (let i = 0; i < 18; i++) {
+    const x = (i * 17 + tick) % W;
+    const y = 8 + ((i * 23) % 44);
+    px(ctx, x, y, 1, 1, i % 3 === 0 ? content.palette.accent : "#FFFFFF");
+  }
+
+  if (destination.id === "moon-dairy") {
+    px(ctx, 10, 62, 36, 22, "#E8E8FF");
+    px(ctx, 15, 54, 26, 10, "#C0C8E8");
+    px(ctx, 18, 68, 6, 10, "#8090C0");
+    px(ctx, 30, 68, 8, 8, "#F8F8FF");
+    drawText(ctx, "MOO", 28, 57, "#8090C0", 0.42);
+    for (let i = 0; i < 3; i++) {
+      px(ctx, 82 + i * 10, 72 - (i % 2) * 5, 8, 5, "#F8F8FF");
+      px(ctx, 84 + i * 10, 70 - (i % 2) * 5, 2, 2, "#333");
+    }
+  } else if (destination.id === "asteroid-bazaar") {
+    for (let i = 0; i < 5; i++) {
+      px(ctx, 8 + i * 23, 72 + (i % 2) * 5, 18, 8, i % 2 ? "#8A6050" : "#B87840");
+      px(ctx, 11 + i * 23, 61 + (i % 3), 12, 11, i % 2 ? "#FFD86B" : "#70FFE0");
+    }
+  } else if (destination.id === "black-hole-cafe") {
+    for (let r = 28; r >= 4; r -= 3) {
+      const color = r % 2 === 0 ? "#100820" : "#603080";
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        const d = dx * dx + dy * dy;
+        if (d <= r * r && d > (r - 2) * (r - 2)) px(ctx, 64 + dx, 43 + dy, 1, 1, color);
+      }
+    }
+    px(ctx, 22, 68, 28, 14, "#302040");
+    drawText(ctx, "CAFE", 36, 72, "#C080FF", 0.42);
+  } else if (destination.id === "cone-constellation") {
+    drawText(ctx, "\u2728", 64, 27, "#FFF0A0", 1.1);
+    for (let i = 0; i < 5; i++) {
+      px(ctx, 50 + i * 7, 42 + i * 6, 3, 3, "#FFF0A0");
+      px(ctx, 78 - i * 7, 42 + i * 6, 3, 3, "#FFF0A0");
+    }
+    px(ctx, 52, 74, 24, 9, "#E0A050");
+    drawText(ctx, "SHRINE", 64, 67, "#FFF0A0", 0.42);
+  } else if (destination.id === "comet-carnival") {
+    for (let x = -20; x < W; x++) {
+      const y = 34 + Math.floor(Math.sin((x + tick) / 12) * 6);
+      px(ctx, x, y, 1, 1, "#FFB040");
+      px(ctx, x, y + 1, 1, 1, "#FF70C0");
+    }
+    px(ctx, 18, 63, 30, 18, "#FF70C0");
+    drawText(ctx, "FUN", 33, 69, "#FFF0A0", 0.5);
+    px(ctx, 83, 58, 20, 24, "#70A0FF");
+  } else if (destination.id === "star-nursery") {
+    for (let i = 0; i < 4; i++) {
+      px(ctx, 18 + i * 25, 66, 18, 10, "#D8E8FF");
+      px(ctx, 20 + i * 25, 61, 14, 8, "#FFF8B0");
+      drawText(ctx, "\u{1F31F}", 27 + i * 25, 60, "#FFF8B0", 0.45);
+    }
+  } else if (destination.id === "dino-timeline") {
+    px(ctx, 82, 47, 8, 29, "#303030");
+    px(ctx, 84, 49, 4, 25, "#101010");
+    drawText(ctx, "REX", 28, 66, "#305020", 0.55);
+  }
+
+  // Mobile pop-up counter
+  px(ctx, 44, 72, 42, 14, content.palette.accent);
+  px(ctx, 48, 63, 34, 11, "#FFF8D8");
+  drawText(ctx, "POP-UP", 65, 70, content.palette.shadow, 0.42);
+  drawCone(ctx, 64, 81, coneScoops, customer?.toppings ?? [], toppingsDone);
+
+  if (customer) {
+    drawAlienSprite(ctx, Math.round(customer.x), 77, customer.spriteIdx, customer.state === "walking-in" || customer.state === "walking-out");
+    if (customer.state === "waiting") {
+      drawSpeechBubble(ctx, Math.round(customer.x), 47, customer.order, scoopsDone, customer.toppings, toppingsDone, toppingsPhase, customer.reaction);
+    } else if (customer.reaction) {
+      drawText(ctx, customer.reaction, Math.round(customer.x), 52, "#FFFFFF", 0.55);
+    }
+  }
+
+  drawText(ctx, destination.name.toUpperCase(), W / 2, 10, content.palette.accent, 0.62);
+}
+
 // Shop interior — draws owner behind counter and shop-themed backdrop
 function drawShopInterior(ctx: CanvasRenderingContext2D, shop: Shop, tick: number) {
   // Wall
@@ -4331,6 +4661,50 @@ function drawGoldCoin(ctx: CanvasRenderingContext2D, cx: number, cy: number, siz
   drawText(ctx, "G", cx + 0.5, cy + 0.5, "#B8860B", 0.35);
 }
 
+function drawAliveShopEventScene(ctx: CanvasRenderingContext2D, tick: number, state: AliveShopState) {
+  const step = state.step;
+  if (step === "awakening" || step === "street-chase") {
+    drawBackground(ctx);
+    const wobble = Math.floor(Math.sin(tick / 5) * 2);
+    px(ctx, 20 + wobble, 42, 88, 42, "#FFF4B8");
+    px(ctx, 20 + wobble, 36, 88, 8, "#FF80B0");
+    for (let x = 20; x < 108; x += 9) px(ctx, x + wobble, 36, 5, 8, "#FFFFFF");
+    px(ctx, 52 + wobble, 60, 18, 24, "#80E0FF");
+    px(ctx, 76 + wobble, 65, 10, 10, "#FFD86B");
+    drawText(ctx, step === "awakening" ? "THE SHOP WIGGLES" : "CHASE THE SHOP", W / 2, 18, "#FF4080", 0.62);
+    if (step === "street-chase") {
+      for (let i = 0; i < 5; i++) {
+        px(ctx, 8 + i * 24 - (tick % 24), 88, 12, 2, "#C8A878");
+      }
+    }
+    return;
+  }
+
+  if (step === "ship-stowaway") {
+    drawShipInteriorScene(ctx, tick, SHIP_ROOMS.cargo, { title: "Cargo Hold", body: "A tiny shop is hiding in here." });
+    drawText(ctx, "STOWAWAY", W / 2, 18, "#FFD86B", 0.7);
+    px(ctx, 48, 58, 34, 18, "#FFF4B8");
+    px(ctx, 48, 54, 34, 5, "#FF80B0");
+    drawText(ctx, "shh", 65, 66, "#FF4080", 0.5);
+    return;
+  }
+
+  if (step === "underground-hideout") {
+    drawAlienUndergroundScene(ctx, tick, 64, false, [], state.affinity);
+    drawText(ctx, "UNDERGROUND HIDEOUT", W / 2, 14, "#80FFE0", 0.55);
+    px(ctx, 46, 62, 36, 20, "#FFF4B8");
+    px(ctx, 46, 57, 36, 5, "#FF80B0");
+    drawText(ctx, "home?", 64, 68, "#FF4080", 0.45);
+    return;
+  }
+
+  drawSpaceScene(ctx, tick, "out");
+  drawText(ctx, step === "heart-talk" ? "HEART TALK" : "POP-UP SHOP UNLOCKED", W / 2, 18, "#FFE080", 0.62);
+  drawFlyingSaucer(ctx, 64, 68, tick);
+  px(ctx, 44, 44, 40, 17, "#FFF4B8");
+  px(ctx, 44, 39, 40, 6, "#FF80B0");
+  drawText(ctx, step === "heart-talk" ? "..." : "READY", 64, 50, "#FF4080", 0.48);
+}
 
 // ── Main Game ──────────────────────────────────────────────────────────────────
 export default function IceCreamGame() {
@@ -4367,6 +4741,15 @@ export default function IceCreamGame() {
   // Alien/Location state
   const [location, setLocation] = useState<Location>("earth");
   const [selectedSpaceDestination, setSelectedSpaceDestination] = useState<SpaceDestinationId | null>(null);
+  const [activeSpaceDestination, setActiveSpaceDestination] = useState<SpaceDestinationId | null>(null);
+  const [spaceDestinationVisit, setSpaceDestinationVisit] = useState<SpaceDestinationVisit | null>(null);
+  const [destinationPopUp, setDestinationPopUp] = useState<DestinationPopUpState | null>(null);
+  const [visitedSpaceDestinations, setVisitedSpaceDestinations] = useState<Partial<Record<SpaceDestinationId, boolean>>>(() =>
+    loadJson<Partial<Record<SpaceDestinationId, boolean>>>(STORAGE_KEYS.spaceDestinations, {})
+  );
+  const [mobileShopUnlocked, setMobileShopUnlocked] = useState(() =>
+    loadJson<{ unlocked: boolean }>(STORAGE_KEYS.mobileShop, { unlocked: false }).unlocked
+  );
   const [spaceMapMessage, setSpaceMapMessage] = useState<string | null>(null);
   const [cutsceneType, setCutsceneType] = useState<CutsceneType | null>(null);
   const [cutsceneTick, setCutsceneTick] = useState(0);
@@ -4540,6 +4923,13 @@ export default function IceCreamGame() {
     () => getAvailableToppings(location, inventory, unlockFlags),
     [location, inventory, unlockFlags]
   );
+  const activeDestinationContent = activeSpaceDestination
+    ? SPACE_DESTINATION_CONTENT[activeSpaceDestination] ?? null
+    : null;
+  const popUpServing = phase === "space-destination" && destinationPopUp?.phase === "serving" && Boolean(activeDestinationContent);
+  const showOrderControls = phase === "playing" || popUpServing;
+  const activeFlavorPool = popUpServing && activeDestinationContent ? activeDestinationContent.flavors : currentFlavorPool;
+  const activeToppingPool = popUpServing && activeDestinationContent ? activeDestinationContent.toppings : currentToppingPool;
   const visibleShops = useCallback(
     (loc: Location) => getVisibleShops(loc, { customersServed, inventory, unlockFlags }),
     [customersServed, inventory, unlockFlags]
@@ -4556,6 +4946,8 @@ export default function IceCreamGame() {
   useEffect(() => saveJson(STORAGE_KEYS.underground, { glowShards }), [glowShards]);
   useEffect(() => saveJson(STORAGE_KEYS.shipState, { room: shipRoom }), [shipRoom]);
   useEffect(() => saveJson(STORAGE_KEYS.aliveShop, aliveShopState), [aliveShopState]);
+  useEffect(() => saveJson(STORAGE_KEYS.spaceDestinations, visitedSpaceDestinations), [visitedSpaceDestinations]);
+  useEffect(() => saveJson(STORAGE_KEYS.mobileShop, { unlocked: mobileShopUnlocked }), [mobileShopUnlocked]);
 
   const setFlag = useCallback((flag: string, value = true) => {
     setUnlockFlags((prev) => ({ ...prev, [flag]: value }));
@@ -4563,7 +4955,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "moon-maze" && phase !== "ufo-claw" && phase !== "pixel-rift" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "moon-maze" && phase !== "ufo-claw" && phase !== "pixel-rift" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "alive-shop-event" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -4815,6 +5207,23 @@ export default function IceCreamGame() {
       drawSpaceMapScene(ctx, streetTick, selectedSpaceDestination, unlockFlags);
     }
 
+    function drawSpaceDestination() {
+      if (!ctx) return;
+      const dest = activeSpaceDestination ? SPACE_DESTINATIONS.find((d) => d.id === activeSpaceDestination) ?? null : null;
+      drawSpaceDestinationScene(
+        ctx,
+        streetTick,
+        dest,
+        activeDestinationContent,
+        spaceDestinationVisit,
+        destinationPopUp?.phase === "serving" ? customer : null,
+        scoopsDone,
+        coneScoops,
+        toppingsDone,
+        toppingsPhase
+      );
+    }
+
     function drawShop() {
       if (!ctx) return;
       const shop = currentShopId ? shopById(currentShopId) : null;
@@ -4850,6 +5259,11 @@ export default function IceCreamGame() {
     function drawPixelRift() {
       if (!ctx) return;
       drawPixelRiftScene(ctx, streetTick, pixelRift);
+    }
+
+    function drawAliveShopEvent() {
+      if (!ctx) return;
+      drawAliveShopEventScene(ctx, streetTick, aliveShopState);
     }
 
     function drawChase() {
@@ -4924,7 +5338,9 @@ export default function IceCreamGame() {
       } else if (phase === "space-map") {
         drawSpaceMap();
       } else if (phase === "space-destination") {
-        drawSpaceMap();
+        drawSpaceDestination();
+      } else if (phase === "alive-shop-event") {
+        drawAliveShopEvent();
       } else if (phase === "chase") {
         drawChase();
       } else if (phase === "boss-fight") {
@@ -4940,7 +5356,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, moonMaze, ufoClaw, pixelRift, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, shipRoomMessage, selectedSpaceDestination, unlockFlags]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, moonMaze, ufoClaw, pixelRift, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, shipRoomMessage, selectedSpaceDestination, activeSpaceDestination, activeDestinationContent, spaceDestinationVisit, destinationPopUp, aliveShopState, unlockFlags]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -4972,7 +5388,8 @@ export default function IceCreamGame() {
 
   // Gentle nudges (no timer - customers never leave)
   useEffect(() => {
-    if (customer?.state !== "waiting" || phase !== "playing") return;
+    const destinationServing = phase === "space-destination" && destinationPopUp?.phase === "serving";
+    if (customer?.state !== "waiting" || (phase !== "playing" && !destinationServing)) return;
     const interval = setInterval(() => {
       setCustomer((prev) => {
         if (!prev || prev.state !== "waiting") return prev;
@@ -4989,7 +5406,7 @@ export default function IceCreamGame() {
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [customer?.state, customer?.id, phase]);
+  }, [customer?.state, customer?.id, destinationPopUp?.phase, phase]);
 
   // Walk out after served
   useEffect(() => {
@@ -5076,6 +5493,50 @@ export default function IceCreamGame() {
   // Complete order
   const completeOrder = useCallback(() => {
     if (!customer) return;
+    if (phase === "space-destination" && destinationPopUp?.phase === "serving" && activeDestinationContent) {
+      const coinCount = 2 + customer.order.length + customer.toppings.length;
+      const pointsEarned = 75 + customer.toppings.length * 20;
+      const nextScore = score + pointsEarned;
+      setScore(nextScore);
+      if (nextScore > highScore) {
+        setHighScore(nextScore);
+        window.localStorage.setItem("scoopstack-highscore", nextScore.toString());
+      }
+      setAlienCoins((g) => {
+        const n = g + coinCount;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+      setCustomersServed((c) => c + 1);
+      playCoinSound();
+      const newCoins = Array.from({ length: coinCount }, (_, i) => ({
+        x: Math.round(customer.x) - 5 + (i % 8) * 6,
+        y: 70 - Math.floor(i / 8) * 6,
+        age: 0,
+      }));
+      setGoldCoins((prev) => [...prev, ...newCoins]);
+      setDestinationPopUp((cur) => {
+        if (!cur || cur.phase !== "serving") return cur;
+        const served = cur.customersServed + 1;
+        const complete = served >= cur.targetCustomers;
+        return {
+          ...cur,
+          customersServed: served,
+          phase: complete ? "complete" : "serving",
+          message: complete
+            ? activeDestinationContent.completeMessage
+            : `${activeDestinationContent.localNames[served % activeDestinationContent.localNames.length]} is next.`,
+        };
+      });
+      setCustomer((prev) => prev ? { ...prev, reaction: `+${coinCount}G!`, state: "served" } : prev);
+      setTimeout(() => {
+        setCustomer((prev) => prev ? { ...prev, reaction: pick(HAPPY_REACTIONS) } : prev);
+      }, 600);
+      setTimeout(() => {
+        setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
+      }, 1200);
+      return;
+    }
     const isVIP = !!customer.isAlienVIP;
     const bonusMult = isVIP ? 3 : 1;
     let coinCount = (1 + customer.order.length + customer.toppings.length) * bonusMult;
@@ -5137,7 +5598,7 @@ export default function IceCreamGame() {
         setCustomer((prev) => prev ? { ...prev, state: "walking-out" } : prev);
       }, 1400);
     }
-  }, [customer, highScore, score, location, alienEncountered, inventory, unlockFlags]);
+  }, [activeDestinationContent, customer, destinationPopUp?.phase, highScore, score, phase, location, alienEncountered, inventory, unlockFlags]);
 
   // Tap a flavor
   const tapFlavor = useCallback(
@@ -5222,6 +5683,11 @@ export default function IceCreamGame() {
     setShipRoom("cockpit");
     setShipRoomMessage(null);
     setShipInteriorReturn("playing");
+    setSelectedSpaceDestination(null);
+    setActiveSpaceDestination(null);
+    setSpaceDestinationVisit(null);
+    setDestinationPopUp(null);
+    setSpaceMapMessage(null);
     setAliveShopState((state) => state);
     setPendingAlien(false);
     setAlienEncountered(false);
@@ -5238,7 +5704,7 @@ export default function IceCreamGame() {
     if (phase === "boss-fight") return "boss";
     if (phase === "blackhole" && (blackholeScene === "dino-intro" || blackholeScene === "dino-encounter" || blackholeScene === "dino-monolith")) return "dino";
     if (phase === "blackhole") return "space";
-    if (phase === "cutscene" || phase === "pilot") return "space";
+    if (phase === "cutscene" || phase === "pilot" || phase === "ship-interior" || phase === "space-map" || phase === "space-destination") return "space";
     if (phase === "shop" && currentShopId) {
       const s = shopById(currentShopId);
       if (s?.type === "casino") return "casino";
@@ -5701,6 +6167,9 @@ export default function IceCreamGame() {
       cutsceneType === "journey-back" ? "earth" :
       location;
     setSelectedSpaceDestination(destination);
+    setActiveSpaceDestination(null);
+    setSpaceDestinationVisit(null);
+    setDestinationPopUp(null);
     setSpaceMapMessage(null);
     setShipRoomMessage(null);
     setPhase("space-map");
@@ -5719,10 +6188,14 @@ export default function IceCreamGame() {
 
   const isDestinationUnlocked = useCallback(
     (dest: SpaceDestination) => {
+      if (dest.id === "moon-dairy" && alienVisited) return true;
       if (dest.id === "comet-carnival" && customersServed >= 25) return true;
+      if (dest.id === "comet-carnival" && unlockFlags["star-chip-cabinet-sticker"]) return true;
+      if (dest.id === "cone-constellation" && (inventory["magic-cone"] || unlockFlags["flavor-mythic-vanilla"])) return true;
+      if (dest.id === "black-hole-cafe" && unlockFlags["survived-black-hole"]) return true;
       return dest.unlocked || !dest.unlockFlag || unlockFlags[dest.unlockFlag];
     },
-    [customersServed, unlockFlags]
+    [alienVisited, customersServed, inventory, unlockFlags]
   );
 
   const travelToDestination = useCallback((dest: SpaceDestination) => {
@@ -5778,6 +6251,21 @@ export default function IceCreamGame() {
       setPhase("blackhole");
       return;
     }
+    const content = SPACE_DESTINATION_CONTENT[dest.id];
+    if (content) {
+      if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+      setCustomer(null);
+      setScoopsDone(0);
+      setConeScoops([]);
+      setToppingsDone(0);
+      setToppingsPhase(false);
+      setActiveSpaceDestination(dest.id);
+      setDestinationPopUp(null);
+      setSpaceDestinationVisit({ id: dest.id, status: "approaching", tick: 0 });
+      setSpaceMapMessage(`Warping to ${dest.name}...`);
+      setPhase("space-destination");
+      return;
+    }
     setPhase("space-destination");
     setSpaceMapMessage(`${dest.name}: ${dest.description}`);
   }, [cutsceneType, isDestinationUnlocked, location, setFlag, shipInteriorReturn]);
@@ -5786,6 +6274,28 @@ export default function IceCreamGame() {
     playBoop();
     setDoorOfferActive(false);
   }, []);
+
+  useEffect(() => {
+    if (phase !== "space-destination" || spaceDestinationVisit?.status !== "approaching") return;
+    const interval = setInterval(() => {
+      setSpaceDestinationVisit((cur) => {
+        if (!cur || cur.status !== "approaching") return cur;
+        const nextTick = cur.tick + 1;
+        if (nextTick >= 70) {
+          const content = SPACE_DESTINATION_CONTENT[cur.id];
+          setVisitedSpaceDestinations((prev) => ({ ...prev, [cur.id]: true }));
+          setMobileShopUnlocked(true);
+          setSpaceMapMessage(content
+            ? `${content.arrival} Mobile Pop-Up is ready.`
+            : "Docking complete.");
+          playDing();
+          return { ...cur, status: "landed", tick: nextTick };
+        }
+        return { ...cur, tick: nextTick };
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [phase, spaceDestinationVisit?.status]);
 
   // ── Street + Shop handlers ─────────────────────────────────────────────
   const persistInventory = useCallback((inv: Record<string, number>) => {
@@ -5816,6 +6326,146 @@ export default function IceCreamGame() {
       return next;
     });
   }, [persistInventory]);
+
+  const claimDestinationReward = useCallback((destinationId: SpaceDestinationId) => {
+    const content = SPACE_DESTINATION_CONTENT[destinationId];
+    if (!content) return null;
+    const alreadyUnlocked = Boolean(
+      (content.reward.flag && unlockFlags[content.reward.flag]) ||
+      (content.reward.itemId && inventory[content.reward.itemId])
+    );
+    if (!alreadyUnlocked) {
+      if (content.reward.flag) setFlag(content.reward.flag);
+      if (content.reward.itemId) grantInventoryItem(content.reward.itemId);
+    }
+    awardCoins(content.reward.coins, "alien-planet");
+    playCoinSound();
+    return `${content.reward.label} ${alreadyUnlocked ? "refreshed" : "unlocked"}! +${content.reward.coins}G`;
+  }, [awardCoins, grantInventoryItem, inventory, setFlag, unlockFlags]);
+
+  const startDestinationPopUp = useCallback(() => {
+    if (!activeSpaceDestination || !activeDestinationContent) return;
+    if (spaceDestinationVisit?.status !== "landed") return;
+    playDing();
+    setMobileShopUnlocked(true);
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setScoopsDone(0);
+    setConeScoops([]);
+    setToppingsDone(0);
+    setToppingsPhase(false);
+    setDestinationPopUp({
+      destinationId: activeSpaceDestination,
+      phase: "serving",
+      customersServed: 0,
+      targetCustomers: 3,
+      rewardClaimed: false,
+      message: activeDestinationContent.popupIntro,
+    });
+    setSpaceMapMessage(activeDestinationContent.popupIntro);
+  }, [activeDestinationContent, activeSpaceDestination, spaceDestinationVisit?.status]);
+
+  const returnToSpaceMap = useCallback(() => {
+    playBoop();
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setDestinationPopUp(null);
+    setSpaceDestinationVisit(null);
+    setActiveSpaceDestination(null);
+    setSpaceMapMessage(null);
+    setPhase("space-map");
+  }, []);
+
+  const returnToCockpitFromDestination = useCallback(() => {
+    playBoop();
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+    setCustomer(null);
+    setDestinationPopUp(null);
+    setSpaceDestinationVisit(null);
+    setActiveSpaceDestination(null);
+    setSpaceMapMessage(null);
+    setShipRoom("cockpit");
+    setPhase("ship-interior");
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "space-destination" || !destinationPopUp || !activeDestinationContent) return;
+
+    if (destinationPopUp.phase === "complete") {
+      if (!destinationPopUp.rewardClaimed) {
+        const timer = setTimeout(() => {
+          const rewardMessage = claimDestinationReward(destinationPopUp.destinationId);
+          const message = rewardMessage
+            ? `${activeDestinationContent.completeMessage} ${rewardMessage}`
+            : activeDestinationContent.completeMessage;
+          setDestinationPopUp((cur) => cur ? { ...cur, rewardClaimed: true, message } : cur);
+          setSpaceMapMessage(message);
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }
+
+    if (customer !== null) return;
+    const timer = setTimeout(() => {
+      customerIdRef.current += 1;
+      const next = createDestinationCustomer(
+        customerIdRef.current,
+        level,
+        activeDestinationContent,
+        destinationPopUp.customersServed
+      );
+      setScoopsDone(0);
+      setConeScoops([]);
+      setToppingsDone(0);
+      setToppingsPhase(false);
+      walkCustomerIn(next);
+    }, 550);
+    return () => clearTimeout(timer);
+  }, [activeDestinationContent, claimDestinationReward, customer, destinationPopUp, level, phase, walkCustomerIn]);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
+    if (chatActive || customer || aliveShopState.started || aliveShopState.completed) return;
+    if (customersServed < 33 || !alienVisited || !inventory["magic-cone"]) return;
+    const timer = setTimeout(() => {
+      if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+      setCustomer(null);
+      setDoorOfferActive(false);
+      setAliveShopState({ started: true, step: "awakening", affinity: 0, completed: false });
+      setPhase("alive-shop-event");
+      playDing();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [alienVisited, aliveShopState.completed, aliveShopState.started, chatActive, customer, customersServed, inventory, phase]);
+
+  const advanceAliveShop = useCallback((step: AliveShopStep, affinity = 0) => {
+    playBoop();
+    setAliveShopState((prev) => ({
+      ...prev,
+      started: true,
+      step,
+      affinity: prev.affinity + affinity,
+    }));
+  }, []);
+
+  const resolveAliveShop = useCallback((affinity = 0) => {
+    playDing();
+    setAliveShopState((prev) => ({
+      ...prev,
+      started: true,
+      step: "resolved",
+      affinity: prev.affinity + affinity,
+      completed: true,
+    }));
+    setMobileShopUnlocked(true);
+    setFlag("mobile-pop-up-shop");
+  }, [setFlag]);
+
+  const exitAliveShopEvent = useCallback(() => {
+    playBoop();
+    setPhase("playing");
+  }, []);
 
   const persistEquipped = useCallback((held: string | null, decor: string[]) => {
     try { window.localStorage.setItem("scoopstack-equipped", JSON.stringify({ held, decor })); } catch { /* */ }
@@ -7565,9 +8215,11 @@ export default function IceCreamGame() {
 
   const handleBlackholeDive = useCallback(() => {
     playDing();
+    setFlag("survived-black-hole");
+    setFlag(getDestinationUnlockFlag("black-hole-cafe"));
     setBlackholeScene("burst-out");
     setBlackholeTick(0);
-  }, []);
+  }, [setFlag]);
 
   // Dino timeline choices. Each adjusts the coin bonus (can be negative for
   // risky choices) then advances to the next scene.
@@ -7773,7 +8425,7 @@ export default function IceCreamGame() {
             : phase === "pixel-rift" ? handlePixelRiftTap
             : phase === "alien-underground" ? handleUndergroundTap
             : phase === "ship-interior" ? handleShipInteriorTap
-            : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
+            : phase === "space-map" ? handleSpaceMapTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -7788,7 +8440,7 @@ export default function IceCreamGame() {
             : phase === "pixel-rift" ? handlePixelRiftTap
             : phase === "alien-underground" ? handleUndergroundTap
             : phase === "ship-interior" ? handleShipInteriorTap
-            : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
+            : phase === "space-map" ? handleSpaceMapTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -8005,7 +8657,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Space map controls */}
-      {(phase === "space-map" || phase === "space-destination") && (
+      {phase === "space-map" && (
         <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
           style={{
             fontFamily: "monospace",
@@ -8034,6 +8686,7 @@ export default function IceCreamGame() {
               return (
                 <button key={dest.id}
                   onClick={() => travelToDestination(dest)}
+                  disabled={!unlocked}
                   className="p-2 rounded-xl text-left transition-all active:scale-95 border-b-4"
                   style={{
                     background: unlocked
@@ -8041,6 +8694,7 @@ export default function IceCreamGame() {
                       : "linear-gradient(180deg, #333344, #202030)",
                     borderBottomColor: unlocked ? "#80C0FF" : "#111",
                     color: unlocked ? selected ? "#102038" : "#F8F8FF" : "#888",
+                    cursor: unlocked ? "pointer" : "not-allowed",
                   }}>
                   <span className="text-lg mr-1" style={{ fontFamily: "sans-serif" }}>{dest.emoji}</span>
                   <strong>{dest.name}</strong>
@@ -8049,6 +8703,84 @@ export default function IceCreamGame() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Space destination controls */}
+      {phase === "space-destination" && activeSpaceDestination && activeDestinationContent && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: `linear-gradient(180deg, ${lightenColor(activeDestinationContent.palette.sky, 8)}, ${activeDestinationContent.palette.shadow})`,
+            borderColor: activeDestinationContent.palette.accent,
+            color: "#F8F8FF",
+            boxShadow: `0 0 18px ${activeDestinationContent.palette.accent}55`,
+          }}>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <strong style={{ color: activeDestinationContent.palette.accent }}>
+                {SPACE_DESTINATIONS.find((d) => d.id === activeSpaceDestination)?.emoji} {SPACE_DESTINATIONS.find((d) => d.id === activeSpaceDestination)?.name}
+              </strong>
+              <div className="text-xs" style={{ color: "#D8E8FF" }}>
+                {activeDestinationContent.tagline}
+              </div>
+            </div>
+            <div className="text-[10px] text-right" style={{ color: "#B8E0FF" }}>
+              {visitedSpaceDestinations[activeSpaceDestination] ? "visited" : "new route"}
+            </div>
+          </div>
+          {spaceMapMessage && (
+            <p className="text-xs text-center mb-2 rounded py-1 px-2"
+              style={{ color: activeDestinationContent.palette.accent, background: "#080818" }}>
+              {spaceMapMessage}
+            </p>
+          )}
+          {spaceDestinationVisit?.status === "approaching" ? (
+            <div className="text-center text-xs py-3" style={{ color: "#D8E8FF" }}>
+              saucer is docking...
+            </div>
+          ) : (
+            <>
+              {destinationPopUp?.phase === "serving" && (
+                <div className="rounded-xl p-2 mb-2 text-xs"
+                  style={{ background: "#080818", color: "#D8E8FF", border: `2px solid ${activeDestinationContent.palette.accent}` }}>
+                  Pop-up orders: {destinationPopUp.customersServed}/{destinationPopUp.targetCustomers}
+                  {destinationPopUp.message ? ` - ${destinationPopUp.message}` : ""}
+                </div>
+              )}
+              {destinationPopUp?.phase === "complete" && (
+                <div className="rounded-xl p-2 mb-2 text-xs"
+                  style={{ background: "#102810", color: "#D8FFD8", border: "2px solid #80FF80" }}>
+                  {destinationPopUp.message ?? activeDestinationContent.completeMessage}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={startDestinationPopUp}
+                  disabled={!mobileShopUnlocked || destinationPopUp?.phase === "serving"}
+                  className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{
+                    background: mobileShopUnlocked && destinationPopUp?.phase !== "serving"
+                      ? `linear-gradient(180deg, ${activeDestinationContent.palette.accent}, ${activeDestinationContent.palette.ground})`
+                      : "linear-gradient(180deg, #555, #333)",
+                    borderBottomColor: mobileShopUnlocked ? activeDestinationContent.palette.shadow : "#111",
+                    color: mobileShopUnlocked ? "#101020" : "#AAA",
+                    opacity: mobileShopUnlocked && destinationPopUp?.phase !== "serving" ? 1 : 0.65,
+                  }}>
+                  open pop-up
+                </button>
+                <button onClick={returnToSpaceMap}
+                  className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{ background: "linear-gradient(180deg, #B8E0FF, #5070D0)", borderBottomColor: "#2060A0", color: "#FFF" }}>
+                  map
+                </button>
+                <button onClick={returnToCockpitFromDestination}
+                  className="col-span-2 py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
+                  style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+                  back to cockpit
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -9456,8 +10188,122 @@ export default function IceCreamGame() {
         </div>
       )}
 
+      {/* Alive shop event */}
+      {phase === "alive-shop-event" && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4 text-center"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #FFFDE8, #FFD6E8)",
+            borderColor: "#FF80B0",
+            color: "#333",
+            boxShadow: "0 0 18px rgba(255,128,176,0.35)",
+          }}>
+          {aliveShopState.step === "awakening" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#FF4080" }}>The Shop Wakes Up</h3>
+              <p className="text-sm mb-3">The awning stretches. The counter blinks. Your shop takes one careful step toward the door.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => advanceAliveShop("street-chase", 1)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #B8E0FF, #5070D0)", borderBottomColor: "#2060A0", color: "#FFF" }}>
+                  follow it
+                </button>
+                <button onClick={() => advanceAliveShop("street-chase")}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+                  call Scoopy
+                </button>
+              </div>
+            </>
+          )}
+          {aliveShopState.step === "street-chase" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#FF4080" }}>Street Chase</h3>
+              <p className="text-sm mb-3">It is not running away from you exactly. It is running toward somewhere it can breathe.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => advanceAliveShop("ship-stowaway", 1)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #C8F7C5, #60C080)", borderBottomColor: "#308050", color: "#103020" }}>
+                  chase gently
+                </button>
+                <button onClick={() => advanceAliveShop("ship-stowaway", 2)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #FFF0A0, #FFB040)", borderBottomColor: "#B87020", color: "#201020" }}>
+                  leave cone crumbs
+                </button>
+              </div>
+            </>
+          )}
+          {aliveShopState.step === "ship-stowaway" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#2060A0" }}>Cargo Hold</h3>
+              <p className="text-sm mb-3">A tiny version of the shop is curled up between spare cones and postcards. It wants to see the stars.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => advanceAliveShop("underground-hideout", 1)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #B8E0FF, #5070D0)", borderBottomColor: "#2060A0", color: "#FFF" }}>
+                  check cargo
+                </button>
+                <button onClick={() => advanceAliveShop("underground-hideout", 2)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #FFE8B0, #E0A050)", borderBottomColor: "#805020", color: "#201020" }}>
+                  give a blanket
+                </button>
+              </div>
+            </>
+          )}
+          {aliveShopState.step === "underground-hideout" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#208060" }}>Underground Hideout</h3>
+              <p className="text-sm mb-3">Below the alien street, the shop plants its little feet near the warm planet-core kitchen.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => advanceAliveShop("heart-talk", 1)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #80FFE0, #20A080)", borderBottomColor: "#106050", color: "#102020" }}>
+                  crawl after it
+                </button>
+                <button onClick={() => advanceAliveShop("heart-talk", glowShards > 0 ? 2 : 1)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #D8C0FF, #8060C0)", borderBottomColor: "#403080", color: "#FFF" }}>
+                  bring glow shards
+                </button>
+              </div>
+            </>
+          )}
+          {aliveShopState.step === "heart-talk" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#FF4080" }}>Heart Talk</h3>
+              <p className="text-sm mb-3">The shop is scared that if it travels, it stops being home. Scoopy listens. Zarixa hums softly from the ship.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => resolveAliveShop(2)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #FFD6E8, #FF80B0)", borderBottomColor: "#C04070", color: "#401020" }}>
+                  places can travel too
+                </button>
+                <button onClick={() => resolveAliveShop(2)}
+                  className="py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #C8F7C5, #60C080)", borderBottomColor: "#308050", color: "#103020" }}>
+                  home is who you carry
+                </button>
+              </div>
+            </>
+          )}
+          {aliveShopState.step === "resolved" && (
+            <>
+              <h3 className="font-bold mb-2" style={{ color: "#208060" }}>Mobile Pop-Up Unlocked</h3>
+              <p className="text-sm mb-3">The shop folds itself into a brave little travel counter. Space destinations can now host pop-up serving sessions.</p>
+              <button onClick={exitAliveShopEvent}
+                className="w-full py-3 rounded-xl font-bold border-b-4 transition-all active:scale-95"
+                style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+                back to scooping
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Order instruction - big readable text below canvas */}
-      {phase === "playing" && customer && customer.state === "waiting" && (
+      {showOrderControls && customer && customer.state === "waiting" && (
         <div className="w-full max-w-lg rounded-xl p-3 mb-3 text-center border-2"
           style={{ background: "#FFF", borderColor: "#FFD6E8", fontFamily: "monospace" }}>
           {!toppingsPhase && scoopsDone < customer.order.length ? (
@@ -9486,11 +10332,11 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "moon-maze" && phase !== "ufo-claw" && phase !== "pixel-rift" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
+      {showOrderControls && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">
-            {currentFlavorPool.map((f) => {
+            {activeFlavorPool.map((f) => {
               const isNext =
                 customer?.state === "waiting" &&
                 !toppingsPhase &&
@@ -9518,7 +10364,7 @@ export default function IceCreamGame() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {currentToppingPool.map((t) => {
+            {activeToppingPool.map((t) => {
               const isNext =
                 customer?.state === "waiting" &&
                 toppingsPhase &&

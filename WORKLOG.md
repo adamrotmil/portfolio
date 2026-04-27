@@ -88,17 +88,19 @@
 - Push status: pushed to `origin/feature/scoop-shop-expansion`
 - Follow-up: Moved `Explore ship` into the journey flight controls only, removed door-panel prototype/explanatory copy, routed ship and map canvas taps away from the generic chat handler, made cockpit map dots clickable, added story interactions for each ship room, expanded the space map to all planned destinations, and wired shop counter item taps to the real purchase flow.
 - Follow-up checks: `git diff --check` passed; `npx tsc --noEmit --pretty false` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed. Browser automation was not run because Playwright is not installed in this workspace.
-- Remaining issues: Non-Earth/Alien destinations now have map/story content, but destination-local customer loops and the mobile pop-up shop still remain future work.
+- Follow-up: Turned non-Earth/Alien map dots into real side trips with approach animation, destination-specific landed scenes, visited-state persistence, disabled locked map buttons, and a Mobile Pop-Up serving loop using local flavors/toppings and persistent rewards.
+- Follow-up checks: `git diff --check` passed; `npx tsc --noEmit --pretty false` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed. Browser Use QA opened the ship cockpit map, confirmed locked entries render disabled, canvas-tapped Moon Dairy, opened Black Hole Cafe, served a full three-customer pop-up route, and confirmed the Void Scoops discount reward.
+- Remaining issues: Destination-local customer loops and mobile pop-up gameplay are now live; the alive-shop unlock story is covered in Milestone 7 below.
 
 ### Milestone 7 - The Shop Walks Away
 
-- Started:
-- Completed:
-- Summary:
-- Checks run:
-- Commit:
-- Push status:
-- Remaining issues:
+- Started: 2026-04-26
+- Completed: 2026-04-26
+- Summary: Added the full alive-shop event path using the existing `alive-shop-event` scaffold: awakening, street chase, ship stowaway, underground hideout, heart talk, and resolved reward state. Resolving the event persists completion and unlocks the Mobile Pop-Up Shop flag.
+- Checks run: `git diff --check` passed; `npx tsc --noEmit --pretty false` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed.
+- Commit: `feat(ice-cream): make space destinations playable`
+- Push status: pending
+- Remaining issues: Event trigger is gated behind `customersServed >= 33`, `alienVisited`, and owning `magic-cone`; browser QA covered the destination pop-up route, while this late-game event path was verified by type/lint/build checks.
 
 ## Final report
 
