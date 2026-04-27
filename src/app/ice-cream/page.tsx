@@ -149,6 +149,11 @@ type SlimeSimonState = {
   message: string;
 };
 
+type ShipRoomMessage = {
+  title: string;
+  body: string;
+};
+
 type ShopItem = {
   id: string;        // stable id used as inventory key
   name: string;
@@ -255,6 +260,11 @@ type ShipRoom = {
   };
 };
 
+type ShipRoomStory = {
+  hint: string;
+  inspect: ShipRoomMessage;
+};
+
 type AliveShopStep =
   | "awakening"
   | "street-chase"
@@ -334,6 +344,29 @@ const SHIP_ROOMS: Record<ShipRoomId, ShipRoom> = {
   cargo: { id: "cargo", name: "Cargo Hold", exits: { left: "galley", right: "engine" } },
   engine: { id: "engine", name: "Engine Room", exits: { left: "cargo", right: "crew-pod" } },
   "crew-pod": { id: "crew-pod", name: "Crew Pod", exits: { left: "engine" } },
+};
+
+const SHIP_ROOM_DETAILS: Record<ShipRoomId, ShipRoomStory> = {
+  cockpit: {
+    hint: "Nav glass, star windows, and Zarixa's glowing route console.",
+    inspect: { title: "Nav Glass", body: "Stars mark every promised stop." },
+  },
+  galley: {
+    hint: "A tiny scoop lab for ship snacks and experimental flavors.",
+    inspect: { title: "Scoop Lab", body: "Fusion scoops are chilling." },
+  },
+  cargo: {
+    hint: "Crates, postcards, spare cones, and suspiciously sleepy boxes.",
+    inspect: { title: "Cargo Hold", body: "Spare cones rattle softly." },
+  },
+  engine: {
+    hint: "The warp syrup pump hums under a shielded glass core.",
+    inspect: { title: "Engine Core", body: "Warp syrup pump hums." },
+  },
+  "crew-pod": {
+    hint: "Zarixa's bunk, a moon blanket, and a very quiet star radio.",
+    inspect: { title: "Crew Pod", body: "Zarixa saved you a bunk." },
+  },
 };
 
 const ALIEN_ARCADE_CABINETS: ArcadeCabinet[] = [
@@ -449,6 +482,39 @@ const SPACE_DESTINATIONS: SpaceDestination[] = [
     unlocked: false,
     unlockFlag: "destination-cone-constellation",
     description: "A star pattern shaped suspiciously like dessert.",
+    travelRisk: "weird",
+  },
+  {
+    id: "comet-carnival",
+    name: "Comet Carnival",
+    emoji: "\u{1F3AA}",
+    x: 18,
+    y: 34,
+    unlocked: false,
+    unlockFlag: "destination-comet-carnival",
+    description: "A carnival braided through a glittering comet tail.",
+    travelRisk: "asteroids",
+  },
+  {
+    id: "star-nursery",
+    name: "Star Nursery",
+    emoji: "\u{1F31F}",
+    x: 112,
+    y: 48,
+    unlocked: false,
+    unlockFlag: "destination-star-nursery",
+    description: "Baby stars sleep in silver cradles and tiny blankets.",
+    travelRisk: "none",
+  },
+  {
+    id: "dino-timeline",
+    name: "Dino Timeline",
+    emoji: "\u{1F996}",
+    x: 42,
+    y: 92,
+    unlocked: false,
+    unlockFlag: "destination-dino-timeline",
+    description: "A repeatable prehistoric detour with fossil rewards.",
     travelRisk: "weird",
   },
 ];
@@ -840,7 +906,7 @@ const ALIEN_SHOPS: Shop[] = [
     greeting: "Wares from SIX galaxies! Don't ask about returns on the rhombus items.",
     items: [
       { id: "antenna-extender", name: "Antenna Extender", emoji: "\u{1F4E1}", price: 25, description: "For those who want to hear more." },
-      { id: "gravity-boots",    name: "Gravity Boots",    emoji: "\u{1F462}", price: 90, description: "Walk on any ceiling. Any. Ceiling." },
+      { id: "gravity-boots",    name: "Gravity Boots",    emoji: "\u{1F462}", price: 90, description: "Walk on any ceiling. Any. Ceiling.", slot: "held", effect: { type: "set-flag", flag: "alien-ladder", value: true } },
       { id: "pocket-nebula",    name: "Pocket Nebula",    emoji: "\u{1F30C}", price: 250, description: "Tiny personal nebula. Keep in a cool place." },
     ],
   },
@@ -3018,6 +3084,8 @@ const STREET_GAP = 4;
 const STREET_MARGIN = 2;
 const ARCADE_ROOM_W = 470;
 const UNDERGROUND_W = 360;
+const SHOP_ITEM_SLOT_W = 52;
+const SHOP_ITEM_SLOT_H = 9;
 const UNDERGROUND_CRYSTALS = [
   { id: 1, x: 54, y: 77, color: "#70FFE0" },
   { id: 2, x: 112, y: 66, color: "#B7FF9A" },
@@ -3038,6 +3106,15 @@ function streetCameraX(heroX: number, shops: Shop[]): number {
 
 function alienLadderWorldX(shops: Shop[]): number {
   return Math.max(38, streetWorldWidth(shops) - 18);
+}
+
+function shopItemDisplaySlot(index: number): { x: number; y: number; w: number; h: number } {
+  return {
+    x: 8 + (index % 2) * 60,
+    y: 51 + Math.floor(index / 2) * 10,
+    w: SHOP_ITEM_SLOT_W,
+    h: SHOP_ITEM_SLOT_H,
+  };
 }
 
 // Draws street backdrop with a scrolling camera when the world is wider than the viewport
@@ -3360,7 +3437,7 @@ function drawAlienUndergroundScene(
   drawText(ctx, `GLOW CAVERN  ${shardCount}`, W / 2, 104, "#B7FF9A", 0.55);
 }
 
-function drawShipInteriorScene(ctx: CanvasRenderingContext2D, tick: number, room: ShipRoom) {
+function drawShipInteriorScene(ctx: CanvasRenderingContext2D, tick: number, room: ShipRoom, message: ShipRoomMessage | null) {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const rib = Math.floor((x + tick / 4) / 10) % 2;
@@ -3388,8 +3465,12 @@ function drawShipInteriorScene(ctx: CanvasRenderingContext2D, tick: number, room
     px(ctx, 48, 58, 32, 14, "#203860");
     px(ctx, 52, 60, 24, 8, "#70FFE0");
     drawText(ctx, "MAP", 64, 64, "#102038", 0.55);
+    px(ctx, 86, 57, 14, 10, "#203860");
+    px(ctx, 90, 60, 6, 4, tick % 20 < 10 ? "#FFD86B" : "#FF70F0");
   } else if (room.id === "galley") {
     drawCone(ctx, 64, 68, [FLAVORS[0], FLAVORS[3]], [], 0);
+    px(ctx, 86, 58, 26, 12, "#203860");
+    drawText(ctx, "MIX", 99, 64, "#70FFE0", 0.45);
   } else if (room.id === "cargo") {
     for (let i = 0; i < 4; i++) {
       px(ctx, 32 + i * 16, 62, 12, 12, i % 2 ? "#A8C8FF" : "#FFD86B");
@@ -3406,6 +3487,16 @@ function drawShipInteriorScene(ctx: CanvasRenderingContext2D, tick: number, room
 
   drawHero(ctx, 20, 82, false, false, null);
   drawFlyingSaucer(ctx, 110, 86, tick);
+  if (message) {
+    for (let dx = 0; dx < 96; dx++) {
+      for (let dy = 0; dy < 14; dy++) {
+        const edge = dx === 0 || dx === 95 || dy === 0 || dy === 13;
+        px(ctx, 16 + dx, 92 + dy, 1, 1, edge ? "#80C0FF" : "#081020");
+      }
+    }
+    drawText(ctx, message.title.toUpperCase().slice(0, 16), W / 2, 96, "#FFD86B", 0.45);
+    drawText(ctx, message.body.toUpperCase().slice(0, 28), W / 2, 102, "#F8F8FF", 0.38);
+  }
 }
 
 function drawSpaceMapScene(ctx: CanvasRenderingContext2D, tick: number, selectedId: SpaceDestinationId | null, unlockFlags: UnlockFlags) {
@@ -3423,7 +3514,7 @@ function drawSpaceMapScene(ctx: CanvasRenderingContext2D, tick: number, selected
     }
     if (!unlocked) drawText(ctx, "x", dest.x, dest.y + pulse, "#202030", 0.45);
   });
-  drawText(ctx, "PICK A DOT BELOW", W / 2, 104, "#FFFFFF", 0.5);
+  drawText(ctx, "TAP A DOT", W / 2, 104, "#FFFFFF", 0.5);
 }
 
 // Shop interior — draws owner behind counter and shop-themed backdrop
@@ -3452,16 +3543,18 @@ function drawShopInterior(ctx: CanvasRenderingContext2D, shop: Shop, tick: numbe
     px(ctx, x, 72, 1, 1, lightenColor(shop.accentColor, -40));
   }
 
-  // Display shelves with the 3 items
+  // Display shelves. The same slots are used by canvas tap handling.
   shop.items.forEach((item, i) => {
-    const tx = 10 + i * 36;
-    for (let dy = 0; dy < 8; dy++) {
-      for (let dx = 0; dx < 28; dx++) {
-        const edge = dx === 0 || dx === 27 || dy === 0 || dy === 7;
-        px(ctx, tx + dx, 60 + dy, 1, 1, edge ? "#333" : "#FFF");
+    const slot = shopItemDisplaySlot(i);
+    for (let dy = 0; dy < slot.h; dy++) {
+      for (let dx = 0; dx < slot.w; dx++) {
+        const edge = dx === 0 || dx === slot.w - 1 || dy === 0 || dy === slot.h - 1;
+        px(ctx, slot.x + dx, slot.y + dy, 1, 1, edge ? "#333" : "#FFF");
       }
     }
-    drawText(ctx, `${item.price}G`, tx + 14, 64, shop.accentColor, 0.5);
+    const shortName = item.name.split(" ")[0].toUpperCase().slice(0, 8);
+    drawText(ctx, shortName, slot.x + slot.w / 2, slot.y + 3, shop.accentColor, 0.38);
+    drawText(ctx, `${item.price}G`, slot.x + slot.w / 2, slot.y + 7, "#333", 0.38);
   });
 
   // Floor
@@ -4135,6 +4228,8 @@ export default function IceCreamGame() {
   const [shipRoom, setShipRoom] = useState<ShipRoomId>(() =>
     loadJson<{ room: ShipRoomId }>(STORAGE_KEYS.shipState, { room: "cockpit" }).room
   );
+  const [shipRoomMessage, setShipRoomMessage] = useState<ShipRoomMessage | null>(null);
+  const [shipInteriorReturn, setShipInteriorReturn] = useState<"playing" | "cutscene">("playing");
   const [aliveShopState, setAliveShopState] = useState<AliveShopState>(() =>
     loadJson<AliveShopState>(STORAGE_KEYS.aliveShop, DEFAULT_ALIVE_SHOP_STATE)
   );
@@ -4503,7 +4598,7 @@ export default function IceCreamGame() {
 
     function drawShipInterior() {
       if (!ctx) return;
-      drawShipInteriorScene(ctx, streetTick, SHIP_ROOMS[shipRoom]);
+      drawShipInteriorScene(ctx, streetTick, SHIP_ROOMS[shipRoom], shipRoomMessage);
     }
 
     function drawSpaceMap() {
@@ -4615,7 +4710,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, selectedSpaceDestination, unlockFlags]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, shipRoomMessage, selectedSpaceDestination, unlockFlags]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -4895,6 +4990,8 @@ export default function IceCreamGame() {
     chaseResumeRef.current = null;
     setWarpActive(false); setWarpTick(0);
     setShipRoom("cockpit");
+    setShipRoomMessage(null);
+    setShipInteriorReturn("playing");
     setAliveShopState((state) => state);
     setPendingAlien(false);
     setAlienEncountered(false);
@@ -5251,6 +5348,7 @@ export default function IceCreamGame() {
           const isOut = cutsceneType === "journey-out";
           if (Math.random() < 0.25) {
             // surprise! dinosaur timeline detour
+            setFlag(getDestinationUnlockFlag("dino-timeline"));
             setBlackholeReturnTo(isOut ? "alien" : "earth");
             setBlackholeBonus(0);
             setBlackholeMessage(null);
@@ -5268,7 +5366,7 @@ export default function IceCreamGame() {
       });
     }, 40);
     return () => clearInterval(interval);
-  }, [warpActive, cutsceneType]);
+  }, [warpActive, cutsceneType, setFlag]);
 
   // Pick a dialogue that hasn't been seen recently
   const pickDialogue = useCallback((target: "customer" | "scoopy") => {
@@ -5302,10 +5400,11 @@ export default function IceCreamGame() {
   // Door tap: open the fork panel (Ship vs Shops). For first-time use the
   // door is only enabled after the player has visited the alien planet at least once.
   const handleDoorTap = useCallback(() => {
+    if (phase !== "playing") return;
     if (chatActive) return;
     playDing();
     setDoorOfferActive(true);
-  }, [chatActive]);
+  }, [chatActive, phase]);
 
   // Fork action: take the ship (the existing bi-directional cutscene)
   const chooseShipFromDoor = useCallback(() => {
@@ -5320,22 +5419,23 @@ export default function IceCreamGame() {
     } else {
       setCutsceneType("earth-departure");
     }
+    setShipInteriorReturn("playing");
+    setShipRoomMessage(null);
     setCutsceneTick(0);
     setPhase("cutscene");
   }, [alienVisited, location]);
 
-  const chooseShipInteriorFromDoor = useCallback(() => {
-    if (!alienVisited) return;
+  const exploreShipDuringJourney = useCallback(() => {
+    if (phase !== "cutscene") return;
+    if (cutsceneType !== "journey-out" && cutsceneType !== "journey-back") return;
     playDing();
-    setDoorOfferActive(false);
-    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
-    setCustomer(null);
-    setScoopsDone(0); setConeScoops([]); setToppingsDone(0); setToppingsPhase(false);
+    setShipInteriorReturn("cutscene");
     setShipRoom("cockpit");
-    setSelectedSpaceDestination(location);
+    setSelectedSpaceDestination(cutsceneType === "journey-out" ? "alien-planet" : "earth");
     setSpaceMapMessage(null);
+    setShipRoomMessage({ title: "Cockpit", body: "The flight path glows." });
     setPhase("ship-interior");
-  }, [alienVisited, location]);
+  }, [phase, cutsceneType]);
 
   // Fork action: walk to shops (enter street phase for the current planet)
   const chooseShopsFromDoor = useCallback(() => {
@@ -5352,15 +5452,29 @@ export default function IceCreamGame() {
 
   const exitShipInterior = useCallback(() => {
     playBoop();
+    setShipRoomMessage(null);
+    if (
+      shipInteriorReturn === "cutscene" &&
+      (cutsceneType === "journey-out" || cutsceneType === "journey-back")
+    ) {
+      setPhase("cutscene");
+      return;
+    }
+    setShipInteriorReturn("playing");
     setPhase("playing");
-  }, []);
+  }, [cutsceneType, shipInteriorReturn]);
 
   const openSpaceMap = useCallback(() => {
     playDing();
-    setSelectedSpaceDestination(location);
+    const destination =
+      cutsceneType === "journey-out" ? "alien-planet" :
+      cutsceneType === "journey-back" ? "earth" :
+      location;
+    setSelectedSpaceDestination(destination);
     setSpaceMapMessage(null);
+    setShipRoomMessage(null);
     setPhase("space-map");
-  }, [location]);
+  }, [cutsceneType, location]);
 
   const moveShipRoom = useCallback((dir: "left" | "right") => {
     const next = SHIP_ROOMS[shipRoom].exits[dir];
@@ -5370,15 +5484,20 @@ export default function IceCreamGame() {
     }
     playBoop();
     setShipRoom(next);
+    setShipRoomMessage(SHIP_ROOM_DETAILS[next].inspect);
   }, [shipRoom]);
 
   const isDestinationUnlocked = useCallback(
-    (dest: SpaceDestination) => dest.unlocked || !dest.unlockFlag || unlockFlags[dest.unlockFlag],
-    [unlockFlags]
+    (dest: SpaceDestination) => {
+      if (dest.id === "comet-carnival" && customersServed >= 25) return true;
+      return dest.unlocked || !dest.unlockFlag || unlockFlags[dest.unlockFlag];
+    },
+    [customersServed, unlockFlags]
   );
 
   const travelToDestination = useCallback((dest: SpaceDestination) => {
     setSelectedSpaceDestination(dest.id);
+    setShipRoomMessage(null);
     if (!isDestinationUnlocked(dest)) {
       playWrong();
       setSpaceMapMessage(`${dest.name} is still locked.`);
@@ -5386,6 +5505,18 @@ export default function IceCreamGame() {
     }
     playDing();
     setSpaceMapMessage(null);
+    const journeyTarget =
+      cutsceneType === "journey-out" ? "alien-planet" :
+      cutsceneType === "journey-back" ? "earth" :
+      null;
+    if (shipInteriorReturn === "cutscene" && journeyTarget && dest.id === journeyTarget) {
+      setPhase("cutscene");
+      return;
+    }
+    if (shipInteriorReturn === "cutscene" && journeyTarget && (dest.id === "earth" || dest.id === "alien-planet")) {
+      setSpaceMapMessage(`Finish this flight to ${journeyTarget === "earth" ? "Earth" : "Alien Planet"} first.`);
+      return;
+    }
     if (dest.id === "earth") {
       if (location === "earth") {
         setPhase("playing");
@@ -5406,9 +5537,20 @@ export default function IceCreamGame() {
       setPhase("cutscene");
       return;
     }
+    if (dest.id === "dino-timeline") {
+      setFlag(getDestinationUnlockFlag("dino-timeline"));
+      setBlackholeReturnTo(location === "alien-planet" ? "alien" : "earth");
+      setBlackholeBonus(0);
+      setBlackholeMessage(null);
+      setBlackholeScene("dino-intro");
+      setBlackholeTick(0);
+      setCutsceneType(null);
+      setPhase("blackhole");
+      return;
+    }
     setPhase("space-destination");
-    setSpaceMapMessage(`${dest.name} is charted. Local customers arrive in a future pass.`);
-  }, [isDestinationUnlocked, location]);
+    setSpaceMapMessage(`${dest.name}: ${dest.description}`);
+  }, [cutsceneType, isDestinationUnlocked, location, setFlag, shipInteriorReturn]);
 
   const closeDoorOffer = useCallback(() => {
     playBoop();
@@ -6271,7 +6413,7 @@ export default function IceCreamGame() {
     [arcadeRoomX, unlockFlags]
   );
 
-  // Tap handler for the shop interior — route exit door tap, owner chat
+  // Tap handler for the shop interior — route exit door tap, item slots, owner chat
   const handleShopTap = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
       if (chatActive) return;
@@ -6290,9 +6432,19 @@ export default function IceCreamGame() {
         exitShop();
         return;
       }
+      const shop = currentShopId ? shopById(currentShopId) : null;
+      if (shop && shop.type !== "casino" && shop.type !== "arcade") {
+        const item = shop.items.find((_, i) => {
+          const slot = shopItemDisplaySlot(i);
+          return gx >= slot.x && gx <= slot.x + slot.w && gy >= slot.y && gy <= slot.y + slot.h;
+        });
+        if (item) {
+          buyItem(item);
+          return;
+        }
+      }
       // Owner (center)
       if (Math.abs(gx - 64) < 12 && gy > 50 && gy < 78) {
-        const shop = currentShopId ? shopById(currentShopId) : null;
         if (shop) {
           playBoop();
           setChatTarget("customer");
@@ -6305,13 +6457,109 @@ export default function IceCreamGame() {
         }
       }
     },
-    [chatActive, currentShopId, exitShop]
+    [buyItem, chatActive, currentShopId, exitShop]
+  );
+
+  const handleShipInteriorTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (chatActive) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+
+      const showMessage = (message: ShipRoomMessage) => {
+        playBoop();
+        setShipRoomMessage(message);
+      };
+
+      if (gy >= 27 && gy <= 44) {
+        const body =
+          cutsceneType === "journey-out" ? "Alien suns glitter ahead." :
+          cutsceneType === "journey-back" ? "Earth shines like blue sherbet." :
+          location === "alien-planet" ? "Three suns blink outside." :
+          "Home lights twinkle below.";
+        showMessage({ title: "Window", body });
+        return;
+      }
+
+      if (shipRoom === "cockpit") {
+        if (gx >= 48 && gx <= 80 && gy >= 56 && gy <= 74) {
+          openSpaceMap();
+          return;
+        }
+        if (gx >= 84 && gx <= 103 && gy >= 55 && gy <= 70) {
+          showMessage({ title: "Nav Beacon", body: "The next jump is tuned." });
+          return;
+        }
+      } else if (shipRoom === "galley") {
+        if (gx >= 50 && gx <= 76 && gy >= 52 && gy <= 80) {
+          showMessage({ title: "Ship Snack", body: "A Milky Way scoop chills." });
+          return;
+        }
+        if (gx >= 84 && gx <= 114 && gy >= 56 && gy <= 72) {
+          showMessage({ title: "Mixer", body: "It hums: vanilla plus starlight." });
+          return;
+        }
+      } else if (shipRoom === "cargo") {
+        if (gx >= 30 && gx <= 98 && gy >= 58 && gy <= 78) {
+          const crateLines = [
+            "This crate is full of yesterday.",
+            "Postcards rattle inside.",
+            "A tiny shop may be sleeping.",
+          ];
+          showMessage({ title: "Mysterious Crate", body: pick(crateLines) });
+          return;
+        }
+      } else if (shipRoom === "engine") {
+        if (gx >= 48 && gx <= 80 && gy >= 45 && gy <= 80) {
+          const body = inventory["engine-sticker"] ? "Your sticker makes it brave." : "It wants an engine sticker.";
+          showMessage({ title: "Engine Core", body });
+          return;
+        }
+      } else if (shipRoom === "crew-pod") {
+        if (gx >= 50 && gx <= 82 && gy >= 50 && gy <= 84) {
+          setFlag(getDestinationUnlockFlag("star-nursery"));
+          showMessage({ title: "Zarixa", body: "She hums a star lullaby." });
+          return;
+        }
+      }
+
+      showMessage(SHIP_ROOM_DETAILS[shipRoom].inspect);
+    },
+    [chatActive, cutsceneType, inventory, location, openSpaceMap, setFlag, shipRoom]
+  );
+
+  const handleSpaceMapTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (chatActive) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const dest = SPACE_DESTINATIONS.find((d) => Math.hypot(gx - d.x, gy - d.y) <= 9);
+      if (dest) travelToDestination(dest);
+    },
+    [chatActive, travelToDestination]
   );
 
   // Canvas tap handler — detect character taps
   const handleCanvasTap = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
       if (chatActive) return; // don't open another chat while one is active
+      if (phase !== "playing") return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -6361,7 +6609,7 @@ export default function IceCreamGame() {
         }
       }
     },
-    [chatActive, customer, pickDialogue, handleDoorTap]
+    [chatActive, customer, phase, pickDialogue, handleDoorTap]
   );
 
   const handleChatChoice = useCallback((nextIdx: number) => {
@@ -6421,7 +6669,7 @@ export default function IceCreamGame() {
     let pilotOffered = false;
     const interval = setInterval(() => {
       // Pause tick advancement while an interactive offer is open
-      if (pilotOfferRef.current) return;
+      if (pilotOfferRef.current || warpActive) return;
       setCutsceneTick((t) => {
         const next = t + 1;
         // Pilot offer (first time during any journey)
@@ -6488,7 +6736,7 @@ export default function IceCreamGame() {
       });
     }, tickMs);
     return () => clearInterval(interval);
-  }, [phase, cutsceneType]);
+  }, [phase, cutsceneType, warpActive]);
 
   // ── Black hole ambient tick + auto-transitions ────────────────────────
   useEffect(() => {
@@ -6498,7 +6746,9 @@ export default function IceCreamGame() {
         const next = t + 1;
         if (blackholeScene === "pull-in" && next >= 110) {
           // 30% chance to get flung to prehistoric Earth instead of the fork
-          setBlackholeScene(Math.random() < 0.3 ? "dino-intro" : "fork");
+          const nextScene: BlackholeScene = Math.random() < 0.3 ? "dino-intro" : "fork";
+          if (nextScene === "dino-intro") setFlag(getDestinationUnlockFlag("dino-timeline"));
+          setBlackholeScene(nextScene);
           return 0;
         }
         if (blackholeScene === "burst-out" && next >= 80) {
@@ -6528,7 +6778,7 @@ export default function IceCreamGame() {
       });
     }, 40);
     return () => clearInterval(interval);
-  }, [phase, blackholeScene, blackholeReturnTo, blackholeBonus]);
+  }, [phase, blackholeScene, blackholeReturnTo, blackholeBonus, setFlag]);
 
   // Pilot offer accepted: init minigame state and switch phase
   const acceptPilotOffer = useCallback(() => {
@@ -6936,6 +7186,8 @@ export default function IceCreamGame() {
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
             : phase === "alien-underground" ? handleUndergroundTap
+            : phase === "ship-interior" ? handleShipInteriorTap
+            : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -6946,6 +7198,8 @@ export default function IceCreamGame() {
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
             : phase === "alien-underground" ? handleUndergroundTap
+            : phase === "ship-interior" ? handleShipInteriorTap
+            : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
             : phase === "chase" ? handleChaseTap
             : handleCanvasTap
           }
@@ -7088,26 +7342,6 @@ export default function IceCreamGame() {
               The ship option unlocks after your first alien visit.
             </p>
           )}
-          {alienVisited && (
-            <p className="text-xs mb-2" style={{ color: "#888" }}>
-              Take the ship keeps the flying sequence, pilot offer, and warp drive.
-            </p>
-          )}
-          {alienVisited && (
-            <button onClick={chooseShipInteriorFromDoor}
-              className="w-full py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4 mb-2"
-              style={{
-                background: "linear-gradient(180deg, #70FFE0, #208088)",
-                borderBottomColor: "#075858",
-                color: "#06122A",
-              }}>
-              {"\u{1F6F8}"} Explore ship rooms
-              <br />
-              <span className="text-xs font-normal" style={{ opacity: 0.8 }}>
-                optional: {SHIP_ROOMS.cockpit.name} map prototype, {SPACE_DESTINATIONS.length} charted stops
-              </span>
-            </button>
-          )}
           <button onClick={closeDoorOffer}
             className="text-sm underline mt-1" style={{ color: "#C44569" }}>
             never mind, stay inside
@@ -7129,7 +7363,7 @@ export default function IceCreamGame() {
             <div>
               <strong style={{ color: "#FFD86B" }}>{SHIP_ROOMS[shipRoom].name}</strong>
               <div className="text-xs" style={{ color: "#B8E0FF" }}>
-                ship interior prototype
+                {SHIP_ROOM_DETAILS[shipRoom].hint}
               </div>
             </div>
             <div className="text-xs" style={{ color: "#80C0FF" }}>
@@ -7175,7 +7409,7 @@ export default function IceCreamGame() {
             <button onClick={exitShipInterior}
               className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
               style={{ background: "linear-gradient(180deg, #FFD86B, #D88020)", borderBottomColor: "#805010", color: "#201020" }}>
-              back to shop
+              {shipInteriorReturn === "cutscene" ? "back to flight" : "back to shop"}
             </button>
           </div>
         </div>
@@ -7205,7 +7439,7 @@ export default function IceCreamGame() {
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
-            {SPACE_DESTINATIONS.slice(0, 6).map((dest) => {
+            {SPACE_DESTINATIONS.map((dest) => {
               const unlocked = isDestinationUnlocked(dest);
               const selected = selectedSpaceDestination === dest.id;
               return (
@@ -7832,21 +8066,24 @@ export default function IceCreamGame() {
                   const owningCount = inventory[item.id] || 0;
                   return (
                     <button key={item.id} onClick={() => buyItem(item)}
-                      disabled={!affordable}
+                      aria-disabled={!affordable}
                       className="flex items-center gap-3 p-2 rounded-lg text-left transition-all active:scale-[0.99] border-b-4"
                       style={{
                         background: affordable ? "linear-gradient(180deg, #FFF, #FFF4B8)" : "linear-gradient(180deg, #EEE, #CCC)",
                         borderBottomColor: affordable ? shop.signColor : "#999",
                         color: "#333",
-                        opacity: affordable ? 1 : 0.7,
+                        opacity: affordable ? 1 : 0.8,
                       }}>
                       <span className="text-2xl">{item.emoji}</span>
                       <span className="flex-1">
                         <strong>{item.name}</strong>
                         <br /><span className="text-xs" style={{ color: "#666" }}>{item.description}</span>
                       </span>
-                      <span className="text-right">
+                      <span className="text-right min-w-[72px]">
                         <span className="font-bold" style={{ color: shop.accentColor }}>{item.price}G</span>
+                        <br /><span className="text-xs" style={{ color: affordable ? shop.accentColor : "#A04040" }}>
+                          {affordable ? "BUY" : `need ${item.price - totalGold}G`}
+                        </span>
                         {owningCount > 0 && (
                           <><br /><span className="text-xs" style={{ color: "#888" }}>x{owningCount} owned</span></>
                         )}
@@ -8057,7 +8294,17 @@ export default function IceCreamGame() {
 
       {/* Warp drive button (only during journey cutscenes, not already warping) */}
       {phase === "cutscene" && (cutsceneType === "journey-out" || cutsceneType === "journey-back") && !warpActive && !pilotOfferActive && (
-        <div className="w-full max-w-lg flex justify-end mb-2">
+        <div className="w-full max-w-lg flex justify-end gap-2 mb-2">
+          <button onClick={exploreShipDuringJourney}
+            className="rounded-xl border-b-4 font-bold py-2 px-4 text-sm"
+            style={{
+              fontFamily: "monospace",
+              background: "linear-gradient(180deg, #70FFE0, #208088)",
+              borderBottomColor: "#075858",
+              color: "#06122A",
+            }}>
+            {"\u{1F6F8}"} EXPLORE SHIP
+          </button>
           <button onClick={handleWarp}
             className="rounded-xl border-b-4 font-bold py-2 px-4 text-sm"
             style={{

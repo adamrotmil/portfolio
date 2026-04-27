@@ -84,7 +84,9 @@
 - Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed.
 - Commit: `feat(ice-cream): add ship interior and space map`
 - Push status: pushed to `origin/feature/scoop-shop-expansion`
-- Remaining issues: Non-Earth/Alien destinations are charted placeholders until destination-local customer loops are added. Follow-up feedback restored `Take the ship` as the primary flying/cutscene path and moved ship rooms behind an optional `Explore ship rooms` button.
+- Follow-up: Moved `Explore ship` into the journey flight controls only, removed door-panel prototype/explanatory copy, routed ship and map canvas taps away from the generic chat handler, made cockpit map dots clickable, added story interactions for each ship room, expanded the space map to all planned destinations, and wired shop counter item taps to the real purchase flow.
+- Follow-up checks: `git diff --check` passed; `npx tsc --noEmit --pretty false` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed. Browser automation was not run because Playwright is not installed in this workspace.
+- Remaining issues: Non-Earth/Alien destinations now have map/story content, but destination-local customer loops and the mobile pop-up shop still remain future work.
 
 ### Milestone 7 - The Shop Walks Away
 
