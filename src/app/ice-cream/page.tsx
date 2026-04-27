@@ -87,6 +87,9 @@ type GamePhase =
   | "arcade-room"
   | "meteor-meltdown"
   | "slime-simon"
+  | "moon-maze"
+  | "ufo-claw"
+  | "pixel-rift"
   | "alien-underground"
   | "space-map"
   | "space-destination"
@@ -146,6 +149,50 @@ type SlimeSimonState = {
   score: number;
   phase: "show" | "play" | "done";
   flashIdx: number | null;
+  message: string;
+};
+
+type MoonMazeEnemy = {
+  x: number;
+  y: number;
+  dir: "h" | "v";
+  step: -1 | 1;
+};
+
+type MoonMazeState = {
+  player: { x: number; y: number };
+  enemies: MoonMazeEnemy[];
+  exit: { x: number; y: number };
+  moves: number;
+  phase: "play" | "won" | "lost";
+  message: string;
+};
+
+type UfoClawPrizeId = "tiny-ufo-plush" | "glitch-token" | "space-jelly-sample" | "arcade-crown";
+
+type UfoClawPrize = {
+  id: UfoClawPrizeId;
+  name: string;
+  emoji: string;
+  rarity: "common" | "uncommon" | "rare";
+};
+
+type UfoClawState = {
+  prize: UfoClawPrize;
+  prizeX: number;
+  prizeDir: -1 | 1;
+  clawX: number;
+  clawY: number;
+  phase: "aim" | "drop" | "done";
+  won: boolean;
+  message: string;
+};
+
+type PixelRiftState = {
+  score: number;
+  timeLeft: number;
+  targetLane: number;
+  phase: "play" | "done";
   message: string;
 };
 
@@ -401,16 +448,69 @@ const ALIEN_ARCADE_CABINETS: ArcadeCabinet[] = [
     highScoreKey: "slime-simon",
   },
   {
+    id: "moon-maze",
+    name: "Moon Maze",
+    subtitle: "Guide a tiny ship through moon slime corridors.",
+    x: 410,
+    colors: { body: "#263A68", screen: "#DDEBFF", accent: "#A8C8FF" },
+    emoji: "\u{1F319}",
+    unlocked: true,
+    highScoreKey: "moon-maze",
+  },
+  {
+    id: "ufo-claw",
+    name: "UFO Claw",
+    subtitle: "Drop the claw when the prize drifts under it.",
+    x: 520,
+    colors: { body: "#4A2A20", screen: "#FFE8A8", accent: "#FFD86B" },
+    emoji: "\u{1F6F8}",
+    unlocked: true,
+    highScoreKey: "ufo-claw",
+  },
+  {
     id: "pixel-rift",
     name: "Pixel Rift",
     subtitle: "A cabinet that dreams about another arcade.",
-    x: 410,
+    x: 630,
     colors: { body: "#301050", screen: "#FF70F0", accent: "#70FFE0" },
     emoji: "\u{1F300}",
     unlockFlag: "pixel-rift-unlocked",
     highScoreKey: "pixel-rift",
   },
 ];
+
+const MOON_MAZE_SIZE = 8;
+const MOON_MAZE_CELL = 10;
+const MOON_MAZE_ORIGIN = { x: 24, y: 18 };
+const MOON_MAZE_START = { x: 0, y: 0 };
+const MOON_MAZE_EXIT = { x: 7, y: 7 };
+const MOON_MAZE_MAP = [
+  "........",
+  ".##.##..",
+  "...#....",
+  "##...##.",
+  "...#....",
+  ".#.###..",
+  ".#......",
+  "...##...",
+] as const;
+const MOON_MAZE_ENEMIES: MoonMazeEnemy[] = [
+  { x: 5, y: 2, dir: "h", step: 1 },
+  { x: 6, y: 5, dir: "v", step: 1 },
+];
+
+const UFO_CLAW_PRIZES: UfoClawPrize[] = [
+  { id: "tiny-ufo-plush", name: "Tiny UFO Plush", emoji: "\u{1F6F8}", rarity: "common" },
+  { id: "glitch-token", name: "Glitch Token", emoji: "\u{1FA99}", rarity: "common" },
+  { id: "space-jelly-sample", name: "Space Jelly Sample", emoji: "\u{1FAD9}", rarity: "uncommon" },
+  { id: "arcade-crown", name: "Arcade Crown", emoji: "\u{1F451}", rarity: "rare" },
+];
+
+const PIXEL_RIFT_LANES = [
+  { label: "REN", color: "#80C0FF", accent: "#2050A0" },
+  { label: "DREAM", color: "#FF70F0", accent: "#8A2078" },
+  { label: "GLITCH", color: "#70FFE0", accent: "#148878" },
+] as const;
 
 const SLIME_SIMON_PADS = [
   { name: "berry", x: 32, y: 48, color: "#FF70A6", accent: "#A82050" },
@@ -3082,7 +3182,7 @@ function drawShopFront(ctx: CanvasRenderingContext2D, shop: Shop, bx: number, bw
 const STREET_SHOP_W = 28;
 const STREET_GAP = 4;
 const STREET_MARGIN = 2;
-const ARCADE_ROOM_W = 470;
+const ARCADE_ROOM_W = 720;
 const UNDERGROUND_W = 360;
 const SHOP_ITEM_SLOT_W = 52;
 const SHOP_ITEM_SLOT_H = 9;
@@ -3102,6 +3202,10 @@ function streetCameraX(heroX: number, shops: Shop[]): number {
   const worldW = streetWorldWidth(shops);
   if (worldW <= W) return 0;
   return Math.max(0, Math.min(worldW - W, Math.floor(heroX - W / 2)));
+}
+
+function moonMazeBlocked(x: number, y: number): boolean {
+  return x < 0 || y < 0 || x >= MOON_MAZE_SIZE || y >= MOON_MAZE_SIZE || MOON_MAZE_MAP[y][x] === "#";
 }
 
 function alienLadderWorldX(shops: Shop[]): number {
@@ -3369,6 +3473,108 @@ function drawSlimeSimonScene(ctx: CanvasRenderingContext2D, tick: number, game: 
   if (game) {
     const color = game.phase === "done" ? "#FFD86B" : game.phase === "play" ? "#FFFFFF" : "#B7FF9A";
     drawText(ctx, game.message, W / 2, 104, color, 0.55);
+  }
+}
+
+function drawMoonMazeScene(ctx: CanvasRenderingContext2D, tick: number, game: MoonMazeState | null) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const crater = (Math.floor(x / 9) + Math.floor((y + tick / 3) / 9)) % 2;
+      px(ctx, x, y, 1, 1, y < 12 ? "#071024" : crater ? "#172648" : "#20345E");
+    }
+  }
+  for (let i = 0; i < 22; i++) {
+    const sx = (i * 19 + Math.floor(tick / 2)) % W;
+    const sy = 3 + (i * 7) % 28;
+    px(ctx, sx, sy, 1, 1, i % 2 ? "#E8F0FF" : "#A8C8FF");
+  }
+  drawText(ctx, "MOON MAZE", W / 2, 10, "#DDEBFF", 0.55);
+
+  for (let gy = 0; gy < MOON_MAZE_SIZE; gy++) {
+    for (let gx = 0; gx < MOON_MAZE_SIZE; gx++) {
+      const x = MOON_MAZE_ORIGIN.x + gx * MOON_MAZE_CELL;
+      const y = MOON_MAZE_ORIGIN.y + gy * MOON_MAZE_CELL;
+      const wall = MOON_MAZE_MAP[gy][gx] === "#";
+      px(ctx, x, y, MOON_MAZE_CELL - 1, MOON_MAZE_CELL - 1, wall ? "#A8C8FF" : "#101A34");
+      if (!wall && (gx + gy + Math.floor(tick / 12)) % 5 === 0) px(ctx, x + 4, y + 4, 2, 2, "#FFD86B");
+    }
+  }
+
+  const exit = game?.exit ?? MOON_MAZE_EXIT;
+  const ex = MOON_MAZE_ORIGIN.x + exit.x * MOON_MAZE_CELL;
+  const ey = MOON_MAZE_ORIGIN.y + exit.y * MOON_MAZE_CELL;
+  px(ctx, ex + 2, ey + 2, 6, 6, "#70FFE0");
+  drawText(ctx, "EXIT", ex + 5, ey + 13, "#70FFE0", 0.32);
+
+  game?.enemies.forEach((enemy, idx) => {
+    const x = MOON_MAZE_ORIGIN.x + enemy.x * MOON_MAZE_CELL + 5;
+    const y = MOON_MAZE_ORIGIN.y + enemy.y * MOON_MAZE_CELL + 5;
+    px(ctx, x - 3, y - 2, 7, 5, idx % 2 ? "#FF70F0" : "#B7FF9A");
+    px(ctx, x - 1, y - 4 + (tick % 8 < 4 ? 0 : 1), 3, 2, "#FFFFFF");
+  });
+
+  if (game) {
+    const px0 = MOON_MAZE_ORIGIN.x + game.player.x * MOON_MAZE_CELL + 5;
+    const py0 = MOON_MAZE_ORIGIN.y + game.player.y * MOON_MAZE_CELL + 5;
+    px(ctx, px0 - 3, py0 - 2, 7, 5, "#FFD86B");
+    px(ctx, px0 - 1, py0 - 5, 3, 3, "#70FFE0");
+    drawText(ctx, `${game.moves} MOVES`, 24, 104, "#FFD86B", 0.45);
+    drawText(ctx, game.message, W / 2, 104, game.phase === "lost" ? "#FF70A6" : "#DDEBFF", 0.45);
+  }
+}
+
+function drawUfoClawScene(ctx: CanvasRenderingContext2D, tick: number, game: UfoClawState | null) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const color = y < 20 ? "#120824" : y < 82 ? "#24104A" : "#3A2030";
+      px(ctx, x, y, 1, 1, color);
+    }
+  }
+  drawText(ctx, "UFO CLAW", W / 2, 10, "#FFD86B", 0.6);
+  px(ctx, 12, 24, W - 24, 56, "#100820");
+  px(ctx, 14, 26, W - 28, 52, "#1E1538");
+  px(ctx, 18, 80, W - 36, 8, "#FFD86B");
+  px(ctx, 46, 18, 36, 4, "#70FFE0");
+
+  if (game) {
+    const prizeX = Math.floor(game.prizeX);
+    const bob = Math.floor(Math.sin(tick / 6) * 2);
+    px(ctx, prizeX - 7, 62 + bob, 14, 8, game.prize.rarity === "rare" ? "#FFD86B" : game.prize.rarity === "uncommon" ? "#70FFE0" : "#FFB0CB");
+    drawText(ctx, game.prize.emoji, prizeX, 67 + bob, "#FFFFFF", 0.52);
+    const clawX = Math.floor(game.clawX);
+    const clawY = Math.floor(game.clawY);
+    px(ctx, clawX, 22, 1, Math.max(0, clawY - 22), "#DDEBFF");
+    px(ctx, clawX - 6, clawY, 13, 2, "#DDEBFF");
+    px(ctx, clawX - 6, clawY + 2, 2, 8, "#DDEBFF");
+    px(ctx, clawX + 5, clawY + 2, 2, 8, "#DDEBFF");
+    drawText(ctx, game.message, W / 2, 102, game.won ? "#B7FF9A" : "#FFFFFF", 0.45);
+  }
+}
+
+function drawPixelRiftScene(ctx: CanvasRenderingContext2D, tick: number, game: PixelRiftState | null) {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const glitch = (Math.floor((x + tick) / 7) + Math.floor(y / 5)) % 3;
+      px(ctx, x, y, 1, 1, glitch === 0 ? "#120030" : glitch === 1 ? "#24104A" : "#081C28");
+    }
+  }
+  drawText(ctx, "PIXEL RIFT", W / 2, 10, "#70FFE0", 0.6);
+  PIXEL_RIFT_LANES.forEach((lane, idx) => {
+    const x = 18 + idx * 36;
+    const active = game?.phase === "play" && game.targetLane === idx;
+    px(ctx, x, 32, 28, 42, active ? lane.color : "#140820");
+    px(ctx, x + 2, 34, 24, 38, active ? "#FFF0FF" : lane.accent);
+    for (let i = 0; i < 8; i++) {
+      const bitX = x + 5 + ((i * 7 + tick) % 18);
+      const bitY = 38 + ((i * 11 + tick * (idx + 1)) % 28);
+      px(ctx, bitX, bitY, 2, 2, active ? lane.accent : lane.color);
+    }
+    drawText(ctx, lane.label, x + 14, 83, active ? "#FFD86B" : lane.color, 0.36);
+  });
+  if (game) {
+    drawText(ctx, `SCORE ${game.score}`, 28, 101, "#FFD86B", 0.45);
+    drawText(ctx, `${Math.ceil(game.timeLeft / 1000)}s`, W - 20, 101, "#70FFE0", 0.45);
+    drawText(ctx, game.message, W / 2, 20, game.phase === "done" ? "#FFD86B" : "#FFFFFF", 0.45);
   }
 }
 
@@ -4265,6 +4471,9 @@ export default function IceCreamGame() {
   const [arcadeCabinetPreview, setArcadeCabinetPreview] = useState<ArcadeGameId | null>(null);
   const [meteorMeltdown, setMeteorMeltdown] = useState<MeteorMeltdownState | null>(null);
   const [slimeSimon, setSlimeSimon] = useState<SlimeSimonState | null>(null);
+  const [moonMaze, setMoonMaze] = useState<MoonMazeState | null>(null);
+  const [ufoClaw, setUfoClaw] = useState<UfoClawState | null>(null);
+  const [pixelRift, setPixelRift] = useState<PixelRiftState | null>(null);
 
   // Boss state
   const [shakeTick, setShakeTick] = useState(0);
@@ -4354,7 +4563,7 @@ export default function IceCreamGame() {
 
   // ── Canvas rendering loop ─────────────────────────────────────────────
   useEffect(() => {
-    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
+    if (phase !== "playing" && phase !== "cutscene" && phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "moon-maze" && phase !== "ufo-claw" && phase !== "pixel-rift" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -4628,6 +4837,21 @@ export default function IceCreamGame() {
       drawSlimeSimonScene(ctx, streetTick, slimeSimon);
     }
 
+    function drawMoonMaze() {
+      if (!ctx) return;
+      drawMoonMazeScene(ctx, streetTick, moonMaze);
+    }
+
+    function drawUfoClaw() {
+      if (!ctx) return;
+      drawUfoClawScene(ctx, streetTick, ufoClaw);
+    }
+
+    function drawPixelRift() {
+      if (!ctx) return;
+      drawPixelRiftScene(ctx, streetTick, pixelRift);
+    }
+
     function drawChase() {
       if (!ctx) return;
       drawChaseScene(ctx, chaseTick, chaseMinions);
@@ -4687,6 +4911,12 @@ export default function IceCreamGame() {
         drawMeteorMeltdown();
       } else if (phase === "slime-simon") {
         drawSlimeSimon();
+      } else if (phase === "moon-maze") {
+        drawMoonMaze();
+      } else if (phase === "ufo-claw") {
+        drawUfoClaw();
+      } else if (phase === "pixel-rift") {
+        drawPixelRift();
       } else if (phase === "alien-underground") {
         drawAlienUnderground();
       } else if (phase === "ship-interior") {
@@ -4710,7 +4940,7 @@ export default function IceCreamGame() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, shipRoomMessage, selectedSpaceDestination, unlockFlags]);
+  }, [phase, customer, scoopsDone, coneScoops, toppingsDone, toppingsPhase, level, customersServed, goldCoins, totalGold, location, cutsceneType, cutsceneTick, blackholeScene, blackholeTick, pilotTick, pilotHits, pilotLives, streetTick, heroX, streetNpcs, currentShopId, equippedHeld, equippedDecor, bossFight, chaseMinions, chaseTick, warpActive, warpTick, sarahsWorld, visibleShops, availableAlienFlavors, availableEarthFlavors, arcadeRoomX, arcadeCabinetPreview, meteorMeltdown, slimeSimon, moonMaze, ufoClaw, pixelRift, alienLadderUnlocked, undergroundX, collectedUndergroundCrystals, glowShards, shipRoom, shipRoomMessage, selectedSpaceDestination, unlockFlags]);
 
   // Walk customer in
   const walkCustomerIn = useCallback((c: Customer) => {
@@ -5562,6 +5792,31 @@ export default function IceCreamGame() {
     try { window.localStorage.setItem("scoopstack-inventory", JSON.stringify(inv)); } catch { /* private mode etc. */ }
   }, []);
 
+  const awardCoins = useCallback((amount: number, rewardLocation: Location = location) => {
+    if (amount <= 0) return;
+    if (rewardLocation === "alien-planet") {
+      setAlienCoins((g) => {
+        const n = g + amount;
+        window.localStorage.setItem("scoopstack-alien-coins", n.toString());
+        return n;
+      });
+    } else {
+      setEarthCoins((g) => {
+        const n = g + amount;
+        window.localStorage.setItem("scoopstack-earth-coins", n.toString());
+        return n;
+      });
+    }
+  }, [location]);
+
+  const grantInventoryItem = useCallback((itemId: string) => {
+    setInventory((inv) => {
+      const next = { ...inv, [itemId]: (inv[itemId] || 0) + 1 };
+      persistInventory(next);
+      return next;
+    });
+  }, [persistInventory]);
+
   const persistEquipped = useCallback((held: string | null, decor: string[]) => {
     try { window.localStorage.setItem("scoopstack-equipped", JSON.stringify({ held, decor })); } catch { /* */ }
   }, []);
@@ -5690,14 +5945,23 @@ export default function IceCreamGame() {
     setSlotSpinning(false);
     if (slotIntervalRef.current) { clearInterval(slotIntervalRef.current); slotIntervalRef.current = null; }
     if (shopId === "alien-arcade") {
+      const shouldWakePixelRift = Boolean(unlockFlags["played-sarahs-world"]) && !unlockFlags["pixel-rift-unlocked"];
       setArcadeRoomX(42);
       arcadeDirRef.current = 0;
       setArcadeCabinetPreview(null);
+      if (shouldWakePixelRift) {
+        startQuest("ren-glitch-rivalry");
+        advanceQuest("ren-glitch-rivalry");
+        setFlag("pixel-rift-unlocked");
+        setShopFlash("Ren's dream cabinet flickers awake: Pixel Rift!");
+      } else if (!unlockFlags["played-sarahs-world"] && !unlockFlags["pixel-rift-unlocked"]) {
+        setShopFlash("One cabinet is dreaming about Ren's Pixel Arcade.");
+      }
       setPhase("arcade-room");
       return;
     }
     setPhase("shop");
-  }, []);
+  }, [advanceQuest, setFlag, startQuest, unlockFlags]);
 
   // Exit shop back to the street
   const exitShop = useCallback(() => {
@@ -5714,6 +5978,10 @@ export default function IceCreamGame() {
   const startSarahsWorld = useCallback(() => {
     playDing();
     sarahsWorldReturnRef.current = phase === "arcade-room" ? "arcade-room" : "shop";
+    if (currentShopId === "pixel-arcade" || location === "earth") {
+      setFlag("played-sarahs-world");
+      startQuest("ren-glitch-rivalry");
+    }
     setSarahsWorld({
       tick: 0,
       tileCount: 0,
@@ -5726,7 +5994,7 @@ export default function IceCreamGame() {
       phaseTick: 0,
     });
     setPhase("sarahs-world");
-  }, [phase]);
+  }, [currentShopId, location, phase, setFlag, startQuest]);
 
   // Sarah's World: stack a tile
   const handleStackTile = useCallback(() => {
@@ -6176,15 +6444,89 @@ export default function IceCreamGame() {
     setPhase("slime-simon");
   }, []);
 
+  const startMoonMaze = useCallback(() => {
+    playDing();
+    setShopFlash(null);
+    setArcadeCabinetPreview(null);
+    setMeteorMeltdown(null);
+    setSlimeSimon(null);
+    setUfoClaw(null);
+    setPixelRift(null);
+    setMoonMaze({
+      player: { ...MOON_MAZE_START },
+      enemies: MOON_MAZE_ENEMIES.map((enemy) => ({ ...enemy })),
+      exit: { ...MOON_MAZE_EXIT },
+      moves: 0,
+      phase: "play",
+      message: "Reach the glowing exit.",
+    });
+    setPhase("moon-maze");
+  }, []);
+
+  const pickUfoPrize = useCallback((): UfoClawPrize => {
+    const roll = Math.random();
+    if (roll > 0.9) return UFO_CLAW_PRIZES[3];
+    if (roll > 0.68) return UFO_CLAW_PRIZES[2];
+    return UFO_CLAW_PRIZES[Math.floor(Math.random() * 2)];
+  }, []);
+
+  const startUfoClaw = useCallback(() => {
+    playDing();
+    setShopFlash(null);
+    setArcadeCabinetPreview(null);
+    setMeteorMeltdown(null);
+    setSlimeSimon(null);
+    setMoonMaze(null);
+    setPixelRift(null);
+    setUfoClaw({
+      prize: pickUfoPrize(),
+      prizeX: 24 + Math.random() * 80,
+      prizeDir: Math.random() > 0.5 ? 1 : -1,
+      clawX: W / 2,
+      clawY: 24,
+      phase: "aim",
+      won: false,
+      message: "Time the drop.",
+    });
+    setPhase("ufo-claw");
+  }, [pickUfoPrize]);
+
+  const startPixelRift = useCallback(() => {
+    playDing();
+    setShopFlash(null);
+    setArcadeCabinetPreview(null);
+    setMeteorMeltdown(null);
+    setSlimeSimon(null);
+    setMoonMaze(null);
+    setUfoClaw(null);
+    setPixelRift({
+      score: 0,
+      timeLeft: 20000,
+      targetLane: Math.floor(Math.random() * PIXEL_RIFT_LANES.length),
+      phase: "play",
+      message: "Tap the glowing dream lane.",
+    });
+    setPhase("pixel-rift");
+  }, []);
+
   const exitArcadeGame = useCallback(() => {
     playBoop();
     setMeteorMeltdown(null);
     setSlimeSimon(null);
+    setMoonMaze(null);
+    setUfoClaw(null);
+    setPixelRift(null);
     setArcadeCabinetPreview(null);
     setPhase("arcade-room");
   }, []);
 
   const playArcadeCabinet = useCallback((gameId: ArcadeGameId) => {
+    const cabinet = ALIEN_ARCADE_CABINETS.find((c) => c.id === gameId);
+    if (cabinet?.unlockFlag && !unlockFlags[cabinet.unlockFlag]) {
+      playWrong();
+      setShopFlash("That cabinet is still dreaming.");
+      return;
+    }
     if (gameId === "sarahs-world") {
       setArcadeCabinetPreview(null);
       startSarahsWorld();
@@ -6198,9 +6540,18 @@ export default function IceCreamGame() {
       startSlimeSimon();
       return;
     }
-    playBoop();
-    setShopFlash(`${ALIEN_ARCADE_CABINETS.find((c) => c.id === gameId)?.name ?? "Cabinet"} is humming. Full game wiring next!`);
-  }, [startSarahsWorld, startMeteorMeltdown, startSlimeSimon]);
+    if (gameId === "moon-maze") {
+      startMoonMaze();
+      return;
+    }
+    if (gameId === "ufo-claw") {
+      startUfoClaw();
+      return;
+    }
+    if (gameId === "pixel-rift") {
+      startPixelRift();
+    }
+  }, [startSarahsWorld, startMeteorMeltdown, startSlimeSimon, startMoonMaze, startUfoClaw, startPixelRift, unlockFlags]);
 
   useEffect(() => {
     if (phase !== "meteor-meltdown" || meteorMeltdown?.phase !== "play") return;
@@ -6237,6 +6588,14 @@ export default function IceCreamGame() {
         }
 
         if (lives <= 0 || timeLeft <= 0) {
+          const reward = Math.floor(cur.score / 10);
+          if (reward > 0) {
+            awardCoins(reward, "alien-planet");
+            playCoinSound();
+          }
+          if (cur.score >= 200) {
+            setFlag("star-chip-cabinet-sticker");
+          }
           return {
             ...cur,
             timeLeft,
@@ -6244,7 +6603,7 @@ export default function IceCreamGame() {
             meteors,
             nextId,
             phase: "done",
-            message: `Score ${cur.score}`,
+            message: reward > 0 ? `Score ${cur.score}  +${reward}G` : `Score ${cur.score}`,
           };
         }
 
@@ -6252,7 +6611,7 @@ export default function IceCreamGame() {
       });
     }, 80);
     return () => clearInterval(interval);
-  }, [phase, meteorMeltdown?.phase]);
+  }, [awardCoins, phase, meteorMeltdown?.phase, setFlag]);
 
   useEffect(() => {
     if (phase !== "slime-simon") return;
@@ -6345,6 +6704,10 @@ export default function IceCreamGame() {
       if (nextPlayIdx >= cur.sequence.length) {
         playCoinSound();
         const nextScore = cur.score + 1;
+        awardCoins(20, "alien-planet");
+        if (nextScore >= 5) {
+          setFlag("topping-glow-worms-deluxe");
+        }
         recordArcadeScore("slime-simon", nextScore);
         return {
           sequence: [...cur.sequence, Math.floor(Math.random() * SLIME_SIMON_PADS.length)],
@@ -6366,7 +6729,7 @@ export default function IceCreamGame() {
         message: `${cur.sequence.length - nextPlayIdx} more`,
       };
     });
-  }, [recordArcadeScore]);
+  }, [awardCoins, recordArcadeScore, setFlag]);
 
   const handleSlimeSimonCanvasTap = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -6384,6 +6747,226 @@ export default function IceCreamGame() {
       if (padIdx >= 0) handleSlimeSimonPad(padIdx);
     },
     [handleSlimeSimonPad]
+  );
+
+  const moveMoonMaze = useCallback((dx: number, dy: number) => {
+    setMoonMaze((cur) => {
+      if (!cur || cur.phase !== "play") return cur;
+      const nx = cur.player.x + dx;
+      const ny = cur.player.y + dy;
+      if (moonMazeBlocked(nx, ny)) {
+        playWrong();
+        return { ...cur, message: "Moon wall bonk." };
+      }
+      const moves = cur.moves + 1;
+      const hitEnemy = cur.enemies.some((enemy) => enemy.x === nx && enemy.y === ny);
+      if (hitEnemy) {
+        playWrong();
+        return { ...cur, player: { x: nx, y: ny }, moves, phase: "lost", message: "Moon slime tagged you." };
+      }
+      if (nx === cur.exit.x && ny === cur.exit.y) {
+        playCoinSound();
+        awardCoins(80, "alien-planet");
+        const scoreValue = Math.max(1, 100 - moves);
+        recordArcadeScore("moon-maze", scoreValue);
+        if (moves < 30 && !inventory["moon-maze-trophy"]) {
+          grantInventoryItem("moon-maze-trophy");
+          setFlag("moon-maze-trophy");
+        }
+        return {
+          ...cur,
+          player: { x: nx, y: ny },
+          moves,
+          phase: "won",
+          message: moves < 30 ? "Clear! Trophy won. +80G" : "Clear! +80G",
+        };
+      }
+      playBoop();
+      return { ...cur, player: { x: nx, y: ny }, moves, message: "Keep gliding." };
+    });
+  }, [awardCoins, grantInventoryItem, inventory, recordArcadeScore, setFlag]);
+
+  useEffect(() => {
+    if (phase !== "moon-maze" || moonMaze?.phase !== "play") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      setMoonMaze((cur) => {
+        if (!cur || cur.phase !== "play") return cur;
+        const enemies = cur.enemies.map((enemy) => {
+          const nx = enemy.x + (enemy.dir === "h" ? enemy.step : 0);
+          const ny = enemy.y + (enemy.dir === "v" ? enemy.step : 0);
+          if (moonMazeBlocked(nx, ny)) return { ...enemy, step: (enemy.step * -1) as -1 | 1 };
+          return { ...enemy, x: nx, y: ny };
+        });
+        if (enemies.some((enemy) => enemy.x === cur.player.x && enemy.y === cur.player.y)) {
+          playWrong();
+          return { ...cur, enemies, phase: "lost", message: "Moon slime caught you." };
+        }
+        return { ...cur, enemies };
+      });
+    }, 560);
+    return () => clearInterval(interval);
+  }, [phase, moonMaze?.phase]);
+
+  const handleMoonMazeTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (!moonMaze || moonMaze.phase !== "play") return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const cellX = Math.floor((gx - MOON_MAZE_ORIGIN.x) / MOON_MAZE_CELL);
+      const cellY = Math.floor((gy - MOON_MAZE_ORIGIN.y) / MOON_MAZE_CELL);
+      const dx = cellX - moonMaze.player.x;
+      const dy = cellY - moonMaze.player.y;
+      if (Math.abs(dx) + Math.abs(dy) === 1) moveMoonMaze(dx, dy);
+    },
+    [moonMaze, moveMoonMaze]
+  );
+
+  const dropUfoClaw = useCallback(() => {
+    setUfoClaw((cur) => {
+      if (!cur || cur.phase !== "aim") return cur;
+      playBoop();
+      return { ...cur, phase: "drop", clawX: W / 2, clawY: 24, message: "Claw dropping!" };
+    });
+  }, []);
+
+  const ufoClawPhase = ufoClaw?.phase;
+
+  useEffect(() => {
+    if (phase !== "ufo-claw" || !ufoClawPhase || ufoClawPhase === "done") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      setUfoClaw((cur) => {
+        if (!cur || cur.phase === "done") return cur;
+        if (cur.phase === "aim") {
+          let prizeX = cur.prizeX + cur.prizeDir * 1.8;
+          let prizeDir = cur.prizeDir;
+          if (prizeX < 22 || prizeX > W - 22) {
+            prizeDir = (prizeDir * -1) as -1 | 1;
+            prizeX = Math.max(22, Math.min(W - 22, prizeX));
+          }
+          return { ...cur, prizeX, prizeDir };
+        }
+        const clawY = cur.clawY + 5;
+        if (clawY < 62) return { ...cur, clawY };
+        const won = Math.abs(cur.clawX - cur.prizeX) <= 9;
+        if (won) {
+          playCoinSound();
+          grantInventoryItem(cur.prize.id);
+          recordArcadeScore("ufo-claw", (arcadeHighScores["ufo-claw"] ?? 0) + 1);
+          if (cur.prize.id === "glitch-token") setFlag("glitch-token-won");
+          if (cur.prize.id === "arcade-crown") setFlag("arcade-crown");
+        } else {
+          playWrong();
+        }
+        return {
+          ...cur,
+          clawY,
+          phase: "done",
+          won,
+          message: won ? `Won ${cur.prize.name}!` : "So close. Try again.",
+        };
+      });
+    }, 60);
+    return () => clearInterval(interval);
+  }, [arcadeHighScores, grantInventoryItem, phase, recordArcadeScore, setFlag, ufoClawPhase]);
+
+  const handleUfoClawTap = useCallback(() => {
+    dropUfoClaw();
+  }, [dropUfoClaw]);
+
+  const completePixelRift = useCallback((reason: string) => {
+    setPixelRift((cur) => {
+      if (!cur || cur.phase !== "play") return cur;
+      const best = arcadeHighScores["pixel-rift"] ?? 0;
+      const isNewBest = cur.score > best;
+      if (isNewBest) {
+        const reward = Math.max(20, Math.floor(cur.score / 2));
+        awardCoins(reward, "alien-planet");
+        recordArcadeScore("pixel-rift", cur.score);
+        setFlag("pixel-rift-cleared");
+        playCoinSound();
+        return { ...cur, phase: "done", timeLeft: Math.max(0, cur.timeLeft), message: `${reason} New best! +${reward}G` };
+      }
+      playWrong();
+      return { ...cur, phase: "done", timeLeft: Math.max(0, cur.timeLeft), message: `${reason} Score ${cur.score}` };
+    });
+  }, [arcadeHighScores, awardCoins, recordArcadeScore, setFlag]);
+
+  useEffect(() => {
+    if (phase !== "pixel-rift" || pixelRift?.phase !== "play") return;
+    const interval = setInterval(() => {
+      setStreetTick((t) => t + 1);
+      setPixelRift((cur) => {
+        if (!cur || cur.phase !== "play") return cur;
+        const timeLeft = Math.max(0, cur.timeLeft - 120);
+        if (timeLeft <= 0) {
+          const best = arcadeHighScores["pixel-rift"] ?? 0;
+          const isNewBest = cur.score > best;
+          if (isNewBest) {
+            const reward = Math.max(20, Math.floor(cur.score / 2));
+            awardCoins(reward, "alien-planet");
+            recordArcadeScore("pixel-rift", cur.score);
+            setFlag("pixel-rift-cleared");
+            playCoinSound();
+            return { ...cur, timeLeft, phase: "done", message: `Time! New best +${reward}G` };
+          }
+          return { ...cur, timeLeft, phase: "done", message: `Time! Score ${cur.score}` };
+        }
+        return { ...cur, timeLeft };
+      });
+    }, 120);
+    return () => clearInterval(interval);
+  }, [arcadeHighScores, awardCoins, phase, pixelRift?.phase, recordArcadeScore, setFlag]);
+
+  const handlePixelRiftLane = useCallback((laneIdx: number) => {
+    setPixelRift((cur) => {
+      if (!cur || cur.phase !== "play") return cur;
+      if (laneIdx !== cur.targetLane) {
+        setTimeout(() => completePixelRift("Wrong lane."), 0);
+        return { ...cur, message: "Wrong lane!" };
+      }
+      playBoop();
+      const nextScore = cur.score + 10;
+      let targetLane = Math.floor(Math.random() * PIXEL_RIFT_LANES.length);
+      if (targetLane === cur.targetLane) targetLane = (targetLane + 1) % PIXEL_RIFT_LANES.length;
+      return {
+        ...cur,
+        score: nextScore,
+        targetLane,
+        message: nextScore % 50 === 0 ? "Rift combo!" : "Good signal.",
+      };
+    });
+  }, [completePixelRift]);
+
+  const handlePixelRiftTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+      if (!pixelRift || pixelRift.phase !== "play") return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      let clientX: number, clientY: number;
+      if ("touches" in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else                { clientX = e.clientX; clientY = e.clientY; }
+      const gx = (clientX - rect.left) * scaleX;
+      const gy = (clientY - rect.top) * scaleY;
+      const laneIdx = PIXEL_RIFT_LANES.findIndex((_, idx) => {
+        const x = 18 + idx * 36;
+        return gx >= x && gx <= x + 28 && gy >= 32 && gy <= 74;
+      });
+      if (laneIdx >= 0) handlePixelRiftLane(laneIdx);
+    },
+    [handlePixelRiftLane, pixelRift]
   );
 
   const handleArcadeRoomTap = useCallback(
@@ -6406,7 +6989,7 @@ export default function IceCreamGame() {
           const unlocked = cabinet.unlocked || !cabinet.unlockFlag || unlockFlags[cabinet.unlockFlag];
           playBoop();
           setArcadeCabinetPreview(unlocked ? cabinet.id : null);
-          setShopFlash(unlocked ? null : "That cabinet is still asleep.");
+          setShopFlash(unlocked ? null : cabinet.id === "pixel-rift" ? "Pixel Rift is waiting for Ren's dream signal." : "That cabinet is still asleep.");
         }
       }
     },
@@ -7185,6 +7768,9 @@ export default function IceCreamGame() {
             : phase === "arcade-room" ? handleArcadeRoomTap
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
+            : phase === "moon-maze" ? handleMoonMazeTap
+            : phase === "ufo-claw" ? handleUfoClawTap
+            : phase === "pixel-rift" ? handlePixelRiftTap
             : phase === "alien-underground" ? handleUndergroundTap
             : phase === "ship-interior" ? handleShipInteriorTap
             : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
@@ -7197,6 +7783,9 @@ export default function IceCreamGame() {
             : phase === "arcade-room" ? handleArcadeRoomTap
             : phase === "meteor-meltdown" ? handleMeteorMeltdownTap
             : phase === "slime-simon" ? handleSlimeSimonCanvasTap
+            : phase === "moon-maze" ? handleMoonMazeTap
+            : phase === "ufo-claw" ? handleUfoClawTap
+            : phase === "pixel-rift" ? handlePixelRiftTap
             : phase === "alien-underground" ? handleUndergroundTap
             : phase === "ship-interior" ? handleShipInteriorTap
             : phase === "space-map" || phase === "space-destination" ? handleSpaceMapTap
@@ -7621,7 +8210,6 @@ export default function IceCreamGame() {
         const cabinet = ALIEN_ARCADE_CABINETS.find((c) => c.id === arcadeCabinetPreview);
         if (!cabinet) return null;
         const best = arcadeHighScores[cabinet.highScoreKey] ?? 0;
-        const playable = cabinet.id === "sarahs-world" || cabinet.id === "meteor-meltdown" || cabinet.id === "slime-simon";
         return (
           <div className="w-full max-w-lg rounded-2xl p-4 mb-3 border-4"
             style={{
@@ -7645,14 +8233,12 @@ export default function IceCreamGame() {
               <button onClick={() => playArcadeCabinet(cabinet.id)}
                 className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
                 style={{
-                  background: playable
-                    ? "linear-gradient(180deg, #FFB0CB, #D04060)"
-                    : "linear-gradient(180deg, #70FFE0, #208088)",
-                  borderBottomColor: playable ? "#801040" : "#075858",
-                  color: playable ? "#FFF" : "#06122A",
-                  textShadow: playable ? "1px 1px 0 #400020" : "none",
+                  background: "linear-gradient(180deg, #FFB0CB, #D04060)",
+                  borderBottomColor: "#801040",
+                  color: "#FFF",
+                  textShadow: "1px 1px 0 #400020",
                 }}>
-                {playable ? "play" : "preview"}
+                play
               </button>
               <button onClick={() => setArcadeCabinetPreview(null)}
                 className="py-3 rounded-xl font-bold transition-all active:scale-95 border-b-4"
@@ -7697,7 +8283,7 @@ export default function IceCreamGame() {
             </p>
             {shop.location === "alien-planet" && (
               <div className="grid grid-cols-2 gap-2 mb-3">
-                {ALIEN_ARCADE_CABINETS.slice(0, 4).map((cabinet) => {
+                {ALIEN_ARCADE_CABINETS.map((cabinet) => {
                   const unlocked = cabinet.unlocked || !cabinet.unlockFlag || unlockFlags[cabinet.unlockFlag];
                   return (
                     <div key={cabinet.id} className="rounded-lg p-2 border-2"
@@ -7735,7 +8321,7 @@ export default function IceCreamGame() {
                 {"\u2190"} back to street
               </button>
               <span className="text-xs" style={{ color: "#C0C0FF" }}>
-                more cabinets coming soon
+                cabinet dreams online
               </span>
             </div>
           </div>
@@ -7908,6 +8494,190 @@ export default function IceCreamGame() {
               </div>
               <button onClick={exitArcadeGame}
                 className="w-full py-2 rounded-xl font-bold transition-all active:scale-95 border-b-4 text-sm"
+                style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+                quit to arcade
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Moon Maze controls */}
+      {phase === "moon-maze" && moonMaze && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #172648, #081020)",
+            borderColor: "#A8C8FF",
+            color: "#E8F0FF",
+            boxShadow: "0 0 18px rgba(168,200,255,0.35)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#DDEBFF" }}>Moon Maze</strong>
+            <span className="text-xs" style={{ color: "#FFD86B" }}>
+              best {arcadeHighScores["moon-maze"] ?? 0}
+            </span>
+          </div>
+          <p className="text-xs text-center mb-2" style={{ color: "#C8D8FF" }}>
+            {moonMaze.message}
+          </p>
+          {moonMaze.phase === "play" ? (
+            <>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div />
+                <button onClick={() => moveMoonMaze(0, -1)}
+                  className="py-3 rounded-xl font-bold border-b-4"
+                  style={{ background: "linear-gradient(180deg,#DDEBFF,#7088D0)", borderBottomColor: "#304A88", color: "#06122A" }}>
+                  up
+                </button>
+                <div />
+                <button onClick={() => moveMoonMaze(-1, 0)}
+                  className="py-3 rounded-xl font-bold border-b-4"
+                  style={{ background: "linear-gradient(180deg,#A8C8FF,#4058A0)", borderBottomColor: "#203070", color: "#FFF" }}>
+                  left
+                </button>
+                <button onClick={() => moveMoonMaze(0, 1)}
+                  className="py-3 rounded-xl font-bold border-b-4"
+                  style={{ background: "linear-gradient(180deg,#FFD86B,#D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+                  down
+                </button>
+                <button onClick={() => moveMoonMaze(1, 0)}
+                  className="py-3 rounded-xl font-bold border-b-4"
+                  style={{ background: "linear-gradient(180deg,#A8C8FF,#4058A0)", borderBottomColor: "#203070", color: "#FFF" }}>
+                  right
+                </button>
+              </div>
+              <button onClick={exitArcadeGame}
+                className="w-full py-2 rounded-xl font-bold border-b-4 text-sm"
+                style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+                quit to arcade
+              </button>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={startMoonMaze}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg,#DDEBFF,#7088D0)", borderBottomColor: "#304A88", color: "#06122A" }}>
+                retry
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg, #70FFE0, #208088)", borderBottomColor: "#075858", color: "#06122A" }}>
+                back to arcade
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* UFO Claw controls */}
+      {phase === "ufo-claw" && ufoClaw && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #24104A, #100820)",
+            borderColor: "#FFD86B",
+            color: "#FFF7C8",
+            boxShadow: "0 0 18px rgba(255,216,107,0.35)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#FFD86B" }}>UFO Claw</strong>
+            <span className="text-xs" style={{ color: "#70FFE0" }}>
+              wins {arcadeHighScores["ufo-claw"] ?? 0}
+            </span>
+          </div>
+          <p className="text-xs text-center mb-2" style={{ color: "#FFF0A8" }}>
+            Prize: {ufoClaw.prize.emoji} {ufoClaw.prize.name}
+          </p>
+          {ufoClaw.phase === "done" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={startUfoClaw}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg,#FFD86B,#D88020)", borderBottomColor: "#805010", color: "#201020" }}>
+                retry
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg, #70FFE0, #208088)", borderBottomColor: "#075858", color: "#06122A" }}>
+                back to arcade
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={dropUfoClaw}
+                disabled={ufoClaw.phase !== "aim"}
+                className="py-4 rounded-xl font-bold border-b-4"
+                style={{
+                  background: ufoClaw.phase === "aim"
+                    ? "linear-gradient(180deg,#FFD86B,#D88020)"
+                    : "linear-gradient(180deg,#888,#555)",
+                  borderBottomColor: ufoClaw.phase === "aim" ? "#805010" : "#222",
+                  color: ufoClaw.phase === "aim" ? "#201020" : "#DDD",
+                }}>
+                drop claw
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-4 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
+                quit
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pixel Rift controls */}
+      {phase === "pixel-rift" && pixelRift && (
+        <div className="w-full max-w-lg rounded-2xl p-3 mb-3 border-4"
+          style={{
+            fontFamily: "monospace",
+            background: "linear-gradient(180deg, #1A0E30, #071824)",
+            borderColor: "#70FFE0",
+            color: "#E8FFFF",
+            boxShadow: "0 0 18px rgba(112,255,224,0.35)",
+          }}>
+          <div className="flex items-center justify-between mb-2">
+            <strong style={{ color: "#70FFE0" }}>Pixel Rift</strong>
+            <span className="text-xs" style={{ color: "#FFD86B" }}>
+              best {arcadeHighScores["pixel-rift"] ?? 0}
+            </span>
+          </div>
+          <p className="text-xs text-center mb-2" style={{ color: "#C0C0FF" }}>
+            {pixelRift.message}
+          </p>
+          {pixelRift.phase === "done" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={startPixelRift}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg,#FF70F0,#8A2078)", borderBottomColor: "#481040", color: "#FFF" }}>
+                retry
+              </button>
+              <button onClick={exitArcadeGame}
+                className="py-3 rounded-xl font-bold border-b-4"
+                style={{ background: "linear-gradient(180deg, #70FFE0, #208088)", borderBottomColor: "#075858", color: "#06122A" }}>
+                back to arcade
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {PIXEL_RIFT_LANES.map((lane, idx) => (
+                  <button key={lane.label}
+                    onClick={() => handlePixelRiftLane(idx)}
+                    className="py-4 rounded-xl font-bold border-b-4"
+                    style={{
+                      background: pixelRift.targetLane === idx
+                        ? `linear-gradient(180deg,#FFF,${lane.color})`
+                        : `linear-gradient(180deg,${lane.color},${lane.accent})`,
+                      borderBottomColor: lane.accent,
+                      color: pixelRift.targetLane === idx ? "#201020" : "#FFF",
+                    }}>
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+              <button onClick={exitArcadeGame}
+                className="w-full py-2 rounded-xl font-bold border-b-4 text-sm"
                 style={{ background: "linear-gradient(180deg, #FFF, #B8A8FF)", borderBottomColor: "#6A4AC0", color: "#201020" }}>
                 quit to arcade
               </button>
@@ -8716,7 +9486,7 @@ export default function IceCreamGame() {
       )}
 
       {/* Flavor / Topping buttons - pixel-style (menu swaps with location) */}
-      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
+      {phase !== "blackhole" && phase !== "pilot" && phase !== "street" && phase !== "shop" && phase !== "arcade-room" && phase !== "meteor-meltdown" && phase !== "slime-simon" && phase !== "moon-maze" && phase !== "ufo-claw" && phase !== "pixel-rift" && phase !== "alien-underground" && phase !== "ship-interior" && phase !== "space-map" && phase !== "space-destination" && phase !== "chase" && phase !== "boss-fight" && phase !== "sarahs-world" && (
       <div className="w-full max-w-lg">
         {!toppingsPhase ? (
           <div className="grid grid-cols-3 gap-2">

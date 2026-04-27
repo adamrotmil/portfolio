@@ -64,7 +64,9 @@
 - Checks run: `git diff --check` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed; `npm run lint` still fails on pre-existing non-game files. Browser smoke entered the arcade room through the in-app browser and confirmed the room panel renders without the scoop-button UI leak after the guard fix.
 - Commit: `db48d41` (`feat(ice-cream): add walkable alien arcade`)
 - Push status: pushed to `origin/feature/scoop-shop-expansion`
-- Remaining issues: Browser playthrough of Meteor Meltdown / Slime Simon was not completed because the existing travel flow branched into the black-hole event during the second verification pass; build and page lint cover implementation correctness.
+- Follow-up: Completed the full cabinet list from the handoff docs by adding playable Moon Maze, UFO Claw, and Pixel Rift. Pixel Rift now unlocks through the Ren/Glitch path after Sarah's World is played on Earth and Alien Arcade is entered. Meteor Meltdown now pays score-based coins and unlocks the star-chip sticker at 200+, Slime Simon pays per round and unlocks Glow Worms Deluxe at round 5, Moon Maze can award the trophy, and UFO Claw grants prize inventory.
+- Follow-up checks: `git diff --check` passed; `npx tsc --noEmit --pretty false` passed; `npx eslint src/app/ice-cream/page.tsx` passed; `npm run build` passed. Browser Use smoke played Sarah's World on Earth to wake Pixel Rift, entered Glitch Galaxy Arcade, launched Moon Maze, UFO Claw, and Pixel Rift, verified returns to the arcade, and caught/fixed an unfair Moon Maze start-row patrol.
+- Remaining issues: Arcade-specific handoff scope is now implemented. Global hydration warnings and full-project lint debt predate this arcade pass.
 
 ### Milestone 5 - Underground
 
