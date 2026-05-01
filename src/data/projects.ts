@@ -1975,7 +1975,7 @@ export const PROJECTS: Project[] = [
           {
             src: "/images/uscis/pcis-card-outcome.png",
             label: "Card artifact modal showing the issued-card outcome in context",
-            height: 560,
+            height: 480,
             objectFit: "contain",
           },
         ],
@@ -1995,7 +1995,7 @@ export const PROJECTS: Project[] = [
         layout: "photo-grid",
         images: [
           {
-            src: "/images/uscis/stacks.webp",
+            src: "/images/uscis/stacks-sharper.png",
             label: "STACKS document evidence prototype",
             height: 720,
             objectFit: "contain",
