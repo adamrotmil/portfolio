@@ -1957,8 +1957,9 @@ export const PROJECTS: Project[] = [
         sectionLabel: "Evidence Review",
         heading: "Evidence stayed close to the decision",
         body: [
-          "For high-confidence identity decisions, officers needed to inspect evidence without losing their place in the broader workflow. We used focused modals for photos, signatures, and related encounter details so the officer could validate a record and then return to the exact adjudication context.",
+          "For high-confidence identity decisions, officers needed to inspect evidence without losing their place in the broader workflow. We used focused modals for photos, card artifacts, signatures, and related encounter details so the officer could validate a record and then return to the exact adjudication context.",
           "Photo history was especially important because identity verification happens over time. Side-by-side thumbnails, carousel navigation, dates, receipt numbers, and transaction details let officers compare evidence rather than relying on a single current image.",
+          "The card view made the happy path concrete: after officers resolved identity and reviewed supporting evidence, the same person-centric record could carry them through to the issued-card outcome without sending them into another disconnected system.",
         ],
       },
       {
@@ -1972,8 +1973,8 @@ export const PROJECTS: Project[] = [
             objectFit: "contain",
           },
           {
-            src: "/images/uscis/pcis-signature-modal.png",
-            label: "Signature evidence modal opened from the timeline",
+            src: "/images/uscis/pcis-card-outcome.png",
+            label: "Card artifact modal showing the issued-card outcome in context",
             height: 560,
             objectFit: "contain",
           },
