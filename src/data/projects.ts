@@ -6,7 +6,14 @@ export interface ProjectSection {
   body?: string[];
   quote?: string;
   stats?: { number: number; suffix: string; label: string }[];
-  images?: { label: string; dark?: boolean; height?: number; src?: string; objectPosition?: string }[];
+  images?: {
+    label: string;
+    dark?: boolean;
+    height?: number;
+    src?: string;
+    objectPosition?: string;
+    objectFit?: "cover" | "contain";
+  }[];
   imagePosition?: "left" | "right";
   layout?: "phone-gallery" | "desktop-showcase" | "photo-grid";
   videoSrc?: string;
@@ -26,6 +33,13 @@ export interface Project {
   thumbnail?: string;
   thumbnailVideo?: string;
   heroImage?: string;
+  heroIntroImage?: {
+    src: string;
+    label: string;
+    height?: number;
+    objectFit?: "cover" | "contain";
+    objectPosition?: string;
+  };
   heroObjectPosition?: string;
   meta: { label: string; value: string }[];
   sections: ProjectSection[];
@@ -1687,10 +1701,17 @@ export const PROJECTS: Project[] = [
     title: "USCIS",
     subtitle: "U.S. Citizenship & Immigration",
     description:
-      "Streamlined identity verification for 5,000+ adjudicators by redesigning USCIS core identity platform.",
+      "Redesigned USCIS's core identity platform from fragmented, paper-heavy casework into a person-centric adjudication interface for 5,000+ users.",
     tags: ["GovTech", "DHS", "Enterprise", "Identity & Access"],
     color: "#1e3a5f",
     heroImage: "/images/uscis/cis-1.webp",
+    heroIntroImage: {
+      src: "/images/uscis/uscis-logo.webp",
+      label: "U.S. Citizenship and Immigration Services signage",
+      height: 320,
+      objectFit: "cover",
+      objectPosition: "center",
+    },
     thumbnail: "/images/uscis/cis-7.webp",
     meta: [
       { label: "Client", value: "USCIS / DHS" },
@@ -1703,19 +1724,19 @@ export const PROJECTS: Project[] = [
         type: "text",
         sectionNumber: "01",
         sectionLabel: "Context",
-        heading: "Redesigning the backbone of DHS identity services",
+        heading: "From fragmented evidence to person-centric adjudication",
         body: [
-          "CIS 2 is the main identity system used by USCIS adjudicators to verify applicant qualifications and check historical encounters. Originally designed in the 1970s, it had become the backbone for DHS identity services that downstream platforms depend on — but it was showing its age.",
-          "How might we drive person-centric identity and case-management UX — A-number search, cross-record timelines, audit/lineage, RBAC/ABAC, and error-handling — at a scale of 5,000+ users processing ~35k applications per day?",
+          "CIS 2 is the main identity system used by USCIS adjudicators to verify applicant qualifications and review historical encounters. Originally designed in the 1970s, it had become the backbone for DHS identity services that downstream platforms depended on, but the work around it had grown increasingly fragmented.",
+          "The product challenge was not simply modernizing an old interface. Adjudicators needed to confirm identity, status, eligibility, evidence, and risk across paper files, legacy databases, external systems, and agency-specific workflows at a scale of 5,000+ users processing roughly 35,000 applications per day.",
         ],
       },
       {
         type: "text",
         sectionNumber: "02",
         sectionLabel: "My Role",
-        heading: "Leading design across four work streams",
+        heading: "Owning the interaction model across four work streams",
         body: [
-          "Craft Lead for interaction design, managing a team of 6 designers across 4 work streams. I was hands-on with design while also leading teams as the face of the work to external stakeholders across USCIS, ICE, and CBP.",
+          "As Key Personnel on the contract and Craft Lead for interaction design, I managed a team of 6 designers across 4 work streams while staying hands-on with the core product model, UI patterns, and delivery artifacts. I also served as a face of the work to external stakeholders across USCIS, ICE, and CBP.",
         ],
       },
       {
@@ -1731,25 +1752,38 @@ export const PROJECTS: Project[] = [
         type: "text",
         sectionNumber: "03",
         sectionLabel: "Field Research",
-        heading: "Starting with the people doing the work",
+        heading: "Starting where adjudication actually happened",
         body: [
-          "We conducted contextual research at ports of entry along the U.S.–Mexico border and at service centers across the country — shadowing adjudicators, observing intake processes, and conducting over 100 user interviews to understand how the system was actually being used.",
+          "We conducted contextual research at ports of entry along the U.S.-Mexico border and at service centers across the country, shadowing adjudicators, observing intake processes, and conducting over 100 user interviews to understand how identity work actually happened.",
+          "The recurring pattern was that people were not making decisions from a single screen. They were assembling confidence from paper files, receipt numbers, biometric records, relationship data, case status, external document stores, and informal knowledge about where to look next.",
         ],
       },
       {
         type: "images",
         layout: "photo-grid",
         images: [
-          { src: "/images/uscis/cis-2.webp", label: "Field research at the border", height: 640 },
+          {
+            src: "/images/uscis/cis-2.webp",
+            label: "Field research at the border",
+            height: 360,
+            objectFit: "contain",
+          },
+          {
+            src: "/images/uscis/cis-4.webp",
+            label: "Site visit locations across the United States",
+            height: 360,
+            objectFit: "contain",
+          },
         ],
       },
       {
         type: "text",
         sectionNumber: "04",
-        sectionLabel: "Observations",
-        heading: "A paper-heavy reality",
+        sectionLabel: "Operational Reality",
+        heading: "A form moved through people, paper, queues, and exceptions",
         body: [
-          "What we found was a heavily paper-based system. Case files were physically bundled, routed, and tracked by hand. Adjudicators toggled between dozens of fragmented digital systems — none of which they fully trusted — to verify a single applicant’s identity.",
+          "What we found was a heavily paper-based operating model. Case files were physically bundled, routed, stored, pulled, scanned, and reviewed by hand. A single form could pass through intake, sorting, file prep, storage, adjudication, decision, post-adjudication, and exception loops before the work was complete.",
+          "Mapping the lifecycle exposed the real design problem: adjudication was not one task, and identity was not one record. The interface needed to support confidence-building across a long chain of handoffs, delays, duplicate steps, and data-quality gaps.",
         ],
       },
       {
@@ -1760,79 +1794,221 @@ export const PROJECTS: Project[] = [
         ],
       },
       {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/uscis/lifecycle-form.png",
+            label: "Lifecycle of a Form",
+            height: 720,
+            objectFit: "contain",
+          },
+        ],
+      },
+      {
         type: "text",
         sectionNumber: "05",
-        sectionLabel: "Site Visits",
-        heading: "Understanding how systems overlapped",
+        sectionLabel: "System Gaps",
+        heading: "The same person was split across systems and agencies",
         body: [
-          "We focused on two things: people’s working relationships and the data they need. We visited sites across the country — California, Texas, Florida, Missouri, Vermont, Virginia, and more.",
-          "At the end, we understood how systems overlapped. Some were being used for just one data point, presenting a clear opportunity to simplify.",
+          "We mapped every system touching the adjudication process: 25+ platforms spanning USCIS, ICE, CBP, and external agencies. The system usage matrix revealed both overlap and absence. Some systems were used for a single data point, while other agencies lacked access to data that would materially change their work.",
+          "The research readout made the product opportunity clearer: users did not need another destination to check. They needed a way to bring the right identity evidence, system links, and cross-agency context into one coherent view.",
         ],
       },
       {
         type: "images",
         layout: "photo-grid",
         images: [
-          { src: "/images/uscis/cis-4.webp", label: "Site visit locations across the United States", height: 640 },
+          {
+            src: "/images/uscis/cis-5.webp",
+            label: "System usage matrix by agency",
+            height: 640,
+            objectFit: "contain",
+          },
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/uscis/readout-gaps.webp",
+            label: "Research readout highlighting system gaps",
+            height: 640,
+            objectFit: "contain",
+          },
         ],
       },
       {
         type: "text",
         sectionNumber: "06",
-        sectionLabel: "Systems Analysis",
-        heading: "Mapping 25+ platforms across four agencies",
+        sectionLabel: "Human System",
+        heading: "Information moved through relationships, not just databases",
         body: [
-          "We mapped every system touching the adjudication process — 25+ platforms spanning USCIS, ICE, CBP, and external agencies. The system usage matrix revealed massive overlap: some systems existed solely for a single data point.",
-          "We also mapped the human side — the web of relationships around each adjudicator — to understand how information actually flowed between roles.",
+          "Alongside the systems map, we mapped the human side: supervisors, records teams, section chiefs, external affairs, adjudicators, and other agencies. These relationships shaped how evidence was requested, trusted, escalated, and corrected.",
+          "That mattered for the design because an identity view could not just display data. It had to make provenance, related people, case ownership, and next steps understandable enough for officers to act with confidence.",
         ],
       },
       {
         type: "images",
         layout: "photo-grid",
         images: [
-          { src: "/images/uscis/cis-5.webp", label: "System usage matrix by agency", height: 640 },
-        ],
-      },
-      {
-        type: "images",
-        layout: "photo-grid",
-        images: [
-          { src: "/images/uscis/cis-6.webp", label: "Stakeholder relationship map", height: 640 },
+          {
+            src: "/images/uscis/cis-6.webp",
+            label: "Stakeholder relationship map",
+            height: 640,
+            objectFit: "contain",
+          },
         ],
       },
       {
         type: "text",
         sectionNumber: "07",
-        sectionLabel: "Design Sprints",
-        heading: "16 sprint weeks of discovery and testing",
+        sectionLabel: "Co-Creation",
+        heading: "Testing the product model before polishing the interface",
         body: [
-          "We ran 16 design sprint weeks, each focused on a theme surfaced during research, to discover and validate product features. We tested with users at least twice per week, iterating rapidly between rounds.",
+          "We ran 16 design sprint weeks, each focused on a theme surfaced during research. Workshops, sketching, lightning demos, and prototype reviews helped us test not just layouts, but the underlying product model: what information belonged together, what needed to be searchable, and what could be progressively disclosed.",
+          "We tested with users at least twice per week, then translated what we learned into interaction patterns, content hierarchy, and implementation-ready documentation for product and engineering partners.",
         ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          { src: "/images/uscis/working-session.webp", label: "Co-creation workshop with USCIS users", height: 520 },
+          { src: "/images/uscis/lightning-demo.webp", label: "Lightning demo and critique session", height: 520 },
+        ],
+      },
+      {
+        type: "quote",
+        quote: "The design challenge was not removing complexity. It was making complexity navigable.",
       },
       {
         type: "text",
         sectionNumber: "08",
-        sectionLabel: "Solution",
-        heading: "One cohesive interface — like a Google search",
+        sectionLabel: "Product Model",
+        heading: "Make the person the organizing unit",
         body: [
-          "The core idea — “make it feel like a Google search” — survived every iteration. CIS 2 became a person-centric interface: a single A-number search surfaces cross-record timelines, biographic data, encounter history, and potential identity matches — all in one view.",
-          "Granular RBAC/ABAC controls ensure each role sees exactly what they need, with full audit lineage. The system now serves 5,000+ users processing approximately 35,000 applications per day.",
+          "The core idea that survived every iteration was simple: make the person the organizing unit, not the form, receipt number, source system, or office queue. A single A-number search needed to surface the officer's working picture of an applicant: biographic data, biometric evidence, aliases, addresses, relationships, card data, petitions, encounters, background checks, and history over time.",
+          "The top of the interface gives officers a fast identity snapshot. The timeline underneath supports deeper adjudication work by showing what happened, when it happened, which system or agency it came from, and where the underlying evidence could be reviewed.",
         ],
       },
       {
         type: "images",
         layout: "desktop-showcase",
         images: [
-          { src: "/images/uscis/cis-7.webp", label: "CIS 2 — Identity resolution interface" },
+          { src: "/images/uscis/full-cis-mod.webp", label: "CIS Mod full identity view" },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "09",
+        sectionLabel: "Interface Decisions",
+        heading: "A dense interface organized around officer questions",
+        body: [
+          "The final interface uses progressive disclosure. The top card answers, 'Am I looking at the right person?' The timeline answers, 'What happened over time?' Filters, search, and saved views let different roles reduce noise without losing the completeness of the record.",
+          "Important ambiguity is exposed instead of hidden: multiple dates of birth, aliases, previous addresses, related people, status history, and card details remain visible because they are part of how officers build confidence. Links to STACKS and RAILS connect digital identity work back to the documents and physical files that still mattered operationally.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "desktop-showcase",
+        images: [
+          { src: "/images/uscis/cis-7.webp", label: "CIS 2 - Identity resolution interface" },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "10",
+        sectionLabel: "Identity Resolution",
+        heading: "Resolving identity required comparison and accountability",
+        body: [
+          "Beyond viewing an applicant's history, officers needed to resolve potential duplicate identities. The workflow had to help them search broadly, compare candidate records, understand why two identities might match, choose the primary values, and document the reason for linking records.",
+          "This part of the interface made ambiguity actionable. Highlighted matches showed exactly which data points aligned, while the linking flow asked officers to choose primary information and preserve supporting evidence before making a consequential update.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/uscis/pcis-search-results.png",
+            label: "Identity search results with exact and similar matches",
+            height: 640,
+            objectFit: "contain",
+          },
+          {
+            src: "/images/uscis/pcis-identity-matches.png",
+            label: "Potential identity matches for comparison",
+            height: 680,
+            objectFit: "contain",
+          },
+          {
+            src: "/images/uscis/pcis-link-identities.png",
+            label: "Assigning primary information before linking identities",
+            height: 680,
+            objectFit: "contain",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "11",
+        sectionLabel: "Evidence Review",
+        heading: "Evidence stayed close to the decision",
+        body: [
+          "For high-confidence identity decisions, officers needed to inspect evidence without losing their place in the broader workflow. We used focused modals for photos, signatures, and related encounter details so the officer could validate a record and then return to the exact adjudication context.",
+          "Photo history was especially important because identity verification happens over time. Side-by-side thumbnails, carousel navigation, dates, receipt numbers, and transaction details let officers compare evidence rather than relying on a single current image.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/uscis/pcis-photo-history.png",
+            label: "Photo history modal for identity verification",
+            height: 560,
+            objectFit: "contain",
+          },
+          {
+            src: "/images/uscis/pcis-signature-modal.png",
+            label: "Signature evidence modal opened from the timeline",
+            height: 560,
+            objectFit: "contain",
+          },
+        ],
+      },
+      {
+        type: "text",
+        sectionNumber: "12",
+        sectionLabel: "Delivery",
+        heading: "Bridging legacy evidence while shipping a new product surface",
+        body: [
+          "A major product decision was to bridge existing evidence systems instead of pretending they would disappear. Officers still needed access to document images, physical file locations, and historical records, so the new identity view treated those systems as evidence sources inside a more coherent workflow.",
+          "The design documentation translated user reasoning into implementable rules: what appears conditionally, how modals behave, how status and history are represented, how filters work, and how each role's access should be constrained through RBAC/ABAC and audit lineage.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/uscis/stacks.webp",
+            label: "STACKS document evidence prototype",
+            height: 720,
+            objectFit: "contain",
+          },
         ],
       },
     ],
     outcome: {
-      heading: "The backbone of DHS identity services",
+      heading: "A person-centric foundation for identity work",
       body: [
-        "By consolidating disparate systems into a unified, person-centric platform, adjudicators gained a single source of truth for applicant identity — with cross-record timelines, granular RBAC/ABAC controls, and full audit lineage. CIS 2 now serves as the foundation that downstream platforms depend on.",
+        "By consolidating fragmented evidence into a unified, person-centric platform, adjudicators gained a clearer way to confirm applicant identity, review history, inspect supporting evidence, and understand provenance. CIS 2 became a foundation for downstream DHS identity services, with cross-record timelines, granular RBAC/ABAC controls, and full audit lineage.",
       ],
       contributions: [
+        "Key Personnel",
         "Design Leadership",
         "Field Research",
         "Co-creation Workshops",

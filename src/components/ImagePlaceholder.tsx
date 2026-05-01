@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { assetPath } from "@/lib/basePath";
+import { LightboxExpandButton } from "@/components/PresentationLightbox";
 
 export default function ImagePlaceholder({
   height = 400,
@@ -9,12 +10,14 @@ export default function ImagePlaceholder({
   dark = false,
   src,
   objectPosition = "center",
+  objectFit = "cover",
 }: {
   height?: number;
   label?: string;
   dark?: boolean;
   src?: string;
   objectPosition?: string;
+  objectFit?: "cover" | "contain";
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -24,7 +27,7 @@ export default function ImagePlaceholder({
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="w-full rounded-[14px] overflow-hidden transition-transform duration-500"
+        className="relative w-full rounded-[14px] overflow-hidden transition-transform duration-500"
         style={{
           transform: hovered ? "scale(1.005)" : "scale(1)",
         }}
@@ -43,10 +46,11 @@ export default function ImagePlaceholder({
           <img
             src={assetPath(src)}
             alt={label}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition }}
+            className="absolute inset-0 w-full h-full"
+            style={{ objectFit, objectPosition }}
           />
         </div>
+        <LightboxExpandButton src={src} alt={label} />
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import { assetPath } from "@/lib/basePath";
+import { LightboxExpandButton } from "@/components/PresentationLightbox";
 
 export default function BrowserFrame({
   src,
@@ -8,7 +9,7 @@ export default function BrowserFrame({
   alt?: string;
 }) {
   return (
-    <div className="bg-[#2c2c2e] rounded-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] overflow-hidden">
+    <div className="relative bg-[#2c2c2e] rounded-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Title bar */}
       <div className="flex items-center gap-2 px-4 py-2.5 bg-[#363638]">
         <div className="flex gap-[6px]">
@@ -29,6 +30,7 @@ export default function BrowserFrame({
         alt={alt}
         className="w-full h-auto block"
       />
+      <LightboxExpandButton src={src} alt={alt} className="top-2 right-2" />
     </div>
   );
 }

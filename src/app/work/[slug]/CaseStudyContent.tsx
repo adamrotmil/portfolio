@@ -14,6 +14,7 @@ import Counter from "@/components/Counter";
 import PhoneFrame from "@/components/PhoneFrame";
 import BrowserFrame from "@/components/BrowserFrame";
 import KranaMix from "@/components/KranaMix";
+import { PresentationLightboxProvider } from "@/components/PresentationLightbox";
 
 /**
  * Case study content — extended design language from the homepage:
@@ -160,6 +161,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                     height={section.images[0].height || 480}
                     label={section.images[0].label}
                     src={section.images[0].src}
+                    objectFit={section.images[0].objectFit}
                     objectPosition={section.images[0].objectPosition}
                   />
                 </Reveal>
@@ -172,6 +174,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                         height={img.height || 360}
                         label={img.label}
                         src={img.src}
+                        objectFit={img.objectFit}
                         objectPosition={img.objectPosition}
                       />
                     </Reveal>
@@ -185,6 +188,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                       height={section.images[0].height || 480}
                       label={section.images[0].label}
                       src={section.images[0].src}
+                      objectFit={section.images[0].objectFit}
                       objectPosition={section.images[0].objectPosition}
                     />
                   </Reveal>
@@ -195,6 +199,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                           height={img.height || 360}
                           label={img.label}
                           src={img.src}
+                          objectFit={img.objectFit}
                           objectPosition={img.objectPosition}
                         />
                       </Reveal>
@@ -218,6 +223,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                 label={imgs[0].label}
                 dark={imgs[0].dark}
                 src={imgs[0].src}
+                objectFit={imgs[0].objectFit}
                 objectPosition={imgs[0].objectPosition}
               />
             </Reveal>
@@ -231,6 +237,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                     label={img.label}
                     dark={img.dark}
                     src={img.src}
+                    objectFit={img.objectFit}
                     objectPosition={img.objectPosition}
                   />
                 </Reveal>
@@ -245,6 +252,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                   label={imgs[0].label}
                   dark={imgs[0].dark}
                   src={imgs[0].src}
+                  objectFit={imgs[0].objectFit}
                   objectPosition={imgs[0].objectPosition}
                 />
               </Reveal>
@@ -256,6 +264,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                       label={img.label}
                       dark={img.dark}
                       src={img.src}
+                      objectFit={img.objectFit}
                       objectPosition={img.objectPosition}
                     />
                   </Reveal>
@@ -271,6 +280,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                   label={imgs[0].label}
                   dark={imgs[0].dark}
                   src={imgs[0].src}
+                  objectFit={imgs[0].objectFit}
                   objectPosition={imgs[0].objectPosition}
                 />
               </Reveal>
@@ -282,6 +292,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                       label={img.label}
                       dark={img.dark}
                       src={img.src}
+                      objectFit={img.objectFit}
                       objectPosition={img.objectPosition}
                     />
                   </Reveal>
@@ -307,6 +318,7 @@ function RenderSection({ section }: { section: ProjectSection }) {
                   height={section.images?.[0]?.height || 480}
                   label={section.images?.[0]?.label || "Project Image"}
                   src={section.images?.[0]?.src}
+                  objectFit={section.images?.[0]?.objectFit}
                   objectPosition={section.images?.[0]?.objectPosition}
                 />
               </div>
@@ -471,147 +483,163 @@ function NextProject({ next }: { next: Project["nextProject"] }) {
 
 export default function CaseStudyContent({ project }: { project: Project }) {
   return (
-    <div className="min-h-screen">
-      <ProgressBar color={YELLOW} />
-      <Nav />
+    <PresentationLightboxProvider>
+      <div className="min-h-screen">
+        <ProgressBar color={YELLOW} />
+        <Nav />
 
-      {/* Hero */}
-      <section className="pt-[clamp(7rem,14vh,10rem)]">
-        <div className="max-w-[1200px] mx-auto px-[clamp(1.5rem,4vw,4rem)]">
-          {/* Breadcrumb */}
-          <Reveal>
-            <nav className="font-mono text-[0.72rem] text-text-muted mb-10">
-              <Link
-                href="/#work"
-                className="transition-colors hover:text-text-primary"
-              >
-                Work
-              </Link>
-              <span className="mx-2 opacity-60">/</span>
-              <span className="text-text-secondary">{project.title}</span>
-            </nav>
-          </Reveal>
+        {/* Hero */}
+        <section className="pt-[clamp(7rem,14vh,10rem)]">
+          <div className="max-w-[1200px] mx-auto px-[clamp(1.5rem,4vw,4rem)]">
+            {/* Breadcrumb */}
+            <Reveal>
+              <nav className="font-mono text-[0.72rem] text-text-muted mb-10">
+                <Link
+                  href="/#work"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  Work
+                </Link>
+                <span className="mx-2 opacity-60">/</span>
+                <span className="text-text-secondary">{project.title}</span>
+              </nav>
+            </Reveal>
 
-          {/* Basel rule */}
-          <div className="border-t border-border" />
+            {/* Basel rule */}
+            <div className="border-t border-border" />
 
-          <div className="pt-10 pb-12">
-            {/* Tags */}
-            <Reveal delay={0.04}>
-              <div className="flex gap-1.5 flex-wrap mb-8">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="font-mono text-[0.68rem] text-text-primary px-2 py-1 border border-border rounded-[3px]"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            <div className="pt-10 pb-12">
+              {/* Tags */}
+              <Reveal delay={0.04}>
+                <div className="flex gap-1.5 flex-wrap mb-8">
+                  {project.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="font-mono text-[0.68rem] text-text-primary px-2 py-1 border border-border rounded-[3px]"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </Reveal>
+
+              <Reveal delay={0.08}>
+                <h1 className="font-serif text-[clamp(2.8rem,6.5vw,5.2rem)] font-normal leading-[1.04] tracking-[-0.03em] text-text-primary mb-8 max-w-[900px]">
+                  {project.title}
+                </h1>
+              </Reveal>
+
+              <Reveal delay={0.14}>
+                <p className="font-sans text-[clamp(1.05rem,1.35vw,1.22rem)] leading-[1.55] text-text-primary max-w-[640px] mb-12">
+                  {project.description}
+                </p>
+              </Reveal>
+
+              {/* Meta grid */}
+              <Reveal delay={0.2}>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-border">
+                  {project.meta.map((item) => (
+                    <div key={item.label}>
+                      <p className="font-mono text-[0.68rem] text-text-muted mb-2">
+                        {item.label}
+                      </p>
+                      <p className="font-mono text-[0.85rem] text-text-primary leading-[1.4]">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+          </div>
+
+          {project.heroIntroImage && (
+            <Reveal delay={0.24}>
+              <div className="max-w-[1200px] mx-auto mt-6 px-[clamp(1.5rem,4vw,4rem)]">
+                <ImagePlaceholder
+                  height={project.heroIntroImage.height || 320}
+                  label={project.heroIntroImage.label}
+                  src={project.heroIntroImage.src}
+                  objectFit={project.heroIntroImage.objectFit}
+                  objectPosition={project.heroIntroImage.objectPosition}
+                />
               </div>
             </Reveal>
+          )}
 
-            <Reveal delay={0.08}>
-              <h1 className="font-serif text-[clamp(2.8rem,6.5vw,5.2rem)] font-normal leading-[1.04] tracking-[-0.03em] text-text-primary mb-8 max-w-[900px]">
-                {project.title}
-              </h1>
+          {/* Hero image */}
+          <Reveal delay={0.26}>
+            <div className="max-w-[1200px] mx-auto mt-4 px-[clamp(1.5rem,4vw,4rem)]">
+              <ImagePlaceholder
+                height={560}
+                label={`${project.title} — Hero Shot`}
+                dark
+                src={project.heroImage}
+                objectPosition={project.heroObjectPosition}
+              />
+            </div>
+          </Reveal>
+        </section>
+
+        {/* Content sections */}
+        <div className="py-[clamp(2rem,4vh,4rem)]">
+          {project.sections.map((section, i) => (
+            <RenderSection key={i} section={section} />
+          ))}
+        </div>
+
+        {/* Outcome */}
+        <section className="bg-bg-card border-y border-border py-[clamp(4rem,10vh,7rem)] px-[clamp(1.5rem,4vw,4rem)]">
+          <div className="max-w-[740px] mx-auto">
+            <SectionLabel number="✦" title="Outcome" />
+            <Reveal>
+              <h2 className="font-serif text-[clamp(1.8rem,3.5vw,2.6rem)] font-normal leading-[1.2] text-text-primary mb-6">
+                {project.outcome.heading}
+              </h2>
             </Reveal>
+            {project.outcome.body.map((p, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <p className="font-sans text-[1.02rem] leading-[1.72] text-text-primary mb-5">
+                  {p}
+                </p>
+              </Reveal>
+            ))}
 
-            <Reveal delay={0.14}>
-              <p className="font-sans text-[clamp(1.05rem,1.35vw,1.22rem)] leading-[1.55] text-text-primary max-w-[640px] mb-12">
-                {project.description}
-              </p>
-            </Reveal>
-
-            {/* Meta grid */}
             <Reveal delay={0.2}>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-border">
-                {project.meta.map((item) => (
-                  <div key={item.label}>
-                    <p className="font-mono text-[0.68rem] text-text-muted mb-2">
-                      {item.label}
+              <div className="flex gap-8 flex-wrap pt-8 border-t border-border mt-10">
+                {[
+                  {
+                    label: "My contribution",
+                    items: project.outcome.contributions,
+                  },
+                  {
+                    label:
+                      project.slug === "gator" ? "Deliverables" : "Collaborators",
+                    items: project.outcome.collaborators,
+                  },
+                  { label: "Tools", items: project.outcome.tools },
+                ].map((col, i) => (
+                  <div key={i} className="flex-1 min-w-[180px]">
+                    <p className="font-mono text-[0.68rem] text-text-muted mb-3">
+                      {col.label}
                     </p>
-                    <p className="font-mono text-[0.85rem] text-text-primary leading-[1.4]">
-                      {item.value}
-                    </p>
+                    {col.items.map((item, j) => (
+                      <p
+                        key={j}
+                        className="font-mono text-[0.78rem] text-text-primary leading-[1.75]"
+                      >
+                        {item}
+                      </p>
+                    ))}
                   </div>
                 ))}
               </div>
             </Reveal>
           </div>
-        </div>
+        </section>
 
-        {/* Hero image */}
-        <Reveal delay={0.26}>
-          <div className="max-w-[1200px] mx-auto mt-6 px-[clamp(1.5rem,4vw,4rem)]">
-            <ImagePlaceholder
-              height={560}
-              label={`${project.title} — Hero Shot`}
-              dark
-              src={project.heroImage}
-              objectPosition={project.heroObjectPosition}
-            />
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Content sections */}
-      <div className="py-[clamp(2rem,4vh,4rem)]">
-        {project.sections.map((section, i) => (
-          <RenderSection key={i} section={section} />
-        ))}
+        <NextProject next={project.nextProject} />
       </div>
-
-      {/* Outcome */}
-      <section className="bg-bg-card border-y border-border py-[clamp(4rem,10vh,7rem)] px-[clamp(1.5rem,4vw,4rem)]">
-        <div className="max-w-[740px] mx-auto">
-          <SectionLabel number="✦" title="Outcome" />
-          <Reveal>
-            <h2 className="font-serif text-[clamp(1.8rem,3.5vw,2.6rem)] font-normal leading-[1.2] text-text-primary mb-6">
-              {project.outcome.heading}
-            </h2>
-          </Reveal>
-          {project.outcome.body.map((p, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <p className="font-sans text-[1.02rem] leading-[1.72] text-text-primary mb-5">
-                {p}
-              </p>
-            </Reveal>
-          ))}
-
-          <Reveal delay={0.2}>
-            <div className="flex gap-8 flex-wrap pt-8 border-t border-border mt-10">
-              {[
-                {
-                  label: "My contribution",
-                  items: project.outcome.contributions,
-                },
-                {
-                  label:
-                    project.slug === "gator" ? "Deliverables" : "Collaborators",
-                  items: project.outcome.collaborators,
-                },
-                { label: "Tools", items: project.outcome.tools },
-              ].map((col, i) => (
-                <div key={i} className="flex-1 min-w-[180px]">
-                  <p className="font-mono text-[0.68rem] text-text-muted mb-3">
-                    {col.label}
-                  </p>
-                  {col.items.map((item, j) => (
-                    <p
-                      key={j}
-                      className="font-mono text-[0.78rem] text-text-primary leading-[1.75]"
-                    >
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <NextProject next={project.nextProject} />
-    </div>
+    </PresentationLightboxProvider>
   );
 }
