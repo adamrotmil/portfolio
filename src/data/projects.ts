@@ -1716,7 +1716,7 @@ export const PROJECTS: Project[] = [
     meta: [
       { label: "Client", value: "USCIS / DHS" },
       { label: "Role", value: "Craft Lead, Interaction Design" },
-      { label: "Duration", value: "2 years" },
+      { label: "Duration", value: "6 months" },
       { label: "Scope", value: "Field Research, Identity & Case-Management UX, RBAC/ABAC, Delivery" },
     ],
     sections: [
