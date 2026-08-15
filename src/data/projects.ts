@@ -46,6 +46,10 @@ export interface Project {
   outcome: {
     heading: string;
     body: string[];
+    /** Optional outbound link rendered after the outcome body —
+     *  e.g. the client's current live site when the story continues
+     *  beyond the engagement. */
+    link?: { label: string; url: string };
     contributions: string[];
     collaborators: string[];
     tools: string[];
@@ -59,7 +63,7 @@ export const PROJECTS: Project[] = [
     title: "Clarvos",
     subtitle: "Agents for Advertising",
     description:
-      "Designed the product vision for an agentic AI platform — from initial MVP through a strategic pivot I proposed, to a rebrand and launch out of stealth.",
+      "Designed the product vision for an agentic AI platform — from initial MVP through a strategic pivot and rebrand to public launch.",
     tags: ["AI / Agents", "SaaS", "Video Editor", "Campaign Management"],
     color: "#6366f1",
     featured: true,
@@ -126,10 +130,10 @@ export const PROJECTS: Project[] = [
         sectionNumber: "02",
         sectionLabel: "The Pivot",
         heading:
-          "I proposed that the user shouldn’t have to do anything at all.",
+          "What if the user didn’t have to do anything at all?",
         body: [
           "The exec team asked for a complete product rethink — and it had to happen fast. They flew me down for a two-day private brainstorm retreat: me, the CEO, CTO, and CPO. Four people, two days.",
-          "I had been studying the opportunity space for agentic AI and arrived with a core design principle: non-action, non-doing. The user should never have to take actions that the system could handle autonomously. I proposed an architecture where AI agents would surface social trends, generate campaign plans, create micro-targeted creatives, and package everything up — so that from the user’s perspective, a Pinterest-style feed of ready-to-run campaigns would appear each morning, powered by ongoing social listening and a behind-the-scenes orchestration layer.",
+          "I had been studying the opportunity space for agentic AI and arrived with a core design principle: non-action, non-doing. The user should never have to take actions that the system could handle autonomously. I designed an architecture where AI agents would surface social trends, generate campaign plans, create micro-targeted creatives, and package everything up — so that from the user’s perspective, a Pinterest-style feed of ready-to-run campaigns would appear each morning, powered by ongoing social listening and a behind-the-scenes orchestration layer.",
           "I mocked up the full end-to-end vision in two days using Claude Code and Figma. The CEO’s response: \"This is it.\"",
         ],
       },
@@ -313,7 +317,7 @@ export const PROJECTS: Project[] = [
         sectionNumber: "04",
         sectionLabel: "Rebrand & Launch",
         heading:
-          "Three weeks from rebrand to launch out of stealth",
+          "Three weeks from rebrand to public launch",
         body: [
           "The company initiated a full rebrand, and since the redesign touched every surface end-to-end, it became an opportunity to improve the information architecture — not just reskin it.",
           "From additional user testing, we learned that marketers with existing campaign assets wanted manual flows alongside the agentic ones. I designed a modular architecture where users could take the AI-optimized campaigns ready to run, but also use individual tools independently — just generate creatives, just run the customer simulator, or build a campaign manually from scratch. Maximum flexibility without compromising the core autonomous experience.",
@@ -379,7 +383,7 @@ export const PROJECTS: Project[] = [
         type: "text",
         body: [
           "I folded all of this into the v3 redesign — branding, design system, UI styling, and reworked product flows — in three weeks. I used Codex and Figma MCP to accelerate initial designs, then refined visual designs in Figma including all design system components. I also coordinated with the branding agency and GTM team to deploy the new UI on the landing page and in the press release.",
-          "This led to a successful launch out of stealth on April 7, 2026, covered by BusinessWire, SiliconANGLE, and MarTech Series. Our first beta customers are already in the platform, and we’re gathering voice-of-customer insights to inform further iteration.",
+          "This led to a successful public launch on April 7, 2026, covered by BusinessWire, SiliconANGLE, and MarTech Series. Our first beta customers are already in the platform, and we’re gathering voice-of-customer insights to inform further iteration.",
         ],
       },
       {
@@ -431,14 +435,14 @@ export const PROJECTS: Project[] = [
     title: "AI Model Training",
     subtitle: "Evaluating Frontier LLMs",
     description:
-      "Improved frontier model behavior through multi-axis LLM evaluation for OpenAI, Google, and others.",
+      "Improved frontier model behavior through multi-axis evaluation and red-teaming for multiple frontier AI labs.",
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
     color: "#10b981",
     featured: true,
     thumbnail: "/images/prompt-evals/mountains-oai.png",
     heroImage: "/images/prompt-evals/mountains-oai.png",
     meta: [
-      { label: "Client", value: "Google, OpenAI & Others (via DataAnnotation)" },
+      { label: "Client", value: "Multiple frontier AI labs" },
       { label: "Role", value: "AI Training Specialist / Evaluator" },
       { label: "Duration", value: "2024" },
       { label: "Platform", value: "Web-based evaluation tools" },
@@ -450,46 +454,26 @@ export const PROJECTS: Project[] = [
         sectionLabel: "Overview",
         heading: "Shaping the next generation of AI models",
         body: [
-          "Contributed to the training and evaluation of frontier large language models through structured human feedback. The work involved multi-axis rating systems used for supervised fine-tuning (SFT) and reinforcement learning from human feedback (RLHF).",
-          "Each response was evaluated across dimensions including groundedness, truthfulness, instruction-following, safety, and factual accuracy. This work directly shaped model behavior for products used by hundreds of millions of people.",
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            src: "/images/prompt-evals/prompt evals.png",
-            label: "Multi-turn evaluation interface — conversation rating workflow",
-          },
-        ],
-      },
-      {
-        type: "images",
-        layout: "desktop-showcase",
-        images: [
-          {
-            src: "/images/prompt-evals/prompt-kernel.png",
-            label: "Multi-axis response rating — instruction following, completeness, factuality",
-          },
+          "Contributed to the training and evaluation of frontier large language models through structured human feedback for multiple frontier AI labs. The work involved multi-axis rating systems used for supervised fine-tuning (SFT) and reinforcement learning from human feedback (RLHF).",
+          "Post-training evaluation: adversarial prompt design, rubric construction, golden-response authoring, and reasoning-trace evaluation across text, audio, and multi-turn systems — reviewer-rated top-tier for producing clear model failures.",
         ],
       },
       {
         type: "text",
         sectionNumber: "02",
-        sectionLabel: "OpenAI — ChatGPT",
-        heading: "Contributing to the next version of ChatGPT",
+        sectionLabel: "Flagship Assistant Evaluation",
+        heading: "Contributing to the next version of a flagship AI assistant",
         body: [
-          "Evaluated and rated outputs for a new version of ChatGPT, applying a rigorous multi-axis assessment framework. The work focused on improving the model’s conversational quality, factual reliability, and alignment with user intent.",
+          "Evaluated and rated outputs for a new version of a major AI lab’s flagship conversational assistant, applying a rigorous multi-axis assessment framework. The work focused on improving the model’s conversational quality, factual reliability, and alignment with user intent.",
         ],
       },
       {
         type: "text",
         sectionNumber: "03",
         sectionLabel: "Additional Annotations",
-        heading: "Evaluation work for Google, Anthropic, and other frontier model providers",
+        heading: "Evaluation work across the teams behind leading frontier models",
         body: [
-          "Worked on evaluation tasks for Google’s Gemini Copilot, rating model outputs across multiple quality axes. The project involved assessing the model’s ability to follow complex instructions, provide grounded and factually accurate responses, and maintain safety guardrails.",
+          "Worked on evaluation tasks for another frontier lab’s assistant and copilot products, rating model outputs across multiple quality axes. The project involved assessing the model’s ability to follow complex instructions, provide grounded and factually accurate responses, and maintain safety guardrails.",
           "Beyond direct evaluation, also served in a quality assurance capacity — reviewing other evaluators’ ratings for consistency, accuracy, and adherence to rubric standards. This meta-review role helped maintain the integrity of the training data pipeline.",
         ],
       },
@@ -507,11 +491,10 @@ export const PROJECTS: Project[] = [
         "Cross-model Evaluation",
       ],
       collaborators: [
-        "DataAnnotation",
-        "Google AI",
-        "OpenAI",
+        "Multiple frontier AI labs",
+        "QA & evaluator teams",
       ],
-      tools: ["DataAnnotation Platform", "Custom Evaluation Tools"],
+      tools: ["Custom Evaluation Tools", "Web-based Rating Platforms"],
     },
     nextProject: {
       slug: "miami",
@@ -849,7 +832,7 @@ export const PROJECTS: Project[] = [
     nextProject: {
       slug: "ai-training",
       title: "AI Model Training",
-      subtitle: "Evaluating Frontier LLMs for Google, OpenAI & More",
+      subtitle: "Evaluating Frontier LLMs",
     },
   },
   {
@@ -1234,24 +1217,24 @@ export const PROJECTS: Project[] = [
     },
     nextProject: {
       slug: "wild-brains",
-      title: "Wild Brains",
-      subtitle: "Brain Wearable & Optimization App",
+      title: "Wild Brains → Atlas",
+      subtitle: "Brain Wearable",
     },
   },
   {
     slug: "wild-brains",
-    title: "Wild Brains",
-    subtitle: "Brain Wearable + App",
+    title: "Wild Brains → Atlas",
+    subtitle: "Brain Wearable",
     description:
-      "Helped secure continued investment through end-to-end design of a brain training wearable app.",
-    tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback"],
+      "Lead designer through product discovery and definition for a consumer brain wearable — I executed all initial UX and UXR and designed the investor pitch deck that helped secure funding. The company has since rebranded as Atlas (atlasmankind.com), now building a nanotechnology-powered brain wearable with an active waitlist.",
+    tags: ["Consumer Health", "Wearable", "Mobile", "Biofeedback", "0→1", "Neurotech"],
     color: "#a855f7",
     thumbnail: "/images/wb/upscale.png",
     heroImage: "/images/wb/upscale.png",
     heroObjectPosition: "top",
     meta: [
-      { label: "Client", value: "Wild Brains" },
-      { label: "Role", value: "Product Designer" },
+      { label: "Client", value: "Wild Brains (now Atlas)" },
+      { label: "Role", value: "Lead Designer, Discovery → Definition" },
       { label: "Stage", value: "Seed Round" },
       { label: "Platform", value: "iOS" },
     ],
@@ -1264,7 +1247,7 @@ export const PROJECTS: Project[] = [
           "A wearable that reads your brain \u2014 and an app that trains it",
         body: [
           "Wild Brains is a direct-to-consumer brain optimization platform built around a lightweight EEG headband. The device measures neural activity in real time while the companion app translates that data into personalized training programs \u2014 creative exercises, focus sessions, and behavioral tracks designed to improve how users think, feel, and perform.",
-          "I joined as the sole product designer during the company\u2019s seed round, working directly with the founder and a small engineering team. The challenge was twofold: make neuroscience accessible to a mainstream consumer audience, and create an experience compelling enough to drive daily engagement with a novel device category.",
+          "I joined as lead designer during the company\u2019s seed round, carrying the product from discovery through definition \u2014 all initial UX and UXR, the original UI, and the investor pitch deck \u2014 working directly with the founder and a small engineering team. The challenge was twofold: make neuroscience accessible to a mainstream consumer audience, and create an experience compelling enough to drive daily engagement with a novel device category.",
         ],
       },
       {
@@ -1480,16 +1463,19 @@ export const PROJECTS: Project[] = [
       },
     ],
     outcome: {
-      heading: "From prototype to funded product",
+      heading: "From funded prototype to Atlas",
       body: [
-        "The design work I delivered became the foundation of Wild Brains\u2019 product vision during their seed round. The comprehensive screen designs, data visualization system, and personalization framework demonstrated a clear, compelling product experience that helped the company secure continued investment and the opportunity to scale.",
+        "The design work I delivered \u2014 end-to-end initial UX and UXR, the original UI, and the investor pitch deck \u2014 became the foundation of Wild Brains\u2019 product vision during their seed round. The comprehensive screen designs, data visualization system, and personalization framework demonstrated a clear, compelling product experience, and the pitch deck helped secure funding and the opportunity to scale.",
         "By borrowing engagement patterns from fitness and wellness apps, we made brain training feel approachable. By investing in data visualization, we made the science feel real. The combination gave investors confidence that this wasn\u2019t just a device \u2014 it was a daily habit.",
+        "The company continues today as Atlas, building a nanotechnology-powered brain wearable \u2014 currently with an active waitlist at atlasmankind.com.",
       ],
+      link: { label: "Visit Atlas \u2014 atlasmankind.com", url: "https://atlasmankind.com" },
       contributions: [
-        "Product Design",
-        "UX Research",
+        "Product Discovery & Definition",
+        "Initial UX & UXR",
+        "Original UI Design",
+        "Investor Pitch Deck",
         "Data Visualization",
-        "Interaction Design",
       ],
       collaborators: ["Founder", "Engineering Team"],
       tools: ["Figma"],

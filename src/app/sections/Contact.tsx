@@ -41,8 +41,7 @@ export default function Contact() {
               className="mb-10 font-mono text-[0.85rem] leading-[1.6] max-w-[56ch] mx-auto"
               style={{ color: "rgba(0,0,0,0.75)" }}
             >
-              Available for product design, AI/UX consulting, and design
-              engineering roles.
+              Open to consulting, advisory, and interesting conversations.
             </p>
 
             <div className="flex justify-center gap-4 flex-wrap mb-10">

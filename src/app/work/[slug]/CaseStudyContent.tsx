@@ -605,6 +605,29 @@ export default function CaseStudyContent({ project }: { project: Project }) {
               </Reveal>
             ))}
 
+            {project.outcome.link && (
+              <Reveal delay={0.15}>
+                <a
+                  href={project.outcome.link.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-block font-mono text-[0.78rem] no-underline px-4 py-2.5 rounded-[4px] border border-border text-text-primary transition-colors mt-2"
+                  style={{ borderColor: "var(--color-border-strong)" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = YELLOW;
+                    e.currentTarget.style.color = YELLOW;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor =
+                      "var(--color-border-strong)";
+                    e.currentTarget.style.color = "var(--color-text-primary)";
+                  }}
+                >
+                  {project.outcome.link.label} ↗
+                </a>
+              </Reveal>
+            )}
+
             <Reveal delay={0.2}>
               <div className="flex gap-8 flex-wrap pt-8 border-t border-border mt-10">
                 {[
