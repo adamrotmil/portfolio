@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Rubric constellation — eight response fingerprints rated across five axes, one golden">
+  <defs>
+    <radialGradient id="sheen2" cx="50%" cy="0%" r="80%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldGlow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFCB05" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#FFCB05" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="#0a0a0c"/>
+  <rect width="1600" height="900" fill="url(#sheen2)"/>
+
+  <!-- Reference pentagons: the full-score envelope, dotted -->
+  <g fill="none" stroke="#e9eaf0" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 5">
+    <path d="M320,242 L394,296 L366,383 L274,383 L246,296 Z"/>
+    <path d="M640,242 L714,296 L686,383 L594,383 L566,296 Z"/>
+    <path d="M960,242 L1034,296 L1006,383 L914,383 L886,296 Z"/>
+    <path d="M1280,242 L1354,296 L1326,383 L1234,383 L1206,296 Z"/>
+    <path d="M320,512 L394,566 L366,653 L274,653 L246,566 Z"/>
+    <path d="M640,512 L714,566 L686,653 L594,653 L566,566 Z"/>
+    <path d="M960,512 L1034,566 L1006,653 L914,653 L886,566 Z"/>
+    <path d="M1280,512 L1354,566 L1326,653 L1234,653 L1206,566 Z"/>
+  </g>
+
+  <!-- Score fingerprints -->
+  <g fill="none" stroke="#e9eaf0" stroke-opacity="0.6" stroke-width="1.25">
+    <path d="M320,254 L346,312 L348,358 L286,367 L283,308 Z"/>
+    <path d="M640,285 L699,301 L654,339 L612,358 L588,303 Z"/>
+    <path d="M960,265 L1001,307 L994,367 L949,336 L916,306 Z"/>
+    <path d="M1280,297 L1317,308 L1305,355 L1243,371 L1250,310 Z"/>
+    <path d="M320,543 L372,573 L338,615 L297,622 L257,570 Z"/>
+    <path d="M960,551 L990,580 L997,641 L930,631 L934,582 Z"/>
+    <path d="M1280,532 L1325,576 L1303,622 L1259,618 L1232,574 Z"/>
+  </g>
+
+  <!-- The golden fingerprint -->
+  <ellipse cx="640" cy="590" rx="92" ry="76" fill="url(#goldGlow2)"/>
+  <path d="M640,518 L705,569 L684,650 L599,647 L576,569 Z"
+        fill="none" stroke="#FFCB05" stroke-opacity="0.95" stroke-width="1.5"/>
+
+  <!-- Centers -->
+  <g fill="#e9eaf0" fill-opacity="0.4">
+    <circle cx="320" cy="320" r="1.5"/><circle cx="640" cy="320" r="1.5"/>
+    <circle cx="960" cy="320" r="1.5"/><circle cx="1280" cy="320" r="1.5"/>
+    <circle cx="320" cy="590" r="1.5"/><circle cx="960" cy="590" r="1.5"/>
+    <circle cx="1280" cy="590" r="1.5"/>
+  </g>
+  <circle cx="640" cy="590" r="2" fill="#FFCB05"/>
+
+  <!-- Axis letters, first specimen only -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+     font-size="9.5" letter-spacing="0.1em" fill="#e9eaf0" fill-opacity="0.32">
+    <text x="320" y="230" text-anchor="middle">G</text>
+    <text x="404" y="299">T</text>
+    <text x="371" y="399">I</text>
+    <text x="269" y="399" text-anchor="end">S</text>
+    <text x="236" y="299" text-anchor="end">F</text>
+  </g>
+
+  <!-- Specimen labels -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+     font-size="11" letter-spacing="0.16em" fill="#e9eaf0" text-anchor="middle">
+    <text x="320" y="428" fill-opacity="0.4">R-01</text>
+    <text x="640" y="428" fill-opacity="0.4">R-02</text>
+    <text x="960" y="428" fill-opacity="0.4">R-03</text>
+    <text x="1280" y="428" fill-opacity="0.4">R-04</text>
+    <text x="320" y="698" fill-opacity="0.4">R-05</text>
+    <text x="640" y="698" fill="#FFCB05" fill-opacity="0.9">R-06 — GOLDEN</text>
+    <text x="960" y="698" fill-opacity="0.4">R-07</text>
+    <text x="1280" y="698" fill-opacity="0.4">R-08</text>
+  </g>
+
+  <!-- Title block -->
+  <path d="M170,764 L560,764" stroke="#e9eaf0" stroke-opacity="0.22" stroke-width="1"/>
+  <text x="170" y="788" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="11" letter-spacing="0.18em" fill="#FFCB05" fill-opacity="0.85">FIG. 02 — RUBRIC CONSTELLATION</text>
+  <text x="170" y="814" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="10.5" letter-spacing="0.14em" fill="#e9eaf0" fill-opacity="0.32">G GROUNDEDNESS · T TRUTHFULNESS · I INSTRUCTION-FOLLOWING · S SAFETY · F FACTUAL ACCURACY</text>
+</svg>

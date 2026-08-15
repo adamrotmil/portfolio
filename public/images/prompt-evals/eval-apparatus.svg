@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Evaluation apparatus — isometric schematic of a post-training evaluation pipeline">
+  <defs>
+    <radialGradient id="sheen" cx="50%" cy="0%" r="80%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.045"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFCB05" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFCB05" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Ground -->
+  <rect width="1600" height="900" fill="#0a0a0c"/>
+  <rect width="1600" height="900" fill="url(#sheen)"/>
+
+  <!-- Isometric plane (30° axonometric, drawn as pure line work) -->
+  <path d="M653,135 L1311,515 L947,725 L289,515 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.16" stroke-width="1"/>
+
+  <!-- ── Stage 1 · Prompt card (flat diamond on the plane) ─────────── -->
+  <path d="M523,245 L566,270 L523,295 L480,270 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+  <path d="M523,257 L545,270 L523,283 L501,270 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.22" stroke-width="1"/>
+
+  <!-- ── The reasoning trace (entry → multi-turn gates → manifold) ─── -->
+  <circle cx="471" cy="240" r="4" fill="none"
+          stroke="#e9eaf0" stroke-opacity="0.8" stroke-width="1.5"/>
+  <path d="M475,242 L774,415"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.8" stroke-width="1.5"/>
+
+  <!-- ── Stage 2 · Multi-turn gates (three upright frames) ─────────── -->
+  <path d="M661,290 L661,200 L558,260 L558,350 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.45" stroke-width="1.25"/>
+  <path d="M713,320 L713,230 L610,290 L610,380 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.45" stroke-width="1.25"/>
+  <path d="M765,350 L765,260 L661,320 L661,410 Z"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.45" stroke-width="1.25"/>
+
+  <!-- ── Stage 3 · Branch manifold (one bus, four candidate lanes) ─── -->
+  <path d="M852,370 L696,460"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.8" stroke-width="1.5"/>
+  <circle cx="774" cy="415" r="2.5" fill="#e9eaf0" fill-opacity="0.8"/>
+
+  <!-- Failure lanes -->
+  <path d="M852,370 L1103,515" fill="none" stroke="#e9eaf0" stroke-opacity="0.5" stroke-width="1.25"/>
+  <path d="M800,400 L1051,545" fill="none" stroke="#e9eaf0" stroke-opacity="0.5" stroke-width="1.25"/>
+  <path d="M696,460 L947,605"  fill="none" stroke="#e9eaf0" stroke-opacity="0.5" stroke-width="1.25"/>
+
+  <!-- Golden lane -->
+  <path d="M748,430 L1047,603"
+        fill="none" stroke="#FFCB05" stroke-opacity="0.95" stroke-width="1.75"/>
+
+  <!-- ── Stage 4 · Rating gantry (portal over the lanes, gauges up top) -->
+  <path d="M1051,455 L1051,315 L843,435 L843,575"
+        fill="none" stroke="#e9eaf0" stroke-opacity="0.45" stroke-width="1.25"/>
+  <path d="M1051,455 L843,575" stroke="#e9eaf0" stroke-opacity="0.25"
+        stroke-width="1" stroke-dasharray="2 5"/>
+  <!-- gauges rising above the beam -->
+  <path d="M1016,335 L1016,323" stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+  <path d="M982,355 L982,343"   stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+  <path d="M947,375 L947,363"   stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+  <path d="M912,395 L912,383"   stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+  <path d="M878,415 L878,403"   stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25"/>
+
+  <!-- ── Failure marks (flat × on the plane) ───────────────────────── -->
+  <g stroke="#e9eaf0" stroke-opacity="0.55" stroke-width="1.25">
+    <path d="M1094,510 L1112,520"/><path d="M1112,510 L1094,520"/>
+    <path d="M1042,540 L1060,550"/><path d="M1060,540 L1042,550"/>
+    <path d="M938,600 L956,610"/><path d="M956,600 L938,610"/>
+  </g>
+
+  <!-- ── Stage 5 · Golden response node ────────────────────────────── -->
+  <ellipse cx="1060" cy="610" rx="58" ry="30" fill="url(#goldGlow)"/>
+  <path d="M1060,595 L1086,610 L1060,625 L1034,610 Z"
+        fill="none" stroke="#FFCB05" stroke-opacity="0.95" stroke-width="1.5"/>
+  <circle cx="1060" cy="610" r="2.5" fill="#FFCB05"/>
+
+  <!-- ── Labels (system mono, horizontal, patent-plate voice) ──────── -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+     font-size="11.5" letter-spacing="0.16em" fill="#e9eaf0">
+    <text x="523" y="332" text-anchor="middle" fill-opacity="0.45">PROMPT</text>
+    <text x="598" y="452" text-anchor="middle" fill-opacity="0.45">MULTI-TURN</text>
+    <text x="1068" y="308" fill-opacity="0.45">5-AXIS RUBRIC</text>
+    <text x="1130" y="524" fill-opacity="0.45">FAILURES</text>
+    <text x="1060" y="700" text-anchor="middle" fill="#FFCB05" fill-opacity="0.9">GOLDEN RESPONSE</text>
+  </g>
+  <!-- leader, node → label -->
+  <path d="M1060,630 L1060,686" stroke="#FFCB05" stroke-opacity="0.3"
+        stroke-width="1" stroke-dasharray="1.5 4"/>
+
+  <!-- ── Title block ───────────────────────────────────────────────── -->
+  <path d="M170,726 L560,726" stroke="#e9eaf0" stroke-opacity="0.22" stroke-width="1"/>
+  <text x="170" y="750" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="11" letter-spacing="0.18em" fill="#FFCB05" fill-opacity="0.85">FIG. 01 — EVALUATION APPARATUS</text>
+  <text x="170" y="786" font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+        font-size="27" fill="#e9eaf0" fill-opacity="0.92">Post-training evaluation</text>
+  <text x="170" y="812" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="10.5" letter-spacing="0.14em" fill="#e9eaf0" fill-opacity="0.32">REASONING TRACE · MULTI-AXIS RUBRIC · GOLDEN RESPONSE</text>
+</svg>
