@@ -73,7 +73,7 @@ export const PROJECTS: Project[] = [
     heroObjectPosition: "top",
     meta: [
       { label: "Client", value: "Clarvos" },
-      { label: "Role", value: "Lead Product Designer" },
+      { label: "Role", value: "Member of Design Staff" },
       { label: "Duration", value: "2024 – Present" },
       { label: "Platform", value: "Web SaaS" },
     ],

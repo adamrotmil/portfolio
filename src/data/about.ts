@@ -7,7 +7,7 @@ export const BIO = [
 export const EXPERIENCE = [
   {
     period: "2024 – Present",
-    role: "Lead Product Designer",
+    role: "Member of Design Staff",
     company: "Clarvos",
   },
   {
