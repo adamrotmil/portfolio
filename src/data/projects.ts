@@ -439,8 +439,8 @@ export const PROJECTS: Project[] = [
     tags: ["AI / LLMs", "RLHF", "SFT", "Evaluation"],
     color: "#10b981",
     featured: true,
-    thumbnail: "/images/prompt-evals/mountains-oai.png",
-    heroImage: "/images/prompt-evals/mountains-oai.png",
+    thumbnail: "/images/prompt-evals/eval-apparatus.svg",
+    heroImage: "/images/prompt-evals/eval-apparatus.svg",
     meta: [
       { label: "Client", value: "Multiple frontier AI labs" },
       { label: "Role", value: "AI Training Specialist / Evaluator" },
@@ -456,6 +456,18 @@ export const PROJECTS: Project[] = [
         body: [
           "Contributed to the training and evaluation of frontier large language models through structured human feedback for multiple frontier AI labs. The work involved multi-axis rating systems used for supervised fine-tuning (SFT) and reinforcement learning from human feedback (RLHF).",
           "Post-training evaluation: adversarial prompt design, rubric construction, golden-response authoring, and reasoning-trace evaluation across text, audio, and multi-turn systems — reviewer-rated top-tier for producing clear model failures.",
+        ],
+      },
+      {
+        type: "images",
+        layout: "photo-grid",
+        images: [
+          {
+            src: "/images/prompt-evals/rubric-constellation.svg",
+            label: "Eight responses, five axes — one golden",
+            height: 600,
+            objectFit: "cover",
+          },
         ],
       },
       {
