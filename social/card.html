@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face {
+    font-family: "Saol";
+    src: url("../public/fonts/saol-display-regular.otf") format("opentype");
+  }
+  @font-face {
+    font-family: "KranaA";
+    src: url("../public/fonts/krana-fat-a.otf") format("opentype");
+  }
+  @font-face {
+    font-family: "KranaB";
+    src: url("../public/fonts/krana-fat-b.otf") format("opentype");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1600px; height: 900px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.045), rgba(255,255,255,0) 60%),
+      #0a0a0c;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    position: relative;
+  }
+  .eyebrow {
+    position: absolute; top: 56px; left: 90px;
+    font-size: 15px; letter-spacing: 0.2em; color: rgba(233,234,240,0.5);
+  }
+  .eyebrow .idx { color: #FFCB05; }
+  .site {
+    position: absolute; top: 56px; right: 90px;
+    font-size: 13px; letter-spacing: 0.16em; color: rgba(233,234,240,0.28);
+  }
+  .shot {
+    position: absolute; top: 108px; left: 90px; right: 90px; height: 536px;
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+    background: #101014;
+  }
+  .shot img {
+    width: 100%; height: 100%; object-fit: cover; object-position: center top;
+    display: block;
+  }
+  .block { position: absolute; left: 90px; bottom: 84px; right: 90px; }
+  .rule { width: 420px; height: 1px; background: rgba(233,234,240,0.22); margin-bottom: 24px; }
+  .name { font-size: 42px; line-height: 1; color: #f5f5f5; letter-spacing: 0.02em; }
+  .name .a { font-family: "KranaA", Impact, sans-serif; }
+  .name .b { font-family: "KranaB", Impact, sans-serif; }
+  .line {
+    margin-top: 16px; font-family: "Saol", Georgia, serif; font-style: italic;
+    font-size: 24px; line-height: 1.35; color: rgba(233,234,240,0.78);
+    letter-spacing: 0.01em;
+  }
+</style>
+</head>
+<body>
+  <div class="eyebrow"><span class="idx" id="idx">01 / 04</span>&nbsp;&nbsp;AI PRODUCTS SHIPPED</div>
+  <div class="site">ADAMROTMIL.GITHUB.IO/PORTFOLIO</div>
+  <div class="shot"><img id="img" src=""></div>
+  <div class="block">
+    <div class="rule"></div>
+    <div class="name" id="name"></div>
+    <div class="line" id="line"></div>
+  </div>
+<script>
+  const CARDS = [
+    {
+      idx: "01 / 04",
+      name: "CLARVOS",
+      pattern: "BAABBAB",
+      line: "Agents for advertising — a feed of ready-to-run campaigns, every morning.",
+      img: "../public/images/clarvos/Homepage-AI-Optimized-Agentic.png",
+    },
+    {
+      idx: "02 / 04",
+      name: "RESPOND AI",
+      pattern: "ABBAABABBA",
+      line: "LLM dispatch for freight logistics — carrier responses in seconds, not hours.",
+      img: "../public/images/respond-ai/Respond-new-hero.png",
+    },
+    {
+      idx: "03 / 04",
+      name: "GATOR",
+      pattern: "BABAB",
+      line: "Multimodal AI support for HVAC field techs — concept to MVP in six weeks.",
+      img: "../public/images/gator/gator-cover-new.png",
+    },
+    {
+      idx: "04 / 04",
+      name: "ATLAS",
+      pattern: "ABBAA",
+      line: "A brain wearable and the app that trains it — funded, still shipping.",
+      img: "../public/images/wb/upscale.png",
+    },
+  ];
+  const i = Number(new URLSearchParams(location.search).get("i") || 0);
+  const c = CARDS[i];
+  document.getElementById("idx").textContent = c.idx;
+  document.getElementById("img").src = c.img;
+  document.getElementById("line").textContent = c.line;
+  // KranaMix-style per-character alternation between the two cuts
+  const nameEl = document.getElementById("name");
+  [...c.name].forEach((ch, j) => {
+    const s = document.createElement("span");
+    s.className = (c.pattern[j % c.pattern.length] || "A") === "A" ? "a" : "b";
+    s.textContent = ch;
+    nameEl.appendChild(s);
+  });
+</script>
+</body>
+</html>
